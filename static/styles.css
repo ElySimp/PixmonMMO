@@ -44,3 +44,59 @@ body {
   .btn:hover {
     background-color: #3730a3;
   }  
+
+
+    /* LOGIN REGISTER PAGE */
+
+
+  .auth-page {
+    background: linear-gradient(135deg, #1f1f2e, #0e0e0e);
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  
+  .auth-container {
+    background: #222;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px #000;
+    text-align: center;
+    width: 300px;
+  }
+  
+  .auth-container h2 {
+    margin-bottom: 20px;
+    color: white;
+  }
+  
+  .auth-container input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 6px;
+  }
+  
+  .auth-container .btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #4f46e5;
+    border: none;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+  
+  .auth-container a {
+    color: #a5b4fc;
+    text-decoration: none;
+  }
+  
+  .auth-container a:hover {
+    text-decoration: underline;
+  }
+  
