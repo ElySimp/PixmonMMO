@@ -1,0 +1,55 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<header class="topbar">
+  <div>Support Service</div>
+  <div>Friends</div>
+  <div class="search"><input type="text" placeholder="Search..."></div>
+  <div class="icons">
+    <i class="icon ring"></i>
+    <i class="icon user"></i>
+  </div>
+</header>
+
+<div class="dashboard">
+  <!-- Start Dungeon -->
+  <div class="card intro">
+    <img src="{{ url_for('static', filename='assets/images/hero-bg.png') }}" class="bg">
+    <div class="overlay">
+      <h2>Your Journey Begins Here</h2>
+      <p>With just a press of a button, you can embark on an adventure of a lifetime.</p>
+      <button class="btn-primary">Start Dungeon</button>
+    </div>
+  </div>
+
+  <!-- Pet Info -->
+  <div class="card pet-info">
+    <div class="pet-header">Current Pet <span class="legendary">Legendary</span></div>
+    <img src="{{ url_for('static', filename='assets/images/horse.png') }}" class="pet">
+    <div class="stats">
+      <p><b>Health:</b> 2,147,483,647</p>
+      <p><b>Attack:</b> 2,147,483,647</p>
+      <p><b>Agility:</b> 32,767</p>
+    </div>
+    <div class="gear">
+      <p>+32,767 HP, +32,767 ATK, +32,767 DEF</p>
+    </div>
+  </div>
+
+  <!-- Daily Reward -->
+  <div class="card reward">
+    <h3>Daily Reward</h3>
+    <p>Come here everyday to claim your daily reward</p>
+    <button class="btn-claim">Claim Reward</button>
+    <div class="streak">Day 2 Streak: 4</div>
+  </div>
+
+  <!-- Diamond Info -->
+  <div class="card diamonds">
+    <h3>Diamond Store Sale!!!</h3>
+    <p>Get 20% off all diamond purchases on the Web App.</p>
+    <button class="btn-buy">Buy Diamonds</button>
+    <button class="btn-upgrade">View Upgrades</button>
+  </div>
+</div>
+{% endblock %}

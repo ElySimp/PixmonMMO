@@ -1,0 +1,438 @@
+body {
+    background: #0e0e0e;
+    color: white;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  .container {
+    text-align: center;
+    background: #1a1a1a;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 0 16px #000;
+  }
+  
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 16px;
+  }
+  
+  p {
+    font-size: 1.2rem;
+    margin-bottom: 24px;
+  }
+  
+  .btn-group {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .btn {
+    background-color: #4f46e5;
+    color: white;
+    padding: 12px 24px;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: 0.3s;
+  }
+  
+  .btn:hover {
+    background-color: #3730a3;
+  }  
+
+
+    /* LOGIN REGISTER PAGE */
+
+
+  .auth-page {
+    background: linear-gradient(135deg, #1f1f2e, #0e0e0e);
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  
+  .auth-container {
+    background: #222;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px #000;
+    text-align: center;
+    width: 300px;
+  }
+  
+  .auth-container h2 {
+    margin-bottom: 20px;
+    color: white;
+  }
+  
+  .auth-container input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 6px;
+  }
+  
+  .auth-container .btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #4f46e5;
+    border: none;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+  
+  .auth-container a {
+    color: #a5b4fc;
+    text-decoration: none;
+  }
+  
+  .auth-container a:hover {
+    text-decoration: underline;
+  }
+
+
+
+/* -----------------------------------------------------
+   GENERAL RESET / BODY
+----------------------------------------------------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Outfit', sans-serif;
+  background-color: #0e0e0e; /* Dark theme base */
+  color: #ffffff;
+}
+
+/* -----------------------------------------------------
+   SIDEBAR STYLES
+----------------------------------------------------- */
+.sidebar {
+  width: 240px;
+  background-color: #000000; /* pure black for contrast */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0;
+  min-height: 100vh;
+}
+
+.logo {
+  width: 120px;
+  margin-bottom: 2rem;
+}
+
+.avatar img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  margin-bottom: 1rem;
+}
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0 1rem;
+}
+
+.sidebar nav a {
+  text-decoration: none;
+  color: #ffffff;
+  padding: 0.8rem 0.8rem;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+  margin-bottom: 0.3rem;
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+}
+
+.sidebar nav a:hover {
+  background-color: #1a1a1a;
+}
+
+.sidebar nav a.active {
+  background-color: #232323;
+}
+
+.logout-btn {
+  margin-top: 1rem;
+  color: #ff6b6b;
+  font-weight: 600;
+}
+
+/* -----------------------------------------------------
+   MAIN CONTENT WRAPPER
+----------------------------------------------------- */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* -----------------------------------------------------
+   TOP BAR STYLES
+----------------------------------------------------- */
+.topbar {
+  height: 60px;
+  background-color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  padding: 0 2rem;
+  justify-content: flex-start;
+  gap: 2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.topbar > div {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.topbar .search {
+  flex: 1; /* push icons to the right */
+  max-width: 400px;
+  position: relative;
+}
+
+.topbar .search input {
+  width: 100%;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  background-color: #2a2a2a;
+  border: none;
+  color: #fff;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.topbar .icons {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  font-size: 1.2rem;
+}
+
+/* Example placeholders for .icon classes:
+   If you want actual images, set background, e.g.:
+   .icon.ring {
+       width: 24px; height: 24px;
+       background: url("path/to/bell.png") no-repeat center;
+       background-size: contain;
+       display: inline-block;
+   }
+*/
+.icon.ring:before {
+  content: '🔔'; /* fallback icon */
+}
+.icon.user:before {
+  content: '👤';
+}
+
+/* -----------------------------------------------------
+   DASHBOARD CONTENT
+----------------------------------------------------- */
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  background-color: #0e0e0e;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* CARDS */
+.card {
+  background-color: #1f1f1f;
+  border-radius: 12px;
+  padding: 1rem;
+  position: relative;
+  box-shadow: 0 0 8px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* CARD: Intro (Start Dungeon) */
+.card.intro {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.card.intro .bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.25;
+}
+
+.card.intro .overlay {
+  position: relative;
+  text-align: center;
+  z-index: 1;
+}
+
+.card.intro h2 {
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.card.intro p {
+  font-size: 0.9rem;
+  color: #cfcfcf;
+  margin-bottom: 1rem;
+}
+
+.btn-primary {
+  background-color: #4f46e5;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #6356e5;
+}
+
+/* CARD: Pet Info */
+.card.pet-info {
+  padding: 1.5rem;
+}
+
+.card.pet-info .pet-header {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.card.pet-info .legendary {
+  color: #ffc107; /* gold-ish color */
+  margin-left: 0.5rem;
+  font-weight: 700;
+}
+
+.card.pet-info .pet {
+  width: 80px;
+  margin: 1rem 0;
+}
+
+.card.pet-info .stats p {
+  margin-bottom: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.card.pet-info .gear {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+/* CARD: Daily Reward */
+.card.reward {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card.reward h3 {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.card.reward p {
+  font-size: 0.9rem;
+  color: #cfcfcf;
+  margin-bottom: 1rem;
+}
+
+.btn-claim {
+  background-color: #5bbf31; /* green-ish */
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.btn-claim:hover {
+  background-color: #72ce3a;
+}
+
+.streak {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+/* CARD: Diamonds */
+.card.diamonds h3 {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.card.diamonds p {
+  font-size: 0.9rem;
+  color: #cfcfcf;
+  margin-bottom: 1rem;
+}
+
+.btn-buy, .btn-upgrade {
+  background-color: #4f46e5;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  margin-right: 0.5rem;
+  transition: background-color 0.3s ease;
+}
+
+.btn-upgrade {
+  background-color: #3a3a3a;
+}
+
+.btn-buy:hover {
+  background-color: #6356e5;
+}
+
+.btn-upgrade:hover {
+  background-color: #4a4a4a;
+}
+
+/* Scrollbar styling for the main content area if the content overflows */
+.dashboard::-webkit-scrollbar {
+  width: 6px;
+}
+.dashboard::-webkit-scrollbar-thumb {
+  background-color: #333;
+  border-radius: 3px;
+}
