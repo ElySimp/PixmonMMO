@@ -22,9 +22,7 @@ function Login() {
     e.preventDefault()
     // Check hardcoded admin credentials
     if (formData.username === 'ely' && formData.password === 'ely123') {
-      // For now, just navigate back to home after successful login
-      // You can change this to your game page once it's created
-      navigate('/')
+      navigate('/main'); // Navigate to main home page after successful login
     } else {
       setError('Invalid username or password')
     }

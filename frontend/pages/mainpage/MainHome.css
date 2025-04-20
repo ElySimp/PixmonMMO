@@ -1,0 +1,447 @@
+@import url('/assets/fonts/fonts.css');
+
+/* Reset default browser styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Zain', sans-serif; /* Add default font family */
+}
+
+/* Main container - wraps the entire application
+   - Uses flexbox with row direction to put sidebar and content side by side */
+.main-container {
+  min-height: 100vh;
+  background-color: #161716;
+  color: white;
+  display: flex;
+  flex-direction: row; /* Make children align horizontally */
+}
+
+/* Left Sidebar - Takes full height
+   - Fixed width of 300px
+   - Takes full height automatically from parent container */
+.sidebar {
+  width: 23%;
+  background-color: #101011;
+  padding: 1rem;
+  border-right: 2px solid #232323;
+}
+
+/* Profile section in sidebar */
+.sidebar-section {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+/* Title styling in profile section */
+.sidebar-section h1 {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  letter-spacing: 3px;
+}
+
+/* Profile picture styling */
+.sidebar-pic {
+  width: 160px;
+  height: 120px;
+  margin-bottom: 1.5rem;
+  /* Removed border-radius for non-circular image */
+}
+
+/* Navigation section title */
+.sidebar-nav p {
+  color: rgba(115, 115, 115);
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+  padding-left: 0.5rem;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  color: #808080;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.sidebar-item:hover, .sidebar-item.active {
+  color: white;
+  background-color: #161716;
+}
+
+/* Main content wrapper - Contains topbar and main content
+   - Takes remaining width with flex: 1
+   - Uses column direction to stack topbar and content */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top Navigation Bar
+   - Now only takes the width next to sidebar */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 2rem;
+  background-color: #101011;
+  height: 60px;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.topbar-menu {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.topbar-logo {
+  height: 35px;
+}
+
+.topbar-center {
+  display: flex;
+  gap: 2rem;
+}
+
+.topbar-center button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.topbar-search {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: none;
+  background-color: #1a1a1a;
+  color: white;
+  width: 250px;
+}
+
+.topbar-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Center Content */
+.center-content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Top row with 2 squares */
+.top-squares {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.dungeon-card {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  aspect-ratio: 1/1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.egg-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  background-color: #e3f2fd;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.dungeon-card h2 {
+  margin: 1rem 0;
+  font-size: 1.5rem;
+}
+
+.start-dungeon {
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.daily-reward {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  padding: 1.5rem;
+  aspect-ratio: 1/1;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.claim-reward {
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 1rem 0;
+  width: 100%;
+}
+
+.reward-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* Bottom row with 3 squares */
+.bottom-squares {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.square-card {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  padding: 1.5rem;
+  aspect-ratio: 1/1;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.square-card h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+
+.square-card .stat-value {
+  font-size: 2rem;
+  margin: 1rem 0;
+  color: #fff;
+}
+
+.square-card button {
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  width: 100%;
+  margin-top: auto;
+}
+
+.square-card button:hover {
+  background-color: #0056b3;
+}
+
+.view-players {
+  background-color: #28a745 !important;
+}
+
+.view-tasks {
+  background-color: #dc3545 !important;
+}
+
+.daily-reward h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.daily-reward .claim-reward {
+  margin-top: auto;
+}
+
+.reward-stats {
+  margin-top: auto;
+}
+
+/* Right Sidebar */
+.right-sidebar {
+  background-color: #000000;
+  padding: 1.5rem;
+  border-left: 1px solid #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.pet-card {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.pet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.legendary-tag {
+  color: #FFD700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.pet-content {
+  text-align: center;
+}
+
+.pet-image {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 1rem;
+  image-rendering: pixelated;
+}
+
+.pet-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background-color: #000000;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.stats-section {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.stat-card {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.stat-card span {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.stat-card p {
+  font-size: 0.8rem;
+  color: #808080;
+}
+
+.diamond-store {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.diamond-store h3 {
+  color: #FFD700;
+  margin-bottom: 1rem;
+}
+
+.diamond-store p {
+  font-size: 0.9rem;
+  color: #808080;
+  margin-bottom: 0.5rem;
+}
+
+.diamond-balance {
+  margin: 1.5rem 0;
+  font-size: 1.2rem;
+}
+
+.diamond-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.buy-diamonds, .view-upgrades {
+  padding: 0.75rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.buy-diamonds {
+  background-color: #007BFF;
+  color: white;
+}
+
+.view-upgrades {
+  background-color: #1a1a1a;
+  color: white;
+  border: 1px solid #333;
+} 
