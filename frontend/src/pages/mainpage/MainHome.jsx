@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import './MainHome.css'
+import Topbar from '../../components/Topbar'
+import Sidebar from '../../components/Sidebar'
 
 function MainHome() {
   const [currentPet] = useState({
@@ -21,55 +23,52 @@ function MainHome() {
     diamonds: '2,147,483,647'
   });
 
+  const handleMenuClick = () => {
+    console.log('Menu clicked');
+  };
+
+  const handleSupportClick = () => {
+    console.log('Support clicked');
+  };
+
+  const handleFriendsClick = () => {
+    console.log('Friends clicked');
+  };
+
+  const handleSearch = (value) => {
+    console.log('Search:', value);
+  };
+
+  const handleChatClick = () => {
+    console.log('Chat clicked');
+  };
+
+  const handleNotificationClick = () => {
+    console.log('Notifications clicked');
+  };
+
+  const handleEggClick = () => {
+    console.log('Egg clicked');
+  };
+
   return (
     <div className="main-container">
-      {/* Left Sidebar - Full height, fixed width */}
-      <aside className="sidebar">
-        {/* Profile Section - Shows logo and avatar */}
-        <div className="sidebar-section">
-          <h1>PIXMON</h1>
-          <img src="/dummy.jpg" alt="Profile" className="sidebar-pic" />
-        </div>
-
-        {/* Navigation Menu - List of navigation items */}
-        <nav className="sidebar-nav">
-          <p><b>MAIN MENU</b></p>
-          <button className="sidebar-item active">🏠 Home</button>
-          <button className="sidebar-item">🎒 Inventory</button>
-          <button className="sidebar-item">🏆 Achievement</button>
-          <button className="sidebar-item">👤 Profile</button>
-          <button className="sidebar-item">🐾 Pets</button>
-          <button className="sidebar-item">⚔️ Battle</button>
-          <button className="sidebar-item">📜 Quest</button>
-          <button className="sidebar-item">🛍️ Shop</button>
-        </nav>
-      </aside>
-
-      {/* Main Content Area - Contains topbar and main content */}
+      <Sidebar 
+        profilePic="/dummy.jpg"
+      />
+      
       <div className="main-content">
-        {/* Top Navigation Bar - Next to sidebar */}
-        <nav className="topbar">
-          <div className="topbar-left">
-            <button className="topbar-menu">☰</button>
-            <img src="/logo.png" alt="Pixmon" className="topbar-logo" />
-          </div>
+        <Topbar 
+          onMenuClick={handleMenuClick}
+          onSupportClick={handleSupportClick}
+          onFriendsClick={handleFriendsClick}
+          onSearch={handleSearch}
+          onChatClick={handleChatClick}
+          onNotificationClick={handleNotificationClick}
+          onEggClick={handleEggClick}
+        />
 
-          <div className="topbar-center">
-            <button>Support Service</button>
-            <button>Friends</button>
-          </div>
-
-          <div className="topbar-right">
-            <input type="search" placeholder="Search..." className="topbar-search" />
-            <button className="topbar-button">💭</button>
-            <button className="topbar-button">🔔</button>
-            <button className="topbar-button">🥚</button>
-          </div>
-        </nav>
-
-        {/* Top row with 2 squares */}
         <div className="top-squares">
-          {/* Dungeon Card */}
           <div className="dungeon-card">
             <div className="egg-icon">🥚</div>
             <h2>Your Journey Begins Here</h2>
@@ -77,7 +76,6 @@ function MainHome() {
             <button className="start-dungeon">Start Dungeon</button>
           </div>
 
-          {/* Daily Reward Card */}
           <div className="daily-reward">
             <h2>Daily Reward</h2>
             <p>Come here everyday to claim your daily reward</p>
@@ -95,7 +93,6 @@ function MainHome() {
           </div>
         </div>
 
-        {/* Bottom row with 3 squares */}
         <div className="bottom-squares">
           <div className="square-card">
             <h3>Players Online</h3>

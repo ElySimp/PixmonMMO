@@ -1,0 +1,70 @@
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: #101011;
+  height: 11%;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.topbar-menu {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.topbar-left button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  font-size: 1.2rem;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.topbar-search {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: none;
+  background-color: #1a1a1a;
+  color: white;
+  width: 250px;
+}
+
+.topbar-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topbar-icon {
+  width: 24px;
+  height: 24px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.topbar-button:hover .topbar-icon {
+  opacity: 1;
+} 
