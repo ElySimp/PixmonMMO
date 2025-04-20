@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import './Home.css'
+import { Link } from 'react-router-dom'
+import './welcome.css'
 
-function Home() {
+function Welcome() {
   const [count, setCount] = useState(0)
 
   return (
@@ -9,8 +10,8 @@ function Home() {
         <div className='header'>
             <img src="logo(sampel).png" alt="logo" />
             <div className='buttons'>
-                <button>Create an Account</button>
-                <button>Log In</button>
+                <Link to="/register" className="button">Create an Account</Link>
+                <Link to="/login" className="button">Log In</Link>
             </div>
         </div>
         <img src="background.jpg" alt="background" className='background-home' />
@@ -25,4 +26,4 @@ function Home() {
   )
 }
 
-export default Home
+export default Welcome
