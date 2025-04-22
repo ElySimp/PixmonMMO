@@ -42,17 +42,29 @@
   margin-top: 0;
 }
 
+/* Dungeon Card */
 .dungeon-card {
-  background-color: #1a1a1a;
+  background-color: #101011;
   border-radius: 12px;
   padding: 2rem;
   text-align: center;
-  aspect-ratio: 1/1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 300px;
+  height: 100%;
+}
+
+/* Pet Card */
+.pet-card {
+  background-color: #101011;
+  border-radius: 12px;
+  padding: 1.5rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .egg-icon {
@@ -83,34 +95,6 @@
   font-size: 0.9rem;
 }
 
-.daily-reward {
-  background-color: #1a1a1a;
-  border-radius: 12px;
-  padding: 1.5rem;
-  aspect-ratio: 1/1;
-  min-height: 300px;
-  display: flex;
-  flex-direction: column;
-}
-
-.claim-reward {
-  background-color: #007BFF;
-  color: white;
-  border: none;
-  padding: 0.75rem 2rem;
-  border-radius: 4px;
-  cursor: pointer;
-  margin: 1rem 0;
-  width: 100%;
-}
-
-.reward-stats {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
 /* Bottom row with 3 squares */
 .bottom-squares {
   display: grid;
@@ -121,31 +105,74 @@
   box-sizing: border-box;
 }
 
-.square-card {
-  background-color: #1a1a1a;
+/* Daily Reward Card */
+.daily-card {
+  background-color: #101011;
   border-radius: 12px;
   padding: 1.5rem;
-  aspect-ratio: 1/1;
-  min-height: 200px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
+}
+
+.daily-card h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.claim-reward {
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  margin: 1rem 0;
+}
+
+.reward-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* Stats Card */
+.stats-card {
+  background-color: #101011;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
 }
 
-.square-card h3 {
+/* Diamond Sale Card */
+.sale-card {
+  background-color: #101011;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-title {
   font-size: 1.2rem;
   margin-bottom: 1rem;
   color: #fff;
 }
 
-.square-card .stat-value {
+.stat-value {
   font-size: 2rem;
   margin: 1rem 0;
   color: #fff;
 }
 
-.square-card button {
+.card-button {
   background-color: #007BFF;
   color: white;
   border: none;
@@ -157,7 +184,7 @@
   margin-top: auto;
 }
 
-.square-card button:hover {
+.card-button:hover {
   background-color: #0056b3;
 }
 
@@ -167,17 +194,4 @@
 
 .view-tasks {
   background-color: #dc3545 !important;
-}
-
-.daily-reward h2 {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.daily-reward .claim-reward {
-  margin-top: auto;
-}
-
-.reward-stats {
-  margin-top: auto;
 } 

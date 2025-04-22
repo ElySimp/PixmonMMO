@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import React from 'react'
 import './MainHome.css'
+import { FaEgg, FaChartBar, FaGem, FaDungeon } from 'react-icons/fa'
 import Topbar from '../../components/Topbar'
 import Sidebar from '../../components/Sidebar'
 
-function MainHome() {
-  const [currentPet] = useState({
+const MainHome = () => {
+  const [currentPet] = React.useState({
     name: 'Lorem Ipsum Horsie',
     level: '2,147,483,647',
     class: 'TANK',
@@ -17,7 +18,7 @@ function MainHome() {
     happiness: 127
   });
 
-  const [playerStats] = useState({
+  const [playerStats] = React.useState({
     playingPlayers: 32767,
     tasksCompleted: 127,
     diamonds: '2,147,483,647'
@@ -70,46 +71,50 @@ function MainHome() {
 
         <div className="top-squares">
           <div className="dungeon-card">
-            <div className="egg-icon">🥚</div>
+            <FaDungeon style={{ fontSize: '3rem', color: '#007BFF' }} />
             <h2>Your Journey Begins Here</h2>
             <p>With just a press of a button, you can embark on an adventure of a lifetime.</p>
-            <button className="start-dungeon">Start Dungeon</button>
+            <button className="start-dungeon">Start Adventure</button>
           </div>
-
-          <div className="daily-reward">
-            <h2>Daily Reward</h2>
-            <p>Come here everyday to claim your daily reward</p>
-            <button className="claim-reward">Claim Reward</button>
-            <div className="reward-stats">
-              <div>
-                <p>Total Claimed</p>
-                <span>{playerStats.playingPlayers}</span>
-              </div>
-              <div>
-                <p>Highest Daily Streak</p>
-                <span>4</span>
-              </div>
+          
+          <div className="pet-card">
+            <div className="egg-icon">
+              <FaEgg style={{ color: '#007BFF' }} />
             </div>
+            <h2>Your Pets</h2>
+            <p>Hatch and train your pets to become stronger!</p>
+            <button className="card-button">View Collection</button>
           </div>
         </div>
 
         <div className="bottom-squares">
-          <div className="square-card">
-            <h3>Players Online</h3>
-            <div className="stat-value">{playerStats.playingPlayers}</div>
-            <button className="view-players">View Players</button>
+          <div className="daily-card">
+            <h2>Daily Rewards</h2>
+            <div className="reward-stats">
+              <div>
+                <p>Current Streak</p>
+                <span className="stat-value">5 Days</span>
+              </div>
+              <div>
+                <p>Next Reward</p>
+                <span className="stat-value">2h 30m</span>
+              </div>
+            </div>
+            <button className="claim-reward">Claim Reward</button>
           </div>
-          
-          <div className="square-card">
-            <h3>Tasks Completed</h3>
-            <div className="stat-value">{playerStats.tasksCompleted}</div>
-            <button className="view-tasks">View Tasks</button>
+
+          <div className="stats-card">
+            <FaChartBar style={{ fontSize: '2.5rem', color: '#28a745' }} />
+            <h3 className="card-title">Server Status</h3>
+            <div className="stat-value">740 Players Online</div>
+            <button className="card-button view-players">View Details</button>
           </div>
-          
-          <div className="square-card">
-            <h3>Diamond Store</h3>
-            <div className="stat-value">💎 {playerStats.diamonds}</div>
-            <button className="buy-diamonds">Buy Diamonds</button>
+
+          <div className="sale-card">
+            <FaGem style={{ fontSize: '2.5rem', color: '#dc3545' }} />
+            <h3 className="card-title">Diamond Sale</h3>
+            <div className="stat-value">50% OFF</div>
+            <button className="card-button view-tasks">Shop Now</button>
           </div>
         </div>
       </div>
