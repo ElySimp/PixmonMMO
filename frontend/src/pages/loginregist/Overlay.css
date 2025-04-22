@@ -55,6 +55,7 @@
   flex-direction: column;
   gap: 0.5rem;
   width: 12.5rem;
+  /* height: 30rem; */
   background-color: #D9D9D9;
   padding: 2rem;
 }
@@ -66,11 +67,16 @@
 
 .overlay-container-right { 
   width: 25rem;
+  overflow-y: auto;
+}
+
+.overlay-container-right::-webkit-scrollbar {
+  display: none;
 }
 .modal-close {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: -0.5rem;
+  right: -0.5rem;
   background: none;
   border: none;
   font-size: 24px;

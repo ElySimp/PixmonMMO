@@ -34,7 +34,7 @@ function Login() {
         <h2>Login to Pixmon</h2>
         <form onSubmit={handleSubmit}>
           {error && <div className="error-message">{error}</div>}
-          <div className="form-group">
+          <div className="form-group-login">
             <label htmlFor="username">Username</label>
             <input
               type="text"
@@ -45,7 +45,7 @@ function Login() {
               required
             />
           </div>
-          <div className="form-group">
+          <div className="form-group-login">
             <label htmlFor="password">Password</label>
             <input
               type="password"
