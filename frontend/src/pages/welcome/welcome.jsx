@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import Modal from '../loginregist/Modal'
+import Overlay from '../loginregist/Overlay'
 import Login from '../loginregist/Login'
 import Register from '../loginregist/Register'
 import './welcome.css'
@@ -26,19 +26,16 @@ function Welcome() {
         <div className='header'>
             <img src="logo(sampel).png" alt="logo" />
             <div className='buttons'>
-                {/* <Link to="/register" className="button">Create an Account</Link> */}
-                <button onClick={openRegister}>Create an Account</button>
-                {/* <Link to="/register" className="button">Create an Account</Link> */}
-                <button onClick={openLogin}>Log In</button>
-                {/* <Link to="/login" className="button">Log In</Link> */}
+                <button className='button' onClick={openRegister}>Create an Account</button>
+                <button className='button' onClick={openLogin}>Log In</button>
             </div>
         </div>
-        <Modal isOpen={isLoginOpen} onClose={closeLogin}>
+        <Overlay isOpen={isLoginOpen} onClose={closeLogin}>
           <Login openRegister={openRegister} />
-        </Modal>
-        <Modal isOpen={isRegisterOpen} onClose={closeRegister}>
+        </Overlay>
+        <Overlay isOpen={isRegisterOpen} onClose={closeRegister}>
           <Register openLogin={openLogin} />
-        </Modal>
+        </Overlay>
         <img src="background.jpg" alt="background" className='background-home' />
         
         <div className='hero'>
