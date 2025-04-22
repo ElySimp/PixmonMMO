@@ -1,9 +1,30 @@
 .sortingSquare {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
-    width: 100%;
-    padding: 1.5rem;
-    box-sizing: border-box;
-    margin-top: 0;
+    background-color: rgba(203, 203, 203, 0.5);;
+    width: 220px;
+    height:600px;
+    top: 15%;
+    left: 21%;
+    position: absolute;
+    border-radius: 10px;
+}
+
+.innerSort {
+    background-color: rgb(236, 236, 236);
+    color: black;
+    width: 190px;
+    height: 35px;
+    border-radius: 10px;
+    margin: 0 auto;
+    text-align: center;
+    font-size: 24px;
+    margin-top: 4%;
+
+}
+
+.idk {
+    color: black;
+    font-size: 24px;
+    text-align: center;
+    margin: 0 auto;
+    
 }

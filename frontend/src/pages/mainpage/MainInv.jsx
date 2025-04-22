@@ -52,8 +52,10 @@ const MainInv = () => {
             </div>
 
             <div class="sortingSquare">
-               
+               <div class="innerSort"> filter </div>
             </div>
+
+            <label class="idk"> name </label>
         </div>
 
         // suffering
