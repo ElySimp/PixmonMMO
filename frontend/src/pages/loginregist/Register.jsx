@@ -29,7 +29,7 @@ function Register() {
       <div className="register-box">
         <h2>Create an Account</h2>
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
+          <div className="form-group-register">
             <label htmlFor="username">Username</label>
             <input
               type="text"
@@ -40,7 +40,7 @@ function Register() {
               required
             />
           </div>
-          <div className="form-group">
+          <div className="form-group-register">
             <label htmlFor="email">Email</label>
             <input
               type="email"
@@ -51,7 +51,7 @@ function Register() {
               required
             />
           </div>
-          <div className="form-group">
+          <div className="form-group-register">
             <label htmlFor="password">Password</label>
             <input
               type="password"
@@ -62,7 +62,7 @@ function Register() {
               required
             />
           </div>
-          <div className="form-group">
+          <div className="form-group-register">
             <label htmlFor="confirmPassword">Confirm Password</label>
             <input
               type="password"
@@ -73,11 +73,14 @@ function Register() {
               required
             />
           </div>
-          <button type="submit" className="register-button">Register</button>
+          
         </form>
-        <p className="login-link">
-          Already have an account? <Link to="/login">Login here</Link>
-        </p>
+        <div className='register-terms'>
+          <p className="login-link">
+            Already have an account? <Link to="/login">Login here</Link>
+          </p>
+          <button type="submit" className="register-button">Register</button>
+        </div>
       </div>
     </div>
   )
