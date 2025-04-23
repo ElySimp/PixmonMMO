@@ -34,28 +34,82 @@ const MainInv = () => {
 
 
       return (
-        <div className="main-container">
+        <div className="invCont">
             <Sidebar 
                 profilePic="/dummy.jpg"
             />
-          
-            <div className="main-content">
-            <Topbar 
-              onMenuClick={handleMenuClick}
-              onSupportClick={handleSupportClick}
-              onFriendsClick={handleFriendsClick}
-              onSearch={handleSearch}
-              onChatClick={handleChatClick}
-              onNotificationClick={handleNotificationClick}
-              onEggClick={handleEggClick}
-            />
-            </div>
+           
+            <div className="invContent">
+              <Topbar 
+                  onMenuClick={handleMenuClick}
+                  onSupportClick={handleSupportClick}
+                  onFriendsClick={handleFriendsClick}
+                  onSearch={handleSearch}
+                  onChatClick={handleChatClick}
+                  onNotificationClick={handleNotificationClick}
+                  onEggClick={handleEggClick}
+                /> 
+              <div class="Inventory-Data-Container">
+                <div class="sortingSquare">
+                  <div class="innerSort"> filter </div>
+                  <br></br>
+                  <label for="fruit" class="inventory-sorting-content">Choose a type</label>
+                  <br></br>
+                  <select id="Sort" name="Choice" class="inventory-sorting-content">
+                    <option value="All">All</option>
+                    <option value="Rarity">Rarity</option>
+                    <option value="Effectivity">Effectivity</option>
+                    <option value="Obtainment">Obtainment</option>
+                  </select>
 
-            <div class="sortingSquare">
-               <div class="innerSort"> filter </div>
-            </div>
+                </div>
 
-            <label class="idk"> name </label>
+                <div class="right-side-inv"> 
+                  <div class="inventory-Info">
+                    <label class="inv-word">  Inventory </label>
+                    <div class="inventory-capacity">
+                      capacity : 0 / 100
+                    </div>
+                  
+                  </div>
+                  <div class="actual-inventory">
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                    <div class="inventory-items"> </div>
+                  </div>
+                </div>
+
+              </div>
+              
+            </div>
+            
         </div>
 
         // suffering

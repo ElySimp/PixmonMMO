@@ -1,13 +1,65 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Zain', sans-serif;
+  }
+
+
+.invCont {
+    min-height: 100vh;
+    background-color: #161716;
+    color: white;
+    display: flex;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+
+  .invContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 0;
+    margin-top: 0;
+  }
+
 .sortingSquare {
+    display: flex;
     background-color: rgba(203, 203, 203, 0.5);;
-    width: 220px;
-    height:600px;
-    top: 15%;
-    left: 21%;
-    position: absolute;
+    width: 15vw;
+    height: 80vh;
+    gap: 1 rem;
     border-radius: 10px;
+    margin-left: 2%;
+    margin-top: 2%;
+    text-align: center;
+    flex-direction: column;
 }
 
+.sortingSquare select {
+    background-color: rgb(236, 236, 236);
+    color: black;
+    width: 12vw;
+    height: 5vh;
+    justify-self: center;
+    margin: 0 auto;
+    border-radius: 10px;
+    font-size: 28px;
+    transition: opacity 0.5s ease, max-height 0.5s ease;
+}
+
+.sortingSquare select.open {
+    opacity: 1; /* Show when 'open' class is added */
+}
+
+.sortingSquare select option {
+    border-radius: 10px;
+}
 .innerSort {
     background-color: rgb(236, 236, 236);
     color: black;
@@ -18,13 +70,83 @@
     text-align: center;
     font-size: 24px;
     margin-top: 4%;
+    
+}
+
+.inventory-sorting-content {
 
 }
 
-.idk {
-    color: black;
-    font-size: 24px;
-    text-align: center;
-    margin: 0 auto;
+.inventory-Info {
+    background-color: rgba(203, 203, 203, 0.5);;
+    width: 62vw;
+    height: 6vh;
+    gap: 0.5 rem;
+    border-radius: 10px;
+    margin-left: 0.75%;
+    margin-top: 2.6%;
+    text-align: left;
+    font-size: 27px;
+    text-indent: 1.5%;
+    flex-direction: row;
+    display: flex;
     
+}
+
+.inventory-capacity {
+    background-color: rgb(236, 236, 236);
+    color: black;
+    width: 190px;
+    height: 30px;
+    border-radius: 10px;
+    
+    text-align: left;
+    font-size: 24px;
+    align-self: center;
+    margin-top: 0.1%;
+    margin-left:auto;
+    margin-right: 1%;
+    text-indent: 5%;
+    
+}
+
+.Inventory-Data-Container {
+    display: flex;
+    flex-direction: start;
+    margin-left: 1%;
+    margin-top: 0.75%;
+    
+}
+
+.info-and-inside {
+    flex-direction: row;
+}
+.actual-inventory {
+    background-color: transparent;
+    width: 62vw;
+    height: 72.5vh;
+    gap: 0.5 rem;
+    border-radius: 10px;
+    margin-left: 0.75%;
+    margin-top: 1%;
+    text-align: left;
+    font-size: 27px;
+    text-indent: 1.5%;
+    flex-direction: row;
+    display: flex;
+    flex-wrap: wrap;
+    overflow-y: auto; /* scrolls vertically if content overflows */
+
+}
+
+.right-side-inv {
+    flex-direction: column;
+}
+  
+.inventory-items {
+    width: 7vw;
+    height: 7vw;
+    background-color: red;
+    margin-top: 2%;
+    margin-left: 2%;
 }
