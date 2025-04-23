@@ -18,7 +18,7 @@
   margin: 0;
   padding: 0;
   position: relative;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 /* Main content wrapper */
@@ -29,6 +29,8 @@
   width: 100%;
   padding: 0;
   margin-top: 0;
+  overflow-y: auto;
+  height: 100vh;
 }
 
 /* Top row with 2 squares */
@@ -57,6 +59,11 @@
   padding: 0;
   border: 1.5px solid #232323;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dungeon-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
 .dungeon-avatar {
@@ -281,44 +288,35 @@
   font-weight: 500;
 }
 
-/* Stats Section */
-.pet-stats {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.stat-row {
-  width: 100%;
-}
-
+/* Pet Card Stats */
 .pet-stat {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.stat-label {
+.pet-stat-label {
   width: 80px;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+  margin-top: 0.3rem;
   color: #888;
-  display: flex;
+  display: block;
   align-items: center;
   gap: 0.4rem;
 }
 
-.stat-icon {
+.pet-stat-icon {
   width: 12px;
   height: 12px;
   border-radius: 50%;
 }
 
-.stat-icon.happiness { background-color: #28a745; }
-.stat-icon.energy { background-color: #ffc107; }
-.stat-icon.hunger { background-color: #dc3545; }
+.pet-stat-icon.happiness { background-color: #28a745; }
+.pet-stat-icon.energy { background-color: #ffc107; }
+.pet-stat-icon.hunger { background-color: #dc3545; }
 
-.stat-bar {
+.pet-stat-bar {
   flex: 1;
   height: 6px;
   background: rgba(255, 255, 255, 0.1);
@@ -326,17 +324,17 @@
   overflow: hidden;
 }
 
-.stat-fill {
+.pet-stat-fill {
   height: 100%;
   border-radius: 4px;
   transition: width 0.3s ease;
 }
 
-.stat-fill.happiness { background-color: #28a745; }
-.stat-fill.energy { background-color: #ffc107; }
-.stat-fill.hunger { background-color: #dc3545; }
+.pet-stat-fill.happiness { background-color: #28a745; }
+.pet-stat-fill.energy { background-color: #ffc107; }
+.pet-stat-fill.hunger { background-color: #dc3545; }
 
-.stat-value {
+.pet-stat-value {
   width: 40px;
   font-size: 0.8rem;
   color: #fff;
@@ -346,49 +344,45 @@
 /* Combat Stats */
 .combat-stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
+  grid-template-columns: repeat(2, 2fr);
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  gap: 0.5rem;
   border-top: 1px solid #232323;
 }
 
 .combat-stat {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
+  gap: 15px;
+  background: rgba(0, 0, 0, 0);
+  padding: 5px 15px;
+  border-radius: 8px;
+  min-width: 150px;
 }
 
-.combat-stat:hover {
-  transform: translateY(-2px);
-}
-
-.combat-icon {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  margin-bottom: 0.2rem;
-}
-
-.combat-icon.health { background-color: #dc3545; }
-.combat-icon.attack { background-color: #ffc107; }
-.combat-icon.defense { background-color: #28a745; }
-
-.combat-value {
-  font-size: 0.9rem;
-  color: #fff;
-  font-weight: bold;
+.combat-stat-info {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
 
 .combat-label {
-  font-size: 0.7rem;
-  color: #888;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 14px;
+  color: #aaa;
+  margin-bottom: 2px;
+}
+
+.combat-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.combat-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
 }
 
 .view-collection {
@@ -541,8 +535,8 @@
   box-shadow: 0 5px 15px rgba(2, 117, 216, 0.4);
 }
 
-/* Stats Card - More compact version */
-.stats-card {
+/* Server Statistics Card */
+.statistics-card {
   background-color: #101011;
   border-radius: 12px;
   padding: 1.25rem;
@@ -553,7 +547,7 @@
   height: 100%;
 }
 
-.stats-top {
+.statistics-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -562,67 +556,55 @@
   border-bottom: 1px solid #232323;
 }
 
-.stats-divider {
-  width: 1px;
-  background-color: #333;
-  margin: 0 1.5rem;
-  align-self: stretch;
-}
-
-.stat-item, .diamond-stat {
-  flex: 1;
+.statistics-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
   text-align: center;
+  padding: 0.5rem;
+  flex: 1;
+  width: 100%;
 }
 
-.stat-icon {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-  transition: transform 0.3s ease;
+.statistics-icon {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 0.5rem;
+  transition: transform 0.3s ease, filter 0.3s ease;
 }
 
-.stat-item:hover .stat-icon {
+.statistics-icon:hover {
   transform: scale(1.1);
+  filter: brightness(1.2);
 }
 
-.diamond-stat .stat-icon {
-  animation: subtle-pop 2s ease-in-out infinite;
-}
-
-@keyframes subtle-pop {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-}
-
-.stat-info {
+.statistics-info {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.25rem;
+  width: 100%;
 }
 
-.stats-bottom {
-  padding-top: 0.5rem;
-  display: flex;
-  justify-content: center;
-}
-
-.diamond-stat {
-  max-width: 280px;
-}
-
-.diamond-stat .stat-value {
+.statistics-value {
   font-size: 1.5rem;
+  color: #fff;
+  font-weight: bold;
+  margin: 0;
+  padding: 0;
 }
 
-.stat-link {
+.statistics-label {
+  font-size: 0.85rem;
+  color: #888;
+  width: 100%;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+.statistics-link {
+  margin-top: 0.5rem;
   background: none;
   border: none;
   color: #0275D8;
@@ -634,19 +616,10 @@
   border-radius: 4px;
 }
 
-.stat-link:hover {
+.statistics-link:hover {
   color: #0056b3;
   transform: translateY(-1px);
   background-color: rgba(2, 117, 216, 0.1);
-}
-
-/* Make sure the values in the top section are also smaller */
-.stat-item .stat-value {
-  font-size: 1.5rem;
-}
-
-.stat-item .stat-label {
-  font-size: 0.85rem;
 }
 
 /* Diamond Sale Card */
@@ -850,4 +823,105 @@
   padding: 1.25rem;
   border: 1.5px solid #232323;
   min-height: 100px;
+}
+
+/* Make sure sidebar stays fixed */
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+/* Custom Scrollbar */
+.main-content::-webkit-scrollbar {
+  width: 8px;
+  transition: all 0.3s ease;
+}
+
+.main-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.main-content:not(:hover)::-webkit-scrollbar-thumb {
+  opacity: 0;
+}
+
+/* Fix Server Statistics */
+.statistics-card .statistics-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0.5rem;
+  flex: 1;
+  width: 100%;
+}
+
+.statistics-card .statistics-icon {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 0.5rem;
+}
+
+.statistics-card .statistics-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.statistics-card .statistics-value {
+  font-size: 1.5rem;
+  color: #fff;
+  font-weight: bold;
+  margin: 0;
+  padding: 0;
+}
+
+.statistics-card .statistics-label {
+  font-size: 0.85rem;
+  color: #888;
+  width: 100%;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+.statistics-card .statistics-link {
+  margin-top: 0.5rem;
+}
+
+/* Sidebar Scrollbar */
+.sidebar::-webkit-scrollbar {
+  width: 8px;
+  transition: all 0.3s ease;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.sidebar:not(:hover)::-webkit-scrollbar-thumb {
+  opacity: 0;
 } 

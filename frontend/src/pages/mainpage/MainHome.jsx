@@ -11,6 +11,11 @@ import pawIcon from '../../assets/MAIN/pets.png';
 import logo from '../../assets/MAIN/logo.png';
 import avatarExample from '../../assets/MAIN/avatar_exaple.gif';
 
+import healthIcon from '../../assets/MAIN/health.png';
+import attackIcon from '../../assets/MAIN/battle.png';
+import defenseIcon from '../../assets/MAIN/defence.png';
+import agilityIcon from '../../assets/MAIN/agility.png';
+
 const MainHome = () => {
   const handleMenuClick = () => {
     console.log('Menu clicked');
@@ -66,7 +71,7 @@ const MainHome = () => {
               <button className="start-dungeon">Start Adventure</button>
             </div>
           </div>
-          
+
           <div className="pet-card">
             <div className="pet-header">
               <div className="pet-header-group">
@@ -95,58 +100,74 @@ const MainHome = () => {
               <div className="pet-stats">
                 <div className="stat-row">
                   <div className="pet-stat">
-                    <div className="stat-label">
-                      <span className="stat-icon happiness"></span>
+                    <div className="pet-stat-label">
+                      <span className="pet-stat-icon happiness"></span>
                       Happiness
                     </div>
-                    <div className="stat-bar">
-                      <div className="stat-fill happiness" style={{ width: '85%' }}></div>
+                    <div className="pet-stat-bar">
+                      <div className="pet-stat-fill happiness" style={{ width: '85%' }}></div>
                     </div>
-                    <span className="stat-value">85%</span>
+                    <span className="pet-stat-value">85%</span>
                   </div>
                 </div>
 
                 <div className="stat-row">
                   <div className="pet-stat">
-                    <div className="stat-label">
-                      <span className="stat-icon energy"></span>
+                    <div className="pet-stat-label">
+                      <span className="pet-stat-icon energy"></span>
                       Energy
                     </div>
-                    <div className="stat-bar">
-                      <div className="stat-fill energy" style={{ width: '70%' }}></div>
+                    <div className="pet-stat-bar">
+                      <div className="pet-stat-fill energy" style={{ width: '70%' }}></div>
                     </div>
-                    <span className="stat-value">70%</span>
+                    <span className="pet-stat-value">70%</span>
                   </div>
                 </div>
 
                 <div className="stat-row">
                   <div className="pet-stat">
-                    <div className="stat-label">
-                      <span className="stat-icon hunger"></span>
+                    <div className="pet-stat-label">
+                      <span className="pet-stat-icon hunger"></span>
                       Hunger
                     </div>
-                    <div className="stat-bar">
-                      <div className="stat-fill hunger" style={{ width: '95%' }}></div>
+                    <div className="pet-stat-bar">
+                      <div className="pet-stat-fill hunger" style={{ width: '95%' }}></div>
                     </div>
-                    <span className="stat-value">95%</span>
+                    <span className="pet-stat-value">95%</span>
                   </div>
                 </div>
 
                 <div className="combat-stats">
                   <div className="combat-stat">
-                    <span className="combat-icon health"></span>
-                    <span className="combat-value">2,147,483,647</span>
-                    <span className="combat-label">HP</span>
+                    <img src={healthIcon} alt="Health" className="combat-icon" />
+                    <div className="combat-stat-info">
+                      <span className="combat-label">Health</span>
+                      <span className="combat-value">2,500</span>
+                    </div>
                   </div>
+
                   <div className="combat-stat">
-                    <span className="combat-icon attack"></span>
-                    <span className="combat-value">32,767</span>
-                    <span className="combat-label">ATK</span>
+                    <img src={attackIcon} alt="Attack" className="combat-icon" />
+                    <div className="combat-stat-info">
+                      <span className="combat-label">Attack</span>
+                      <span className="combat-value">350</span>
+                    </div>
                   </div>
+
                   <div className="combat-stat">
-                    <span className="combat-icon defense"></span>
-                    <span className="combat-value">24,576</span>
-                    <span className="combat-label">DEF</span>
+                    <img src={defenseIcon} alt="Defense" className="combat-icon" />
+                    <div className="combat-stat-info">
+                      <span className="combat-label">Defense</span>
+                      <span className="combat-value">275</span>
+                    </div>
+                  </div>
+
+                  <div className="combat-stat">
+                    <img src={agilityIcon} alt="Agility" className="combat-icon" />
+                    <div className="combat-stat-info">
+                      <span className="combat-label">Agility</span>
+                      <span className="combat-value">180</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -195,42 +216,42 @@ const MainHome = () => {
 
             <button className="claim-reward">Claim Reward</button>
           </div>
-
-          <div className="stats-card">
-            <div className="stats-top">
-              <div className="stat-item">
-                <img src={peopleIcon} alt="Players" className="stat-icon" />
-                <div className="stat-info">
-                  <span className="stat-value">32,767</span>
-                  <span className="stat-label">Playing</span>
+          
+          <div className="statistics-card">
+            <div className="statistics-top">
+              <div className="statistics-item">
+                <img src={peopleIcon} alt="Players" className="statistics-icon" />
+                <div className="statistics-info">
+                  <span className="statistics-value">32,767</span>
+                  <span className="statistics-label">Playing</span>
                 </div>
-                <button className="stat-link">View Players</button>
+                <button className="statistics-link">View Players</button>
               </div>
 
-              <div className="stats-divider"></div>
+              <div className="statistics-divider"></div>
 
-              <div className="stat-item">
-                <img src={checkmarkIcon} alt="Tasks" className="stat-icon" />
-                <div className="stat-info">
-                  <span className="stat-value">127</span>
-                  <span className="stat-label">Task Completed</span>
+              <div className="statistics-item">
+                <img src={checkmarkIcon} alt="Tasks" className="statistics-icon" />
+                <div className="statistics-info">
+                  <span className="statistics-value">127</span>
+                  <span className="statistics-label">Task Completed</span>
                 </div>
-                <button className="stat-link">View Tasks</button>
+                <button className="statistics-link">View Tasks</button>
               </div>
             </div>
 
-            <div className="stats-bottom">
-              <div className="diamond-stat">
-                <img src={diamondsIcon} alt="Diamonds" className="stat-icon diamond-icon" />
-                <div className="stat-info">
-                  <span className="stat-value">2,147,483,647</span>
-                  <span className="stat-label">Diamonds Remaining</span>
+            <div className="statistics-bottom">
+              <div className="statistics-item">
+                <img src={diamondsIcon} alt="Diamonds" className="statistics-icon diamond-icon" />
+                <div className="statistics-info">
+                  <span className="statistics-value">2,147,483,647</span>
+                  <span className="statistics-label">Diamonds Remaining</span>
                 </div>
-                <button className="stat-link">Spend Diamonds</button>
+                <button className="statistics-link">Spend Diamonds</button>
               </div>
             </div>
           </div>
-
+          
           <div className="sale-card">
             <div className="sale-header">
               <div className="diamond-icons">
