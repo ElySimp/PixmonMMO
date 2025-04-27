@@ -1,0 +1,250 @@
+.filter-container {
+    display: flex;
+    gap: 60px; /* jarak antara Role dan Status */
+    align-items: center;
+    margin-top: 12px;
+    margin-left: 120px; /* Menyesuaikan dengan posisi bawah "Support Service" */
+  }
+  
+  .filter-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .filter-item select {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background-color: #1e1e1e;
+    color: white;
+  }
+  
+  .role-label,
+  .status-label {
+    color: white;
+  }
+  
+  .card-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding-top: 20px;
+  }
+  
+  .pet-card {
+    position: relative;
+    background: linear-gradient(145deg, #1b1b1b, #0f0f0f);
+    color: #00f6ff;
+    border-radius: 18px;
+    padding: 18px;
+    width: 260px;
+    margin: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 0 12px rgba(0, 255, 255, 0.3);
+    overflow: hidden;
+    z-index: 1;
+    border: 1px solid #0ff;
+    transition: all 0.3s ease;
+  }
+  
+  .pet-card::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    background: conic-gradient(from 0deg at 50% 50%, #0ff, #f0f, #ff0, #0ff);
+    background-size: 300% 300%;
+    z-index: 0; /* <--- ini penting, biar gak nutup tombol */
+    filter: blur(8px);
+    border-radius: 20px;
+    animation: cyberpulse 8s linear infinite;
+    opacity: 0.4;
+  }
+  
+  
+  @keyframes cyberpulse {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  .pet-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 40px rgba(0, 255, 255, 0.8), 0 0 20px #f0f, 0 0 10px #ff0;
+  }  
+  
+  .select-button-container {
+    margin-top: auto;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding-top: 12px;
+  }
+  
+  .select-button {
+    background: radial-gradient(circle, #00f6ff 0%, #0080ff 100%);
+    color: black;
+    padding: 10px 22px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    letter-spacing: 1px;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 0 12px #00f6ff, 0 0 24px #f0f;
+    transition: all 0.25s ease;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .select-button:hover {
+    background: radial-gradient(circle, #fff 0%, #00f6ff 100%);
+    color: #0f0f0f;
+    box-shadow: 0 0 25px #00f6ff, 0 0 35px #ff00ff;
+  }
+  
+  
+  .pet-name {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+  }
+  
+  .pet-image {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    margin: 12px 0;
+  }
+  
+  .pet-info {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  
+  .pet-stats > div {
+    font-size: 14px;
+    margin: 2px 0;
+  }
+  
+  .select-button-container {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.select-button {
+  padding: 10px 20px;
+  background-color: #00c9a7;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.select-button:hover {
+  background-color: #009e82;
+}
+
+  
+  .pet-card {
+    position: relative;
+    background-color: #1e1e1e;
+    color: white;
+    border-radius: 12px;
+    border: 1px solid #333;
+    padding: 16px;
+    width: 240px;
+    margin: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .role-icon {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 20px;
+  }
+  
+  .pet-image {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    margin: 12px 0;
+  }
+  
+  .pet-info,
+  .pet-stats {
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  
+  .select-button-container {
+    margin-top: 10px;
+  }
+  
+  .select-button {
+    background-color: #007bff;
+    border: none;
+    padding: 6px 14px;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .stat-line {
+    margin-bottom: 8px;
+  }
+  
+  .stat-label {
+    font-size: 12px;
+    margin-bottom: 2px;
+  }
+  
+  .stat-bar-background {
+    width: 100%;
+    height: 6px;
+    background-color: #444;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .stat-bar-fill {
+    height: 100%;
+    background: linear-gradient(to right, #00c6ff, #0072ff);
+    border-radius: 4px;
+  }
+  
+  .role-icon {
+    font-size: 24px;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+  }
+
+  .reset-button {
+    padding: 6px 12px;
+    background-color: #dc2626;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 1rem;
+  }
+  
+  .reset-button:hover {
+    background-color: #b91c1c;
+  }
+
+ 
