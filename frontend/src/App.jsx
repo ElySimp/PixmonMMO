@@ -4,8 +4,8 @@ import Home from '../pages/welcome/welcome';
 import Login from '../pages/loginregist/Login';
 import Register from '../pages/loginregist/Register';
 import Dashboard from './Dashboard';
+import Miscprofile from '../pages/miscpage/Miscprofile'; 
 
-// Protected Route component
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" />;
@@ -26,6 +26,15 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Miscprofile />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
 }
