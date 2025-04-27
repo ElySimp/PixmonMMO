@@ -9,21 +9,24 @@ import MainHome from './pages/mainpage/MainHome.jsx'
 import MainInv from './pages/mainpage/MainInv.jsx'
 import MiscQuest from './pages/miscpage/MiscQuest.jsx'
 import MiscProfile from './pages/miscpage/MiscProfile.jsx' 
+import { AuthProvider } from './context/AuthContext'
 
 import './index.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Welcome />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/main" element={<MainHome />} />
-        <Route path="/inventory" element={<MainInv />} />
-        <Route path="/quest" element={<MiscQuest />} />
-        <Route path="/profile" element={<MiscProfile />} />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Welcome />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/main" element={<MainHome />} />
+          <Route path="/inventory" element={<MainInv />} />
+          <Route path="/quest" element={<MiscQuest />} />
+          <Route path="/profile" element={<MiscProfile />} />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   </StrictMode>,
 )

@@ -75,10 +75,20 @@
   position: fixed;
   top: 9.5rem;
   left: calc(50% + 0.57rem);
-  background-color: #f0f0f0;
-  border: 1px solid #ff1a1a;
+  background-color: #ffebee;
+  border: 1px solid #ef9a9a;
   color: #c62828;
-  padding: 0.5rem;
+  padding: 10px;
   border-radius: 4px;
   text-align: center;
+  margin-bottom: 16px;
+}
+
+.success-message {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  border: 1px solid #a5d6a7;
 } 

@@ -1,14 +1,27 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import './Login.css'
 
 function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
     password: ''
   })
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // Check for success message in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const message = params.get('message');
+    if (message) {
+      setSuccessMessage(message);
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -18,13 +31,20 @@ function Login() {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Check hardcoded admin credentials
-    if (formData.username === 'ely' && formData.password === 'ely123') {
-      navigate('/main'); // Navigate to main home page after successful login
-    } else {
-      setError('Invalid username or password')
+    setLoading(true);
+    setError('');
+    
+    try {
+      const result = await login(formData.username, formData.password);
+      if (!result.success) {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError('Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -34,6 +54,7 @@ function Login() {
         <h2>Login to Pixmon</h2>
         <form onSubmit={handleSubmit}>
           {error && <div className="error-message">{error}</div>}
+          {successMessage && <div className="success-message">{successMessage}</div>}
           <div className="form-group-login">
             <label htmlFor="username">Username</label>
             <input
@@ -56,8 +77,17 @@ function Login() {
               required
             />
           </div>
-          <button type="submit" className="login-button">Login</button>
+          <button 
+            type="submit" 
+            className="login-button"
+            disabled={loading}
+          >
+            {loading ? 'Loading...' : 'Login'}
+          </button>
         </form>
+        <p className="register-link">
+          Don't have an account? <Link to="/register">Register here</Link>
+        </p>
       </div>
     </div>
   )

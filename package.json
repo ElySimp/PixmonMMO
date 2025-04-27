@@ -1,0 +1,25 @@
+{
+  "name": "pixmonmmo",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "frontend": "cd frontend && npm run dev",
+    "backend": "node backend/server.js",
+    "dev": "concurrently \"npm run frontend\" \"npm run backend\"",
+    "build": "cd frontend && npm run build",
+    "lint": "cd frontend && npm run lint",
+    "preview": "cd frontend && npm run preview",
+    "start": "node backend/server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.14.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
