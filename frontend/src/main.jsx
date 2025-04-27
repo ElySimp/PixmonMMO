@@ -7,6 +7,7 @@ import Login from './pages/loginregist/Login.jsx'
 import Register from './pages/loginregist/Register.jsx'
 import MainHome from './pages/mainpage/MainHome.jsx'
 import MainInv from './pages/mainpage/MainInv.jsx'
+import MiscPets from "./pages/miscpage/MiscPets.jsx";
 import './index.css'
 
 createRoot(document.getElementById('root')).render(
@@ -18,6 +19,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/register" element={<Register />} />
         <Route path="/main" element={<MainHome />} />
         <Route path="/inventory" element={<MainInv />} />
+        <Route path="/pets" element={<MiscPets />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,
