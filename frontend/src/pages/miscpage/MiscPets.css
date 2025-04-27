@@ -32,7 +32,7 @@
     padding-top: 20px;
   }
   
-  .pet-card {
+  .misc-pet-card {
     position: relative;
     background: linear-gradient(145deg, #1b1b1b, #0f0f0f);
     color: #00f6ff;
@@ -51,7 +51,7 @@
     transition: all 0.3s ease;
   }
   
-  .pet-card::before {
+  .misc-pet-card::before {
     content: '';
     position: absolute;
     top: -10px;
@@ -74,7 +74,7 @@
     100% { background-position: 0% 50%; }
   }
   
-  .pet-card:hover {
+  .misc-pet-card:hover {
     transform: scale(1.05);
     box-shadow: 0 0 40px rgba(0, 255, 255, 0.8), 0 0 20px #f0f, 0 0 10px #ff0;
   }  
@@ -154,7 +154,7 @@
 }
 
   
-  .pet-card {
+  .misc-pet-card {
     position: relative;
     background-color: #1e1e1e;
     color: white;
@@ -198,53 +198,60 @@
     background-color: #007bff;
     border: none;
     padding: 6px 14px;
+    border-radius: 4px;
     color: white;
-    border-radius: 6px;
+    font-weight: bold;
     cursor: pointer;
+    transition: background-color 0.3s;
   }
-
+  
+  .select-button:hover {
+    background-color: #0056b3;
+  }
+  
   .stat-line {
-    margin-bottom: 8px;
+    margin: 4px 0;
+    width: 100%;
   }
   
   .stat-label {
-    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
     margin-bottom: 2px;
   }
   
   .stat-bar-background {
-    width: 100%;
-    height: 6px;
-    background-color: #444;
+    height: 8px;
+    background-color: #333;
     border-radius: 4px;
     overflow: hidden;
   }
   
   .stat-bar-fill {
     height: 100%;
-    background: linear-gradient(to right, #00c6ff, #0072ff);
+    background-color: #00c9a7;
     border-radius: 4px;
   }
   
   .role-icon {
-    font-size: 24px;
     position: absolute;
     top: 10px;
     left: 10px;
+    font-size: 20px;
   }
-
+  
   .reset-button {
-    padding: 6px 12px;
-    background-color: #dc2626;
+    background-color: #dc3545;
     color: white;
     border: none;
-    border-radius: 6px;
+    padding: 8px 12px;
+    border-radius: 8px;
     cursor: pointer;
-    margin-top: 1rem;
+    transition: background-color 0.3s;
   }
   
   .reset-button:hover {
-    background-color: #b91c1c;
+    background-color: #c82333;
   }
 
  

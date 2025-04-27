@@ -156,7 +156,7 @@ const MiscPets = () => {
             };
 
             return (
-              <div className="pet-card" key={index}>
+              <div className="misc-pet-card" key={index}>
                 <div className="role-icon">
                   {(() => {
                     switch (pet.role.toLowerCase()) {

@@ -26,7 +26,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/inventory" element={<MainInv />} />
           <Route path="/quest" element={<MiscQuest />} />
           <Route path="/profile" element={<MiscProfile />} />
-          <Route path="/pets" element={<MainPets />} />
+          <Route path="/pets" element={<MiscPets />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
