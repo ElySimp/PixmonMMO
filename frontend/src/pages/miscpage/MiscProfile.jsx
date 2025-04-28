@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './MiscProfile.css'; 
 import Topbar from '../../components/Topbar';
 import Sidebar from '../../components/Sidebar';
+import defaultWallpaper from '../../assets/backgrounds/hCUwLQ.png'; // Import wallpaper default
+import favoritePetImage from '../../assets/MAIN/pets_sample.png'; 
+import trophyImage from '../../assets/MAIN/trophy.png';
 
 const MiscProfile = () => {
-  // Handler functions
   const handleMenuClick = () => console.log('Menu clicked');
   const handleSupportClick = () => console.log('Support clicked');
   const handleFriendsClick = () => console.log('Friends clicked');
@@ -12,10 +14,35 @@ const MiscProfile = () => {
   const handleChatClick = () => console.log('Chat clicked');
   const handleNotificationClick = () => console.log('Notifications clicked');
   const handleEggClick = () => console.log('Egg clicked');
+
+  const [wallpaper, setWallpaper] = useState(defaultWallpaper); // Mulai dengan wallpaper default
+  const [favoritePet, setFavoritePet] = useState('Crocodile'); // Nama hewan peliharaan favorit default
   
-  // For wallpaper upload demo
-  const [wallpaper, setWallpaper] = useState(null);
-  
+  const [characterName, setCharacterName] = useState('Character name'); // Nama karakter default
+  const [isEditing, setIsEditing] = useState(false); // Mode editing
+
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [xpValue, setXpValue] = useState(10);
+  const [maxXp] = useState(100);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setIsLoaded(true);
+    }, 300);
+  }, []);
+
+  const handleStatIncrement = (statType) => {
+    console.log(`Increasing ${statType} stat`);
+  };
+
+  const handleEditProfile = () => {
+    setIsEditing(true);
+  };
+
+  const handleSaveChanges = () => {
+    setIsEditing(false);
+  };
+
   const handleWallpaperChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -24,10 +51,13 @@ const MiscProfile = () => {
     }
   };
 
+  const handleNameChange = (e) => {
+    setCharacterName(e.target.value);
+  };
+
   return (
     <div className="main-container">
       <Sidebar />
-      
       <div className="main-content profile-main-content">
         <Topbar
           onMenuClick={handleMenuClick}
@@ -39,153 +69,159 @@ const MiscProfile = () => {
           onEggClick={handleEggClick}
         />
 
-        <div className="profile-page">
+        <div className={`misc-profile-profile-page ${isLoaded ? 'loaded' : ''}`}>
           {/* Edit Profile button */}
-          <div className="profile-edit-button-container">
-            <button className="profile-edit-btn">Edit Profile</button>
+          <div className="misc-profile-profile-edit-button-container">
+            {isEditing ? (
+              <button className="misc-profile-profile-edit-btn" onClick={handleSaveChanges}>Save Changes</button>
+            ) : (
+              <button className="misc-profile-profile-edit-btn" onClick={handleEditProfile}>Edit Profile</button>
+            )}
           </div>
 
           {/* Profile container with wallpaper */}
           <div 
-            className="profile-wallpaper-container" 
-            style={wallpaper ? { backgroundImage: url({wallpaper}) } : {}}
+            className="misc-profile-profile-wallpaper-container" 
+            style={{ backgroundImage: `url(${wallpaper})` }}
           >
-            {/* Overlay transparan */}
-            <div className="wallpaper-overlay"></div>
+            <div className="misc-profile-wallpaper-overlay"></div>
 
-            {/* Wallpaper upload button (hidden input) */}
-            <label className="wallpaper-upload-btn">
-              <input 
-                type="file" 
-                accept="image/*" 
-                onChange={handleWallpaperChange} 
-                style={{ display: 'none' }}
-              />
-              <span>Change Wallpaper</span>
-            </label>
-            
-            {/* Character profile section inside the wallpaper container */}
-            <div className="profile-inner-container">
-              <div className="profile-character-container">
-                <div className="profile-character-avatar">
-                  <img src="/pixel-character.png" alt="Character" className="pixel-character" />
+            {isEditing && (
+              <div className="misc-profile-edit-wallpaper-container">
+                <label className="wallpaper-upload-label">
+                  Change Wallpaper:
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleWallpaperChange} 
+                    style={{ display: 'block', marginTop: '5px' }}
+                  />
+                </label>
+              </div>
+            )}
+
+            <div className="misc-profile-profile-inner-container">
+             <div className="misc-profile-profile-character-container">
+                <div className="misc-profile-profile-character-avatar">
+                <img src="/dummy1.jpg" alt="Character" className="misc-profile-pixel-character" />
                 </div>
-                <div className="character-name">Character name</div>
+
+                {isEditing ? (
+                  <input 
+                    type="text" 
+                    value={characterName} 
+                    onChange={handleNameChange} 
+                    className="misc-profile-character-name-input"
+                  />
+                ) : (
+                  <div className="misc-profile-character-name">{characterName}</div>
+                )}
               </div>
 
-              <div className="profile-stats-container">
-                <div className="level-display">
-                  <span className="stat-label">Level</span>
-                  <span className="stat-value">10/100</span>
+              <div className="misc-profile-profile-stats-container">
+                <div className="misc-profile-level-display">
+                  <span className="misc-profile-stat-label">Level</span>
+                  <span className="misc-profile-stat-value">10/100</span>
                 </div>
                 
-                <div className="xp-container">
-                  <span className="stat-label">Xp</span>
-                  <div className="xp-bar">
-                    <div className="xp-fill" style={{ width: '10%' }}></div>
+                <div className="misc-profile-xp-container">
+                  <span className="misc-profile-stat-label">Xp</span>
+                  <div className="misc-profile-xp-bar">
+                    <div 
+                      className="misc-profile-xp-fill" 
+                      style={{ '--fill-width': `${xpValue}%` }}
+                    ></div>
                   </div>
-                  <span className="stat-value">10/100</span>
+                  <span className="misc-profile-stat-value">{xpValue}/{maxXp}</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Status message */}
-          <div className="profile-status-message">
+          <div className="misc-profile-profile-status-message">
             Tetap Semangat jangan putus asa, yang penting mah udah usaha :(
-            <button className="edit-status-btn">Edit</button>
+            <button className="misc-profile-edit-status-btn">Edit</button>
           </div>
 
           {/* Stats section */}
-          <div className="profile-stats-grid">
-            <div className="stat-box">
-              <div className="stat-info">
-                <div className="stat-icon heart-icon">❤</div>
-                <div className="stat-name">Max Hp</div>
+          <div className="misc-profile-profile-stats-grid">
+            {/* Semua stat box */}
+            {['hp', 'damage', 'agility'].map((stat, index) => (
+              <div 
+                key={stat}
+                className={`misc-profile-stat-box ${isLoaded ? 'animated' : ''}`}
+                style={{ '--animation-order': index + 1 }}
+              >
+                <div className="misc-profile-stat-info">
+                  <div className={`stat-icon ${stat}-icon`}>
+                    {stat === 'hp' ? '❤' : stat === 'damage' ? '💪' : '⚡'}
+                  </div>
+                  <div className="misc-profile-stat-name">
+                    {stat === 'hp' ? 'Max Hp' : stat === 'damage' ? 'Bonus Damage' : 'Agility'}
+                  </div>
+                </div>
+                <button 
+                  className="misc-profile-stat-plus-btn"
+                  onClick={() => handleStatIncrement(stat)}
+                >
+                  <div className="misc-profile-plus-icon">+</div>
+                </button>
+                <div className="misc-profile-stat-bonus">+ 0,5% {stat.charAt(0).toUpperCase() + stat.slice(1)} / SP</div>
               </div>
-              <button className="stat-plus-btn">
-                <div className="plus-icon">+</div>
-              </button>
-              <div className="stat-bonus">+ 0,5% Hp / SP</div>
-            </div>
-            
-            <div className="stat-box">
-              <div className="stat-info">
-                <div className="stat-icon muscle-icon">💪</div>
-                <div className="stat-name">Bonus Damage</div>
-              </div>
-              <button className="stat-plus-btn">
-                <div className="plus-icon">+</div>
-              </button>
-              <div className="stat-bonus">+ 0,5% Damage / SP</div>
-            </div>
-            
-            <div className="stat-box">
-              <div className="stat-info">
-                <div className="stat-icon lightning-icon">⚡</div>
-                <div className="stat-name">Agility</div>
-              </div>
-              <button className="stat-plus-btn">
-                <div className="plus-icon">+</div>
-              </button>
-              <div className="stat-bonus">+ 0,5% Agility / SP</div>
-            </div>
+            ))}
           </div>
 
-          {/* Skill points */}
-          <div className="skill-points-container">
-            <span className="skill-points-label">Skill Points</span>
-            <span className="skill-points-value">0/10000</span>
+          {/* Skill Points */}
+          <div className="misc-profile-skill-points-container">
+            <span className="misc-profile-skill-points-label">Skill Points</span>
+            <span className="misc-profile-skill-points-value">0/100</span>
           </div>
 
-          {/* Bottom section - Pet and Achievements */}
-          <div className="bottom-section">
+          {/* Bottom section */}
+          <div className="misc-profile-bottom-section">
             {/* Favorite Pet */}
-            <div className="favorite-pet-container">
-              <h3 className="section-title">Favorite Pet</h3>
-              <div className="pet-display">
-                <img src="/crocodile-pet.png" alt="Crocodile" className="pet-image" />
+            <div className={`misc-profile-favorite-pet-container ${isLoaded ? 'animated' : ''}`}>
+              <h3 className="misc-profile-section-title">Favorite Pet</h3>
+              <div className="misc-profile-pet-display">
+              <img src={favoritePetImage} alt="Crocodile" className="misc-profile-pet-image" />
                 
-                <div className="pet-info">
-                  <div className="pet-detail">
-                    <span className="pet-label">Name</span>
-                    <span className="pet-value">Crocodile</span>
+                <div className="misc-profile-pet-info">
+                  <div className="misc-profile-pet-detail">
+                    <span className="misc-profile-pet-label">Name</span>
+                    <span className="misc-profile-pet-value">Crocodile</span>
                   </div>
-                  
-                  <div className="pet-detail">
-                    <span className="pet-label">Level</span>
-                    <span className="pet-value">100/100</span>
+                  <div className="misc-profile-pet-detail">
+                    <span className="misc-profile-pet-label">Level</span>
+                    <span className="misc-profile-pet-value">100/100</span>
                   </div>
-                  
-                  <div className="pet-detail">
-                    <span className="pet-label">Rarity</span>
-                    <span className="pet-value">Legendary</span>
+                  <div className="misc-profile-pet-detail">
+                    <span className="misc-profile-pet-label">Rarity</span>
+                    <span className="misc-profile-pet-value">Legendary</span>
                   </div>
                 </div>
               </div>
-              <button className="edit-pet-btn">Edit</button>
+              <button className="misc-profile-edit-pet-btn">Edit</button>
             </div>
 
             {/* Achievements */}
-            <div className="achievements-container">
-              <h3 className="section-title">Achievements</h3>
-              <div className="achievements-grid">
-                <div className="achievement-item">
-                  <div className="achievement-icon game-icon"></div>
-                  <div className="achievement-text">Have Played The Game For 1000 Match</div>
+            <div className={`misc-profile-achievements-container ${isLoaded ? 'animated' : ''}`}>
+              <h3 className="misc-profile-section-title">Achievements</h3>
+              <div className="misc-profile-achievements-grid">
+                <div className="misc-profile-achievement-item">
+                <img src={trophyImage} alt="misc-profile-achievement-trophy"className="misc-profile-achievement-icon" />
+                  <div className="misc-profile-achievement-text">Have Played The Game For 1000 Match</div>
                 </div>
-                
-                <div className="achievement-item">
-                  <div className="achievement-icon pets-icon"></div>
-                  <div className="achievement-text">Have Collected 100 Pets</div>
+                <div className="misc-profile-achievement-item">
+                <img src={trophyImage} alt="misc-profile-achievement Trophy" className="misc-profile-achievement-icon" />
+                  <div className="misc-profile-achievement-text">Have Collected 100 Pets</div>
                 </div>
-                
-                <div className="achievement-item">
-                  <div className="achievement-icon level-icon"></div>
-                  <div className="achievement-text">Has Reached Max Level</div>
+                <div className="misc-profile-achievement-item">
+                <img src={trophyImage} alt="misc-profile-achievement Trophy" className="misc-profile-achievement-icon" />
+                  <div className="misc-profile-achievement-text">Has Reached Max Level</div>
                 </div>
               </div>
-              <button className="edit-achievements-btn">Edit</button>
+              <button className="misc-profile-edit-achievements-btn">Edit</button>
             </div>
           </div>
         </div>

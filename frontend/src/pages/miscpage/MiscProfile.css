@@ -1,4 +1,4 @@
-.profile-page {
+.misc-profile-profile-page {
   flex: 1;
   padding: 0;
   position: relative;
@@ -6,14 +6,14 @@
 }
 
 /* Profile edit button */
-.profile-edit-button-container {
+.misc-profile-profile-edit-button-container {
   position: absolute;
   top: 30px;
   right: 20px;
   z-index: 10;
 }
 
-.profile-edit-btn {
+.misc-profile-profile-edit-btn {
   background-color: #007bff;
   color: white;
   border: none;
@@ -21,10 +21,19 @@
   padding: 8px 20px;
   font-size: 14px;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Standardized button hover effect */
+.misc-profile-profile-edit-btn:hover, .misc-profile-wallpaper-upload-btn:hover {
+  background-color: #0056b3;
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
 /* Profile wallpaper container */
-.profile-wallpaper-container {
+.misc-profile-profile-wallpaper-container {
   height: 400px;
   width: 100%;
   background-color: #101010;
@@ -36,9 +45,14 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  transition: all 0.5s ease;
 }
 
-.wallpaper-overlay {
+.misc-profile-profile-wallpaper-container:hover .misc-profile-wallpaper-overlay {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.misc-profile-wallpaper-overlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -46,33 +60,36 @@
   height: 100%;
   background-color: rgba(0, 0, 0, 0); /* ✅ Transparan hitam 50% */
   z-index: 1;
+  transition: background-color 0.4s ease;
 }
 
-.wallpaper-upload-btn {
+.misc-profile-wallpaper-upload-btn {
   position: absolute;
-  top : 11px;
+  top: 11px;
   right: 120px;
-  background-color: #007bff ;
+  background-color: #007bff;
   color: white;
   padding: 8px 16px;
   border-radius: 20px;
   cursor: pointer;
   font-size: 13px;
   z-index: 5;
+  transition: all 0.3s ease;
+  opacity: 0.8;
 }
 
-.profile-inner-container {
+.misc-profile-profile-inner-container {
   width: 60%;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  z-index: 8  ;
+  z-index: 8;
 }
 
 /* Character profile section */
-.profile-character-container {
+.misc-profile-profile-character-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -81,7 +98,7 @@
   margin-left: 0%;
 }
 
-.profile-character-avatar {
+.misc-profile-profile-character-avatar {
   width: 150px;
   height: 150px;
   border-radius: 50%;
@@ -90,21 +107,65 @@
   justify-content: center;
   align-items: center;
   overflow: hidden;
+  border: 3px solid transparent;
+  transition: all 0.4s ease;
+  animation: misc-profile-pulse 3s infinite;
 }
 
-.pixel-character {
-  width: 60%;
-  height: auto;
+@keyframes misc-profile-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(0, 123, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+  }
 }
 
-.character-name {
-  
+.misc-profile-profile-character-avatar:hover {
+  border-color: #007bff;
+  transform: scale(1.05);
+}
+
+.misc-profile-pixel-character {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /*   supaya gambar mengisi penuh tanpa aneh */
+  border-radius: 50%; /* Biar jadi bulat */
+}
+
+
+.misc-profile-profile-character-avatar:hover .misc-profile-pixel-character {
+  transform: scale(1.1); /* Removed the rotate(5deg) */
+}
+
+.misc-profile-character-name {
   margin-top: 10px;
   font-size: 18px;
   color: white;
+  position: relative;
+  transition: all 0.3s ease;
 }
 
-.profile-stats-container {
+.misc-profile-character-name:after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background-color: #007bff;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.misc-profile-character-name:hover:after {
+  width: 100%;
+}
+
+.misc-profile-profile-stats-container {
   flex: 0 0 75%;
   display: flex;
   flex-direction: column;
@@ -112,25 +173,35 @@
   padding-left: 20px;
 }
 
-.level-display {
+.misc-profile-level-display {
   display: flex;
   margin-top: 5px;
   align-items: center;
-  gap: 5%; 
+  gap: 5%;
 }
 
-
-.stat-label {
+.misc-profile-stat-label {
   font-size: 25px;
   color: white;
+  transition: color 0.3s ease;
 }
 
-.stat-value {
+.misc-profile-stat-label:hover {
+  color: #007bff;
+}
+
+.misc-profile-stat-value {
   font-size: 25px;
   color: white;
+  transition: all 0.3s ease;
 }
 
-.xp-container {
+.misc-profile-stat-value:hover {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  transform: scale(1.1);
+}
+
+.misc-profile-xp-container {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -138,33 +209,77 @@
   padding: 0;
 }
 
-.xp-bar {
+.misc-profile-xp-bar {
   height: 18px;
   flex: 1;
   background-color: #333;
   border-radius: 10px;
   overflow: hidden;
+  position: relative;
 }
 
-.xp-fill {
+.misc-profile-xp-fill {
   height: 100%;
   background-color: #ff3333;
   border-radius: 10px;
+  position: relative;
+  transition: width 3s ease-out;
+  animation: misc-profile-fillAnimation 4s ease-out forwards;
+}
+
+@keyframes misc-profile-fillAnimation {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: var(--fill-width, 50%); /* Default 50% jika tidak di-set */
+  }
+}
+
+.misc-profile-xp-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: misc-profile-shimmer 3s infinite;
+  transform: translateX(-100%);
+}
+
+@keyframes misc-profile-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* Status message */
-.profile-status-message {
+.misc-profile-profile-status-message {
   margin: 20px;
   padding: 35px;
   background-color: #101010;
   border-radius: 10px;
   position: relative;
+  transition: all 0.3s ease;
+  overflow: hidden;
 }
 
-.edit-status-btn {
+.misc-profile-profile-status-message:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Remove the elliptical overlay animation */
+.misc-profile-profile-status-message::before {
+  display: none; /* Remove the effect completely */
+}
+
+/* Adjust edit status button position */
+.misc-profile-edit-status-btn {
   position: absolute;
-  right: 10px;
-  bottom: 10px;
+  right:-710px; /* Increased from 10px */
+  bottom: -24px; /* Increased from 10px */
   background-color: #007bff;
   color: white;
   border: none;
@@ -172,17 +287,25 @@
   padding: 4px 20px;
   font-size: 12px;
   cursor: pointer;
+  transition: all 0.3s ease;
+  opacity: 0.8;
+}
+
+.misc-profile-edit-status-btn:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 }
 
 /* Stats section */
-.profile-stats-grid {
+.misc-profile-profile-stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   margin: 20px;
 }
 
-.stat-box {
+.misc-profile-stat-box {
   background-color: #101010;
   border-radius: 10px;
   padding: 15px;
@@ -190,25 +313,45 @@
   flex-direction: column;
   align-items: center;
   position: relative;
+  transition: all 0.4s ease;
+  transform-origin: center;
 }
 
-.stat-info {
+.misc-profile-stat-box:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  background-color: #151515;
+}
+
+.misc-profile-stat-info {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
 }
 
-.stat-icon {
+.misc-profile-stat-icon {
   font-size: 24px;
+  transition: all 0.3s ease;
 }
 
-.stat-name {
+/* Improve stat icon sizing */
+.misc-profile-stat-box:hover .misc-profile-stat-icon {
+  transform: scale(1.2); /* Removed the rotation */
+  color: #007bff;
+}
+
+.misc-profile-stat-name {
   font-size: 18px;
   color: white;
+  transition: all 0.3s ease;
 }
 
-.stat-plus-btn {
+.misc-profile-stat-box:hover .misc-profile-stat-name {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.misc-profile-stat-plus-btn {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -219,20 +362,55 @@
   align-items: center;
   cursor: pointer;
   margin: 10px 0;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.plus-icon {
+.misc-profile-stat-plus-btn:hover {
+  background-color: #007bff;
+  border-color: #0056b3;
+  transform: scale(1.1); /* Replace rotation with simple scale */
+}
+
+.misc-profile-stat-plus-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: all 0.4s ease;
+}
+
+.misc-profile-stat-plus-btn:hover::after {
+  left: 100%;
+}
+
+/* Fix the plus button centering issue */
+.misc-profile-plus-icon {
   font-size: 24px;
   color: white;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Ensures perfect centering */
+  transition: all 0.3s ease;
 }
 
-.stat-bonus {
+.misc-profile-stat-bonus {
   font-size: 14px;
   color: #aaa;
+  transition: all 0.3s ease;
+}
+
+.misc-profile-stat-box:hover .misc-profile-stat-bonus {
+  color: #00d9ff;
 }
 
 /* Skill points */
-.skill-points-container {
+.misc-profile-skill-points-container {
   margin: 20px;
   display: flex;
   justify-content: flex-end;
@@ -240,142 +418,274 @@
   gap: 10px;
 }
 
-.skill-points-label {
+.misc-profile-skill-points-label {
   font-size: 16px;
   color: white;
+  transition: all 0.3s ease;
 }
 
-.skill-points-value {
+.misc-profile-skill-points-value {
   font-size: 16px;
   color: white;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.misc-profile-skill-points-value::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #007bff;
+  transition: all 0.4s ease;
+}
+
+.misc-profile-skill-points-container:hover .misc-profile-skill-points-value::after {
+  width: 100%;
 }
 
 /* Bottom section */
-.bottom-section {
+.misc-profile-bottom-section {
   display: grid;
   grid-template-columns: 1fr 2fr;
   gap: 20px;
   margin: 20px;
 }
 
-.favorite-pet-container {
+.misc-profile-favorite-pet-container {
   background-color: #101010;
   border-radius: 10px;
   padding: 15px;
   position: relative;
+  transition: all 0.4s ease;
 }
 
-.section-title {
+.misc-profile-favorite-pet-container:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.misc-profile-section-title {
   font-size: 18px;
   margin-bottom: 15px;
   color: white;
   text-align: center;
+  position: relative;
+  transition: all 0.3s ease;
 }
 
-.pet-display {
+.misc-profile-section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2px;
+  background-color: #007bff;
+  transition: all 0.3s ease;
+}
+
+.misc-profile-favorite-pet-container:hover .misc-profile-section-title::after,
+.misc-profile-achievements-container:hover .misc-profile-section-title::after {
+  width: 50%;
+}
+
+.misc-profile-pet-display {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 15px;
 }
 
-.pet-image {
+.misc-profile-pet-image {
   width: 80px;
   height: 80px;
   object-fit: contain;
+  transition: all 0.4s ease;
+  transform-origin: center bottom;
 }
 
-.pet-info {
+.misc-profile-pet-display:hover .misc-profile-pet-image {
+  animation: misc-profile-bounce 1s infinite alternate;
+}
+
+@keyframes misc-profile-bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-10px);
+  }
+}
+
+.misc-profile-pet-info {
   width: 100%;
 }
 
-.pet-detail {
+.misc-profile-pet-detail {
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
   font-size: 1rem; /* atau bisa jadi 1.1rem biar lebih besar */
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.pet-label {
+.misc-profile-pet-detail:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+  border-radius: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.misc-profile-pet-detail::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background-color: rgba(0, 123, 255, 0.5);
+  transition: all 0.3s ease;
+}
+
+.misc-profile-pet-detail:hover::after {
+  width: 100%;
+}
+
+.misc-profile-pet-label {
   flex: 1;
   color: #ccc;
   font-weight: 500;
+  transition: all 0.3s ease;
 }
 
-.pet-value {
+.misc-profile-pet-detail:hover .misc-profile-pet-label {
+  color: #fff;
+}
+
+.misc-profile-pet-value {
   flex: 1;
   text-align: middle;
   color: white;
   font-weight: 600;
+  transition: all 0.3s ease;
 }
 
-.edit-pet-btn {
+.misc-profile-pet-detail:hover .misc-profile-pet-value {
+  color: #007bff;
+}
+
+.misc-profile-edit-pet-btn {
   background-color: #007bff;
   color: white;
   border: none;
   border-radius: 20px;
-  padding: 5px 22px;
+  padding: 5px 20px;
   font-size: 12px;
   cursor: pointer;
   position: absolute;
   bottom: 10px;
-  right: 10px;
+  right: -310px;
+  transition: all 0.3s ease;
+  opacity: 0.8;
 }
 
-.achievements-container {
+.misc-profile-edit-pet-btn:hover {
+  opacity: 1;
+  transform: translateX(-5px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.misc-profile-trophy-icon {
+  width: 50px;
+  height: 50px;
+  object-fit: contain; /* supaya tidak ketarik */
+}
+
+
+.misc-profile-achievements-container {
   background-color: #101010;
   border-radius: 10px;
   padding: 15px;
   position: relative;
+  transition: all 0.4s ease;
 }
 
-.achievements-grid {
+.misc-profile-achievements-container:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.misc-profile-achievements-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
 }
 
-.achievement-item {
+.misc-profile-achievement-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+  transition: all 0.3s ease;
+  padding-top: 70px; /* <-- ini supaya agak turun ke bawah */
 }
 
-.achievement-icon {
-  width: 60px;
+.misc-profile-achievement-item:hover {
+  transform: scale(1.05);
+}
+
+.misc-profile-achievement-icon {
+  width: 70px;
   height: 60px;
   border-radius: 5px;
   margin-bottom: 10px;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.game-icon {
-  background-image: url('/game-icon.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
+.misc-profile-achievement-item:hover .misc-profile-achievement-icon {
+  box-shadow: 0 0 20px rgba(0, 123, 255, 0.6);
 }
 
-.pets-icon {
-  background-image: url('/pets-icon.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
+.misc-profile-achievement-icon::after {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  width: 50%;
+  height: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transition: all 0.5s ease;
 }
 
-.level-icon {
-  background-image: url('/level-icon.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
+.misc-profile-achievement-item:hover .misc-profile-achievement-icon::after {
+  top: -20%;
+  left: -20%;
+  width: 140%;
+  height: 140%;
+  opacity: 0;
 }
 
-.achievement-text {
+
+.misc-profile-achievement-text {
   font-size: 12px;
   color: #ddd;
+  transition: all 0.3s ease;
 }
 
-.edit-achievements-btn {
+.misc-profile-achievement-item:hover .misc-profile-achievement-text {
+  color: #007bff;
+}
+
+.misc-profile-edit-achievements-btn {
   background-color: #007bff;
   color: white;
   border: none;
@@ -384,25 +694,85 @@
   font-size: 12px;
   cursor: pointer;
   position: absolute;
-  bottom: 10px;
-  right: 10px;
+  bottom: -60px;
+  right: -700px;
+  transition: all 0.3s ease;
+  opacity: 0.8;
+}
+
+.misc-profile-edit-achievements-btn:hover {
+  opacity: 1;
+  transform: translateX(-5px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Animation untuk elemen yang baru muncul */
+@keyframes misc-profile-fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.misc-profile-profile-page {
+  animation: misc-profile-fadeIn 0.8s ease-out;
+}
+
+.misc-profile-stat-box:nth-child(1) { animation: misc-profile-fadeIn 0.5s ease-out 0.1s both; }
+.misc-profile-stat-box:nth-child(2) { animation: misc-profile-fadeIn 0.5s ease-out 0.2s both; }
+.misc-profile-stat-box:nth-child(3) { animation: misc-profile-fadeIn 0.5s ease-out 0.3s both; }
+.misc-profile-stat-box:nth-child(4) { animation: misc-profile-fadeIn 0.5s ease-out 0.4s both; }
+.misc-profile-stat-box:nth-child(5) { animation: misc-profile-fadeIn 0.5s ease-out 0.5s both; }
+.misc-profile-stat-box:nth-child(6) { animation: misc-profile-fadeIn 0.5s ease-out 0.6s both; }
+
+.misc-profile-favorite-pet-container { animation: misc-profile-fadeIn 0.5s ease-out 0.3s both; }
+.misc-profile-achievements-container { animation: misc-profile-fadeIn 0.5s ease-out 0.5s both; }
+
+/* Tambahan hover effect untuk tombol */
+.misc-profile-profile-page button {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.misc-profile-profile-page button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  transition: width 0.6s ease, height 0.6s ease, top 0.6s ease, left 0.6s ease;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+}
+
+.misc-profile-profile-page button:hover::after {
+  width: 300%;
+  height: 300%;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .profile-stats-grid {
+  .misc-profile-profile-stats-grid {
     grid-template-columns: 1fr;
   }
   
-  .bottom-section {
+  .misc-profile-bottom-section {
     grid-template-columns: 1fr;
   }
   
-  .achievements-grid {
+  .misc-profile-achievements-grid {
     grid-template-columns: 1fr 1fr;
   }
   
-  .profile-wallpaper-container {
+  .misc-profile-profile-wallpaper-container {
     height: 300px;
   }
 }
