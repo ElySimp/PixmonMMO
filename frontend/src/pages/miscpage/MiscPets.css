@@ -58,12 +58,11 @@
     left: -10px;
     right: -10px;
     bottom: -10px;
-    background: conic-gradient(from 0deg at 50% 50%, #0ff, #f0f, #ff0, #0ff);
+    background: conic-gradient(from 0deg at 50% 50%, rgb(25, 26, 26), rgb(18, 18, 18), rgb(19, 19, 19), rgb(7, 7, 7));
     background-size: 300% 300%;
     z-index: 0; /* <--- ini penting, biar gak nutup tombol */
     filter: blur(8px);
     border-radius: 20px;
-    animation: cyberpulse 8s linear infinite;
     opacity: 0.4;
   }
   
@@ -74,11 +73,6 @@
     100% { background-position: 0% 50%; }
   }
   
-  .misc-pet-card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 40px rgba(0, 255, 255, 0.8), 0 0 20px #f0f, 0 0 10px #ff0;
-  }  
-  
   .select-button-container {
     margin-top: auto;
     width: 100%;
@@ -88,7 +82,6 @@
   }
   
   .select-button {
-    background: radial-gradient(circle, #00f6ff 0%, #0080ff 100%);
     color: black;
     padding: 10px 22px;
     border-radius: 10px;
@@ -97,16 +90,15 @@
     letter-spacing: 1px;
     font-size: 15px;
     cursor: pointer;
-    box-shadow: 0 0 12px #00f6ff, 0 0 24px #f0f;
+    box-shadow: 0 0 12px #e7eaeb, 0 0 24px rgb(18, 18, 18);
     transition: all 0.25s ease;
     position: relative;
     z-index: 2;
   }
   
   .select-button:hover {
-    background: radial-gradient(circle, #fff 0%, #00f6ff 100%);
     color: #0f0f0f;
-    box-shadow: 0 0 25px #00f6ff, 0 0 35px #ff00ff;
+    box-shadow: 0 0 25px #050505, 0 0 35px #c4c1c4;
   }
   
   
@@ -254,4 +246,23 @@
     background-color: #c82333;
   }
 
- 
+  .upload-label {
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: #444;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 10px 0;
+    font-size: 13px;
+    text-align: center;
+  }
+  
+  .upload-label:hover {
+    background-color: #666;
+  }
+  
+  .upload-input {
+    display: none;
+  }
+  
