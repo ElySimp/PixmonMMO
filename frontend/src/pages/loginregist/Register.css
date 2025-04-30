@@ -89,9 +89,7 @@
 
 .login-link a:hover {
   color: #39FF14;
-}
-
-.login-link a:hover {
+  cursor: pointer;
   text-decoration: underline;
 }
 

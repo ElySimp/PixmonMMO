@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import './Login.css'
 
-function Login() {
+const Login = ({ openRegister }) => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
@@ -86,7 +86,7 @@ function Login() {
           </button>
         </form>
         <p className="register-link">
-          Don't have an account? <Link to="/register">Register here</Link>
+          Don't have an account? <a onClick={openRegister}>Register Here</a>
         </p>
       </div>
     </div>

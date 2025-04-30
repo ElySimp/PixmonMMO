@@ -33,6 +33,10 @@
   height: 100vh;
 }
 
+.main-content::-webkit-scrollbar {
+  display: none;
+} 
+
 /* Top row with 2 squares */
 .top-squares {
   display: grid;
