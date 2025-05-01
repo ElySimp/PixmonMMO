@@ -1,41 +1,66 @@
-/* Existing MiscQuest CSS */
+.quest-tabs {
+  font-size: 1.5rem;
+  margin-top: 2rem;
+  max-width: 56.25rem;
+  position: relative;
+  left: 50%;
+  transform: translatex(-50%);
+}
 
-/* Daily Quest CSS */
-.daily-quest-container {
+.quest-tabs button {
+  padding: 0.1em;
+  width: calc(100% / 4);
+  background-color: #101011;
+  border-radius: 10px 10px 0 0 ;
+  transition: color 0.3s ease;
+}
+
+.active-tab, .non-active-tab {
+  border-top: 1px solid #2E2E2E;
+  border-left: 1px solid #2E2E2E;
+  border-right: 1px solid #2E2E2E;
+}
+
+.non-active-tab:hover {
+  color: #777;
+}
+
+.quest-underline-slider {
+  position: absolute;
+  bottom: 0;
+  height: 3px;
+  transition: all 0.3s ease;
+  border-radius: 2px;
+}
+
+.quest-container {
   display: flex;
   justify-content: space-between;
   max-width: 56.25rem;
-  max-height: 34.25rem;
+  max-height: 33rem;
   height: 100%;
   background-color: #101011;
-  margin-top: 4rem;
+  border-top: none;
+  border-bottom: 1px solid #2E2E2E;
+  border-left: 1px solid #2E2E2E;
+  border-right: 1px solid #2E2E2E;
   padding: 2rem;
   position: relative;
   left: 50%;
   transform: translatex(-50%);
-  /* margin: 0 auto; */
-  /* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); */
 }
 
-/* .daily-quest-progress-section {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 30px;
-} */
-
-.daily-progress-container {
-  /* position: relative; */
+.quest-progress-container {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.daily-circular-progress {
+.daily-circular-progress, .weekly-circular-progress, .monthly-circular-progress {
   width: 11.5rem;
   height: 11.5rem;
   border-radius: 50%;
   background: #D9D9D9;
-  background-image: conic-gradient(#2A73A6 var(--progress-percent), #d0d0d0 0);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -43,7 +68,19 @@
   transform: rotate(-180deg);
 }
 
-.daily-inner-circle {
+.daily-circular-progress {
+  background-image: conic-gradient(#2A73A6 var(--progress-percent), #d0d0d0 0);
+}
+
+.weekly-circular-progress {
+  background-image: conic-gradient(#C73737 var(--progress-percent), #d0d0d0 0);
+}
+
+.monthly-circular-progress {
+  background-image: conic-gradient(#E4C21C var(--progress-percent), #d0d0d0 0);
+}
+
+.quest-inner-circle {
   position: absolute;
   width: 10rem;
   height: 10rem;
@@ -57,43 +94,54 @@
   transform: rotate(180deg);
 }
 
-.daily-inner-circle span:first-child {
+.quest-inner-circle span:first-child {
   font-size: 2.4rem;
   font-weight: bold;
-  /* margin-bottom: 5px; */
 }
 
-.daily-inner-circle span:last-child {
+.quest-inner-circle span:last-child {
   font-size: 1.5rem;
 }
 
-.daily-claim-main-btn {
+.daily-claim-main-btn, .weekly-claim-main-btn, .monthly-claim-main-btn {
   font-family: 'SilkScreen', sans-serif;
   font-size: 1.2rem;
+  font-weight: 500;
   position: absolute;
   top: 11rem;
-  background-color: #2A73A6;
   color: #FFFFFF;
   padding: 5px 10px;
-  border-radius: 5px;
+  border-radius: 20px;
   cursor: pointer;
-  /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); */
   text-transform: uppercase;
-  /* font-size: 14px; */
-  border: 3px solid #5DADEC;
   outline: 5px solid #101011;
 }
 
-.daily-claim-main-btn:disabled {
+.daily-claim-main-btn {
+  background-color: #2A73A6;
+  border: 3px solid #5DADEC;
+}
+
+.weekly-claim-main-btn {
+  background-color: #C73737;
+  border: 3px solid #B84D4D;
+}
+
+.monthly-claim-main-btn {
+  background-color: #E4C21C;
+  border: 3px solid #D9B82C;
+}
+
+.daily-claim-main-btn:disabled, .weekly-claim-main-btn:disabled, .monthly-claim-main-btn:disabled {
   background: linear-gradient(to bottom, #7a7a7a, #505050);
   cursor: not-allowed;
 }
 
-.daily-quest-title {
+.quest-title {
   width: 35rem;
 }
 
-.daily-quest-box {
+.quest-box {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -101,30 +149,81 @@
   margin-bottom: 1.2rem;
   background-color: #232323;
   border-radius: 10px;
-  /* box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1); */
 }
 
-.daily-reward {
+.quest-reward {
   font-size: 0.9em;
   color: #888;
-  /* margin-top: 5px; */
 }
 
-.daily-go-btn, .daily-claim-btn {
+.quest-go-btn, .quest-claim-btn {
+  background-color: transparent;
+  border: 1px solid #ccc;
+  color: #ffffff;
   padding: 8px 20px;
-  border: none;
-  border-radius: 20px;
+  border-radius: 10px;
   font-weight: bold;
   cursor: pointer;
 }
 
-.daily-go-btn {
-  background-color: #2D82B5;
-  color: #FFFFFF;
+/* .daily-claim-btn {
+  cursor: not-allowed;
+} */
+
+.bounty-progress {
+  background-color: #232323;
+  width: 15rem;
+  height: 6.75rem;
+  border-radius: 10px;
+  border: 1px solid #F8F8F8;
 }
 
-.daily-claim-btn {
-  background-color: #ccc;
-  color: #666;
-  cursor: not-allowed;
+.bounty-progress-bar-top {
+  font-size: 1.5rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.5rem;
+}
+
+.quest-point-icon {
+  width: 1.5rem;
+}
+
+.bounty-progress-bar-bottom {
+  margin-top: 0.2rem;
+  font-size: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+}
+
+.quest-point-timer {
+  font-size: 0.7rem;
+  background-color: #D9D9D9;
+  color: #000;
+  text-align: center;
+  width: 3rem;
+  border-radius: 15px;
+  padding: 0;
+}
+
+.bounty-progress-bar {
+  width: 14rem;
+  height: 0.625rem;
+  background-color: #d0d0d0;
+  border-radius: 1rem;
+  overflow: hidden;
+  position: relative;
+  left: 50%;
+  transform: translatex(-50%);
+}
+
+.bounty-progress-bar-inner {
+  height: 100%;
+  background: linear-gradient(to right, #6EC207 var(--progress-percent), #d0d0d0 0);
+  border-radius: 1rem;
+  width: 100%;
+  transition: all 0.5s ease;
 }

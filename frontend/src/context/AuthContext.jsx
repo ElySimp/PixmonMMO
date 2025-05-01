@@ -85,7 +85,6 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
       
       if (response.ok) {
-        navigate('/login');
         return { success: true, message: 'Registration successful! Please login.' };
       } else {
         return { success: false, error: data.message };

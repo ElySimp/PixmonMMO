@@ -10,7 +10,7 @@ class User {
                 email VARCHAR(255) NOT NULL UNIQUE,
                 password VARCHAR(255) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                updated_at DATETIME NULL
             )
         `;
         try {
@@ -30,10 +30,11 @@ class User {
             const hashedPassword = await bcrypt.hash(password, 10);
             console.log('Password hashed successfully');
             
-            // Insert user
+            // Insert user with current date for updated_at
+            const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
             const [result] = await db.query(
-                'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-                [username, email, hashedPassword]
+                'INSERT INTO users (username, email, password, updated_at) VALUES (?, ?, ?, ?)',
+                [username, email, hashedPassword, now]
             );
             
             console.log('User registered successfully:', result.insertId);
@@ -70,6 +71,13 @@ class User {
             if (!isValid) {
                 throw new Error('Invalid password');
             }
+
+            // Update the updated_at timestamp
+            const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+            await db.query(
+                'UPDATE users SET updated_at = ? WHERE id = ?',
+                [now, user.id]
+            );
 
             // Return user data (excluding password)
             const { password: _, ...userData } = user;

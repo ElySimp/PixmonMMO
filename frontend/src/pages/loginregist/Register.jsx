@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import './Register.css'
 
-function Register() {
+const Register = ({openLogin}) => {
   const { register } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -75,7 +75,7 @@ function Register() {
       
       if (result.success) {
         // Redirect to login with success message
-        navigate(`/login?message=${encodeURIComponent(result.message)}`);
+        openLogin();
       } else {
         // Show server-side error
         setErrors({ serverError: result.error });
@@ -145,7 +145,7 @@ function Register() {
           </div>
           <div className='register-terms'>
             <p className="login-link">
-              Already have an account? <Link to="/login">Login here</Link>
+              Already have an account? <a onClick={openLogin}>Login</a>
             </p>
             <button 
               type="submit" 

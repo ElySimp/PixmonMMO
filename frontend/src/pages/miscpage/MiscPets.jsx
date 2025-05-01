@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './MiscPets.css';
 import Topbar from '../../components/Topbar';
 import Sidebar from '../../components/Sidebar';
@@ -65,14 +65,21 @@ const pets = [
 const MiscPets = () => {
   const [selectedRole, setSelectedRole] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [equippedPetName, setEquippedPetName] = useState('');
+  const [customImages, setCustomImages] = useState({});
 
-  const handleMenuClick = () => console.log('Menu clicked');
-  const handleSupportClick = () => console.log('Support clicked');
-  const handleFriendsClick = () => console.log('Friends clicked');
-  const handleSearch = (value) => console.log('Search:', value);
-  const handleChatClick = () => console.log('Chat clicked');
-  const handleNotificationClick = () => console.log('Notifications clicked');
-  const handleEggClick = () => console.log('Egg clicked');
+  // Load from localStorage on mount
+  useEffect(() => {
+    const storedImages = localStorage.getItem('customImages');
+    if (storedImages) {
+      setCustomImages(JSON.parse(storedImages));
+    }
+  }, []);
+
+  // Save to localStorage whenever customImages changes
+  useEffect(() => {
+    localStorage.setItem('customImages', JSON.stringify(customImages));
+  }, [customImages]);
 
   const handleRoleChange = (e) => {
     setSelectedRole(e.target.value.toLowerCase());
@@ -85,6 +92,24 @@ const MiscPets = () => {
   const handleResetFilter = () => {
     setSelectedRole('');
     setSelectedStatus('');
+  };
+
+  const handleEquipClick = (petName) => {
+    setEquippedPetName((prev) => (prev === petName ? '' : petName));
+  };
+
+  const handleImageUpload = (e, petName) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCustomImages((prevImages) => ({
+          ...prevImages,
+          [petName]: reader.result,
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   let filteredPets = pets;
@@ -108,20 +133,12 @@ const MiscPets = () => {
       <Sidebar profilePic="/dummy.jpg" />
 
       <div className="main-content">
-        <Topbar
-          onMenuClick={handleMenuClick}
-          onSupportClick={handleSupportClick}
-          onFriendsClick={handleFriendsClick}
-          onSearch={handleSearch}
-          onChatClick={handleChatClick}
-          onNotificationClick={handleNotificationClick}
-          onEggClick={handleEggClick}
-        />
+        <Topbar />
 
         <div className="filter-container">
           <div className="filter-item">
             <label htmlFor="roleFilter" className="role-label">Sort by Role:</label>
-            <select id="roleFilter" name="roleFilter" onChange={handleRoleChange} value={selectedRole}>
+            <select id="roleFilter" onChange={handleRoleChange} value={selectedRole}>
               <option value="">All Roles</option>
               <option value="assassin">Assassin</option>
               <option value="tank">Tank</option>
@@ -132,7 +149,7 @@ const MiscPets = () => {
 
           <div className="filter-item">
             <label htmlFor="statusFilter" className="status-label">Sort by Status:</label>
-            <select id="statusFilter" name="statusFilter" onChange={handleStatusChange} value={selectedStatus}>
+            <select id="statusFilter" onChange={handleStatusChange} value={selectedStatus}>
               <option value="">All Status</option>
               <option value="atk">ATK</option>
               <option value="hp">HP</option>
@@ -155,8 +172,11 @@ const MiscPets = () => {
               return Math.round((current / max) * 100);
             };
 
+            const isEquipped = equippedPetName === pet.name;
+            const petImage = customImages[pet.name] || pet.image;
+
             return (
-              <div className="misc-pet-card" key={index}>
+              <div className={`misc-pet-card ${isEquipped ? 'equipped-glow' : ''}`} key={index}>
                 <div className="role-icon">
                   {(() => {
                     switch (pet.role.toLowerCase()) {
@@ -170,7 +190,17 @@ const MiscPets = () => {
                 </div>
 
                 <div className="pet-name">{pet.name}</div>
-                <img src={pet.image} alt={pet.name} className="pet-image" />
+                <img src={petImage} alt={pet.name} className="pet-image" />
+
+                <label className="upload-label">
+                  Upload Image
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload(e, pet.name)}
+                    className="upload-input"
+                  />
+                </label>
 
                 <div className="pet-info">
                   <div>Level: {pet.level}</div>
@@ -194,8 +224,11 @@ const MiscPets = () => {
                 </div>
 
                 <div className="select-button-container">
-                  <button className="select-button" onClick={() => console.log(`Selected pet: ${pet.name}`)}>
-                    Select
+                  <button
+                    className={`select-button ${isEquipped ? 'equipped' : ''}`}
+                    onClick={() => handleEquipClick(pet.name)}
+                  >
+                    {isEquipped ? 'Equipped ✅' : 'Equip'}
                   </button>
                 </div>
               </div>

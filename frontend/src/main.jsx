@@ -2,6 +2,7 @@ import React from "react";
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
 import Welcome from './pages/welcome/welcome.jsx'
 import Login from './pages/loginregist/Login.jsx'
 import Register from './pages/loginregist/Register.jsx'
@@ -10,7 +11,6 @@ import MainInv from './pages/mainpage/MainInv.jsx'
 import MiscQuest from './pages/miscpage/MiscQuest.jsx'
 import MiscProfile from './pages/miscpage/MiscProfile.jsx' 
 import MiscPets from "./pages/miscpage/MiscPets.jsx"
-import { AuthProvider } from './context/AuthContext'
 
 import './index.css'
 
