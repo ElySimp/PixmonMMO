@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Topbar.css';
-import searchIcon from '../assets/MAIN/search.png';
 import chatIcon from '../assets/MAIN/chat.png';
 import notificationIcon from '../assets/MAIN/notification.png';
-import eggIcon from '../assets/MAIN/pets_sample.png';
+const profileImage = '/dummy1.jpg'; 
 
 function Topbar({ 
   onMenuClick, 
@@ -11,9 +11,45 @@ function Topbar({
   onFriendsClick, 
   onSearch, 
   onChatClick, 
-  onNotificationClick, 
-  onEggClick 
+  onNotificationClick 
 }) {
+  const [showProfileCard, setShowProfileCard] = useState(false);
+  const navigate = useNavigate();
+
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
+
+  const handleTopUpClick = () => {
+    console.log('Top Up clicked');
+    // Tambahkan navigasi ke halaman top up atau buka modal top up
+  };
+
+  const handleCurrencyAdd = (currencyType) => {
+    console.log(`Add ${currencyType} clicked`);
+    // Logika untuk menambahkan mata uang
+  };
+
+  const handleRefill = () => {
+    console.log('Refill energy clicked');
+    // Logika untuk mengisi ulang energi
+  };
+
+  const handleMembershipClick = () => {
+    console.log('Membership clicked');
+    // Navigasi ke halaman membership
+  };
+
+  const handleSettingsClick = () => {
+    console.log('Settings clicked');
+    // Navigasi ke halaman settings
+  };
+
+  const handleLogoutClick = () => {
+    console.log('Logout clicked');
+    // Logika untuk logout
+  };
+
   return (
     <nav className="topbar">
       <div className="topbar-left">
@@ -35,12 +71,123 @@ function Topbar({
         <button className="topbar-button" onClick={onNotificationClick}>
           <img src={notificationIcon} alt="Notifications" className="topbar-icon" />
         </button>
-        <button className="topbar-button" onClick={onEggClick}>
-          <img src={eggIcon} alt="Egg" className="topbar-icon" />
-        </button>
+
+        {/* Profile Hover Dropdown with card-hover-profile class */}
+        <div 
+          className="topbar-button card-hover-profile"
+          onMouseEnter={() => setShowProfileCard(true)}
+          onMouseLeave={() => setShowProfileCard(false)}
+        >
+          <img 
+            src={profileImage}
+            alt="Profile" 
+            className="topbar-icon" 
+            onClick={handleProfileClick} 
+          />
+          
+          {showProfileCard && (
+            <div className="profile-card">
+              <div className="profile-header" onClick={handleProfileClick}>
+                <div className="profile-avatar">
+                  <img src={profileImage} alt="Profile" />
+                </div>
+                <div className="profile-info">
+                  <div className="profile-username">Username</div>
+                  <div className="profile-level">Lvl 99999</div>
+                  <div className="profile-xp-bar">
+                    <div className="xp-bar">
+                      <div className="xp-progress"></div>
+                    </div>
+                    <span className="xp-text">XP</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="profile-currencies">
+                <div className="currency-item">
+                  <span className="currency-icon">🪙</span>
+                  <span className="currency-label">Gold</span>
+                  <span className="currency-amount">123.456.789.123</span>
+                  <button 
+                    className="currency-add" 
+                    onClick={() => handleCurrencyAdd('gold')}
+                  >+</button>
+                </div>
+                <div className="currency-item">
+                  <span className="currency-icon">💎</span>
+                  <span className="currency-label">Diamond</span>
+                  <span className="currency-amount">123.456.789.123</span>
+                  <button 
+                    className="currency-add"
+                    onClick={() => handleCurrencyAdd('diamond')}
+                  >+</button>
+                </div>
+              </div>
+              
+              <div className="profile-stats">
+                <div className="stat-item">
+                  <div className="stat-label">
+                    <span>Quest Point <span className="stat-icon">📜</span></span>
+                    <span className="stat-value">8/10</span>
+                  </div>
+                  <div className="stat-bar-container">
+                    <div className="stat-bar quest-bar">
+                      <div className="stat-progress" style={{ width: '80%' }}></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="stat-item">
+                  <div className="stat-label">
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <span>Energy Point <span className="stat-icon">⚡</span></span>
+                      <span className="energy-timer">4h 09:40</span>
+                      <button 
+                        className="refill-btn"
+                        onClick={handleRefill}
+                      >Refill?</button>
+                    </div>
+                    <span className="stat-value">2/5</span>
+                  </div>
+                  <div className="energy-row">
+                    <div className="energy-bar">
+                      <div className="stat-progress" style={{ width: '40%' }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="profile-actions">
+                <button className="action-button profile" onClick={handleProfileClick}>
+                  <span className="action-icon">👤</span>
+                  <span>My Profile</span>
+                </button>
+                <button className="action-button membership" onClick={handleMembershipClick}>
+                  <span className="action-icon">👑</span>
+                  <span>Membership</span>
+                </button>
+                <button className="action-button settings" onClick={handleSettingsClick}>
+                  <span className="action-icon">⚙️</span>
+                  <span>Settings</span>
+                </button>
+                <button className="action-button logout" onClick={handleLogoutClick}>
+                  <span className="action-icon">🚪</span>
+                  <span>Log Out</span>
+                </button>
+              </div>
+              
+              <div 
+                className="topup-banner"
+                onClick={handleTopUpClick}
+              >
+                TOP UP SEKARANG JUGA !
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   );
 }
 
-export default Topbar; 
+export default Topbar;
