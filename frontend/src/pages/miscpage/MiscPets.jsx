@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './MiscPets.css';
 import Topbar from '../../components/Topbar';
 import Sidebar from '../../components/Sidebar';
@@ -66,20 +66,6 @@ const MiscPets = () => {
   const [selectedRole, setSelectedRole] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [equippedPetName, setEquippedPetName] = useState('');
-  const [customImages, setCustomImages] = useState({});
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    const storedImages = localStorage.getItem('customImages');
-    if (storedImages) {
-      setCustomImages(JSON.parse(storedImages));
-    }
-  }, []);
-
-  // Save to localStorage whenever customImages changes
-  useEffect(() => {
-    localStorage.setItem('customImages', JSON.stringify(customImages));
-  }, [customImages]);
 
   const handleRoleChange = (e) => {
     setSelectedRole(e.target.value.toLowerCase());
@@ -96,20 +82,6 @@ const MiscPets = () => {
 
   const handleEquipClick = (petName) => {
     setEquippedPetName((prev) => (prev === petName ? '' : petName));
-  };
-
-  const handleImageUpload = (e, petName) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCustomImages((prevImages) => ({
-          ...prevImages,
-          [petName]: reader.result,
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   let filteredPets = pets;
@@ -173,7 +145,6 @@ const MiscPets = () => {
             };
 
             const isEquipped = equippedPetName === pet.name;
-            const petImage = customImages[pet.name] || pet.image;
 
             return (
               <div className={`misc-pet-card ${isEquipped ? 'equipped-glow' : ''}`} key={index}>
@@ -190,17 +161,7 @@ const MiscPets = () => {
                 </div>
 
                 <div className="pet-name">{pet.name}</div>
-                <img src={petImage} alt={pet.name} className="pet-image" />
-
-                <label className="upload-label">
-                  Upload Image
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload(e, pet.name)}
-                    className="upload-input"
-                  />
-                </label>
+                <img src={pet.image} alt={pet.name} className="pet-image" />
 
                 <div className="pet-info">
                   <div>Level: {pet.level}</div>

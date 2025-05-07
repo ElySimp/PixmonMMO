@@ -11,6 +11,7 @@ import MainInv from './pages/mainpage/MainInv.jsx'
 import MiscQuest from './pages/miscpage/MiscQuest.jsx'
 import MiscProfile from './pages/miscpage/MiscProfile.jsx' 
 import MiscPets from "./pages/miscpage/MiscPets.jsx"
+import Adventure from './pages/advpage/Adventure.jsx';
 
 import './index.css'
 
@@ -27,6 +28,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/quest" element={<MiscQuest />} />
           <Route path="/profile" element={<MiscProfile />} />
           <Route path="/pets" element={<MiscPets />} />
+          <Route path="/adventure" element={<Adventure />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

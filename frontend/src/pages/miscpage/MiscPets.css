@@ -1,268 +1,200 @@
+/* === Filter Section === */
 .filter-container {
-    display: flex;
-    gap: 60px; /* jarak antara Role dan Status */
-    align-items: center;
-    margin-top: 12px;
-    margin-left: 120px; /* Menyesuaikan dengan posisi bawah "Support Service" */
-  }
-  
-  .filter-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  .filter-item select {
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    background-color: #1e1e1e;
-    color: white;
-  }
-  
-  .role-label,
-  .status-label {
-    color: white;
-  }
-  
-  .card-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    padding-top: 20px;
-  }
-  
-  .misc-pet-card {
-    position: relative;
-    background: linear-gradient(145deg, #1b1b1b, #0f0f0f);
-    color: #00f6ff;
-    border-radius: 18px;
-    padding: 18px;
-    width: 260px;
-    margin: 16px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 0 12px rgba(0, 255, 255, 0.3);
-    overflow: hidden;
-    z-index: 1;
-    border: 1px solid #0ff;
-    transition: all 0.3s ease;
-  }
-  
-  .misc-pet-card::before {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: -10px;
-    right: -10px;
-    bottom: -10px;
-    background: conic-gradient(from 0deg at 50% 50%, rgb(25, 26, 26), rgb(18, 18, 18), rgb(19, 19, 19), rgb(7, 7, 7));
-    background-size: 300% 300%;
-    z-index: 0; /* <--- ini penting, biar gak nutup tombol */
-    filter: blur(8px);
-    border-radius: 20px;
-    opacity: 0.4;
-  }
-  
-  
-  @keyframes cyberpulse {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  
-  .select-button-container {
-    margin-top: auto;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    padding-top: 12px;
-  }
-  
-  .select-button {
-    color: black;
-    padding: 10px 22px;
-    border-radius: 10px;
-    border: none;
-    font-weight: 600;
-    letter-spacing: 1px;
-    font-size: 15px;
-    cursor: pointer;
-    box-shadow: 0 0 12px #e7eaeb, 0 0 24px rgb(18, 18, 18);
-    transition: all 0.25s ease;
-    position: relative;
-    z-index: 2;
-  }
-  
-  .select-button:hover {
-    color: #0f0f0f;
-    box-shadow: 0 0 25px #050505, 0 0 35px #c4c1c4;
-  }
-  
-  
-  .pet-name {
-    font-size: 18px;
-    font-weight: bold;
-    text-align: center;
-  }
-  
-  .pet-image {
-    width: 100px;
-    height: 100px;
-    object-fit: contain;
-    margin: 12px 0;
-  }
-  
-  .pet-info {
-    text-align: center;
-    margin-bottom: 10px;
-  }
-  
-  .pet-stats > div {
-    font-size: 14px;
-    margin: 2px 0;
-  }
-  
-  .select-button-container {
-  margin-top: 20px;
+  display: flex;
+  gap: 60px; /* jarak antara Role dan Status */
+  align-items: center;
+  margin-top: 12px;
+  margin-left: 120px; /* Menyesuaikan dengan posisi bawah "Support Service" */
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-item select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background-color: #1e1e1e;
+  color: white;
+}
+
+.role-label,
+.status-label {
+  color: white;
+}
+
+/* === Card Container === */
+.card-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding-top: 20px;
+}
+
+/* === Pet Card === */
+.misc-pet-card {
+  position: relative;
+  background: linear-gradient(145deg, #121212, #111010);
+  color: rgb(227, 237, 237);
+  border-radius: 10px;
+  padding: 10px;
+  width: 240px;
+  margin: 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
+  z-index: 1;
+  border: 4px solid rgb(21, 22, 22);
+  transition: all 0.3s ease;
+}
+
+.misc-pet-card::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  background-size: 300% 300%;
+  z-index: 0;
+  filter: blur(8px);
+  border-radius: 20px;
+  opacity: 0.4;
+}
+
+.pet-name {
+  font-size: 18px;
+  font-weight: bold;
   text-align: center;
 }
 
-.select-button {
-  padding: 10px 20px;
+.pet-info,
+.pet-stats {
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+/* === Stat Bars === */
+.stat-line {
+  margin: 4px 0;
+  width: 100%;
+}
+
+.stat-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.stat-bar-background {
+  height: 8px;
+  background-color: #333;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.stat-bar-fill {
+  height: 100%;
   background-color: #00c9a7;
+  border-radius: 4px;
+}
+
+/* === Role Icon === */
+.role-icon {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 20px;
+}
+
+/* === Select Button === */
+.select-button-container {
+  margin-top: 20px;
+  text-align: center;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.select-button {
+  padding: 10px 22px;
+  background-color: #090909;
   color: white;
   border: none;
   border-radius: 10px;
   font-weight: bold;
+  font-size: 15px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, box-shadow 0.25s ease;
+  z-index: 2;
 }
 
 .select-button:hover {
-  background-color: #009e82;
+  background-color: #3e3cdc;
+  color: #0f0f0f;
 }
 
-  
-  .misc-pet-card {
-    position: relative;
-    background-color: #1e1e1e;
-    color: white;
-    border-radius: 12px;
-    border: 1px solid #333;
-    padding: 16px;
-    width: 240px;
-    margin: 12px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .role-icon {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    font-size: 20px;
-  }
-  
-  .pet-image {
-    width: 100px;
-    height: 100px;
-    object-fit: contain;
-    margin: 12px 0;
-  }
-  
-  .pet-info,
-  .pet-stats {
-    font-size: 14px;
-    text-align: center;
-    margin-bottom: 8px;
-  }
-  
-  .select-button-container {
-    margin-top: 10px;
-  }
-  
-  .select-button {
-    background-color: #007bff;
-    border: none;
-    padding: 6px 14px;
-    border-radius: 4px;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .select-button:hover {
-    background-color: #0056b3;
-  }
-  
-  .stat-line {
-    margin: 4px 0;
-    width: 100%;
-  }
-  
-  .stat-label {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 2px;
-  }
-  
-  .stat-bar-background {
-    height: 8px;
-    background-color: #333;
-    border-radius: 4px;
-    overflow: hidden;
-  }
-  
-  .stat-bar-fill {
-    height: 100%;
-    background-color: #00c9a7;
-    border-radius: 4px;
-  }
-  
-  .role-icon {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    font-size: 20px;
-  }
-  
-  .reset-button {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .reset-button:hover {
-    background-color: #c82333;
-  }
+/* === Reset Button === */
+.reset-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
 
-  .upload-label {
-    display: inline-block;
-    padding: 6px 12px;
-    background-color: #444;
-    color: white;
-    border-radius: 5px;
-    cursor: pointer;
-    margin: 10px 0;
-    font-size: 13px;
-    text-align: center;
-  }
-  
-  .upload-label:hover {
-    background-color: #666;
-  }
-  
-  .upload-input {
-    display: none;
-  }
-  
+.reset-button:hover {
+  background-color: #c82333;
+}
+
+/* === Upload Button === */
+.upload-label {
+  display: inline-block;
+  padding: 6px 12px;
+  background-color: #444;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 10px 0;
+  font-size: 13px;
+  text-align: center;
+}
+
+.upload-label:hover {
+  background-color: #666;
+}
+
+.upload-input {
+  display: none;
+}
+
+.filter-container {
+  display: flex;
+  justify-content: center; /* ini yang membuat elemen di tengah */
+  align-items: center;
+  gap: 12rem; /* jarak antar elemen */
+  padding: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* penuh tinggi layar */
+}
+
+.pet-card-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 40px;
+  justify-items: center;
+}
