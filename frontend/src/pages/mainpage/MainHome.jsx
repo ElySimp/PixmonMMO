@@ -3,6 +3,7 @@ import './MainHome.css'
 import { FaEgg, FaChartBar, FaGem, FaDungeon, FaCheck } from 'react-icons/fa'
 import Topbar from '../../components/Topbar'
 import Sidebar from '../../components/Sidebar'
+import { useNavigate } from 'react-router-dom';
 
 import peopleIcon from '../../assets/MAIN/people.png';
 import checkmarkIcon from '../../assets/MAIN/checkmark.png';
@@ -17,6 +18,8 @@ import defenseIcon from '../../assets/MAIN/defence.png';
 import agilityIcon from '../../assets/MAIN/agility.png';
 
 const MainHome = () => {
+  const navigate = useNavigate();
+
   const handleMenuClick = () => {
     console.log('Menu clicked');
   };
@@ -45,6 +48,10 @@ const MainHome = () => {
     console.log('Egg clicked');
   };
 
+  const handleStartAdventure = () => {
+    navigate('/adventure');
+  };
+
   return (
     <div className="main-container">
       <Sidebar 
@@ -68,7 +75,7 @@ const MainHome = () => {
               <img src={avatarExample} alt="Avatar" className="mainhome-dungeon-avatar" />
               <h2 className="mainhome-dungeon-title">Your Journey Begins Here</h2>
               <p className="mainhome-dungeon-description">With just a press of a button, <br /> you can embark on an adventure of a lifetime.</p>
-              <button className="mainhome-start-dungeon">Start Adventure</button>
+              <button className="mainhome-start-dungeon" onClick={handleStartAdventure}>Start Adventure</button>
             </div>
           </div>
 
@@ -276,4 +283,4 @@ const MainHome = () => {
   )
 }
 
-export default MainHome 
+export default MainHome

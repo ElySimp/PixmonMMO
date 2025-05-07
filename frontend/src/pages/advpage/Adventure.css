@@ -1,0 +1,100 @@
+.adventure-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.adventure-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.adventure-grid {
+  display: grid;
+  grid-template-rows: 1fr 4fr;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.adventure-grid-profile {
+    background-color: #101011;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1.5px solid #232323;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: left;
+}
+
+.adventure-grid-actions {
+  background-color: #101011;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1.5px solid #232323;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.adventure-profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 2rem;
+  margin-left: 1rem;
+}
+
+.adventure-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.adventure-story {
+  margin-bottom: 1rem;
+  font-size: 18px;
+  text-align: center;
+}
+
+.adventure-step-button {
+  position: relative;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  overflow: hidden;
+  transition: background-color 0.3s;
+}
+
+.adventure-step-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 100%;
+  background-color: rgba(0, 123, 255, 0.5);
+  z-index: 0;
+  transition: width linear;
+}
+
+.adventure-step-button:hover {
+  background-color: #0056b3;
+}
+
+.adventure-step-button:disabled {
+  color: #fff;
+  cursor: not-allowed;
+}
+
+.adventure-step-button span {
+  position: relative;
+  z-index: 1;
+}
