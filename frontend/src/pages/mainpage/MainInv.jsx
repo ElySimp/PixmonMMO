@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import './MainInv.css'
 import Topbar from '../../components/Topbar'
 import Sidebar from '../../components/Sidebar'
+import potion from '../../assets/inv_asset/potion.png';
 
+const description = "idk what to write";
+const testAmount = 5;
 
 function MaininvInvCreation(count) {
   return Array.from({ length: count }, (_, i) => (
@@ -20,7 +23,14 @@ function InventoryItem({ index }) {
         className="maininv-inventory-items"
         onClick={() => setIsOpen(true)}  // Open box when clicked
       >
-        Item {index + 1}
+       
+        <div class="maininv-amt"> x{testAmount} </div>
+
+        
+        <div class="maininv-items">
+          <img src={potion} alt="fix it now"/>
+        </div>
+        
       </div>
 
       {/* Conditionally render the box in the center */}
@@ -33,7 +43,19 @@ function InventoryItem({ index }) {
             >
               &times;
             </span>
-            <p>Details for Item {index + 1}</p>
+            <div class="overlay-name">
+                potion of sample
+                {/* Details for Item {index + 1} */}
+              </div>
+            <div class="maininv-items">
+               <img src={potion} alt="fix it now"/>
+                </div>
+
+            <div class="maininv-description">
+                  {description}
+              </div>
+              
+              
           </div>
         </div>
       )}
@@ -72,7 +94,7 @@ const MainInv = () => {
         console.log('Egg clicked');
       };
 
-      const count = 60;
+      const count = 10;
 
       return (
         <div className="maininv-invCont">
