@@ -6,7 +6,7 @@
   }
 
 
-.invCont {
+.maininv-invCont {
     min-height: 100vh;
     background-color: #161716;
     color: white;
@@ -19,7 +19,7 @@
   }
 
 
-  .invContent {
+  .maininv-invContent {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -28,7 +28,7 @@
     margin-top: 0;
   }
 
-.sortingSquare {
+.maininv-sortingSquare {
     display: flex;
     background-color: rgba(203, 203, 203, 0.5);;
     width: 15vw;
@@ -41,7 +41,7 @@
     flex-direction: column;
 }
 
-.sortingSquare select {
+.maininv-sortingSquare select {
     background-color: rgb(236, 236, 236);
     color: black;
     width: 12vw;
@@ -53,14 +53,14 @@
     transition: opacity 0.5s ease, max-height 0.5s ease;
 }
 
-.sortingSquare select.open {
+.maininv-sortingSquare select.open {
     opacity: 1; /* Show when 'open' class is added */
 }
 
-.sortingSquare select option {
+.maininv-sortingSquare select option {
     border-radius: 10px;
 }
-.innerSort {
+.maininv-innerSort {
     background-color: rgb(236, 236, 236);
     color: black;
     width: 190px;
@@ -73,11 +73,11 @@
     
 }
 
-.inventory-sorting-content {
-
+.maininv-inventory-sorting-content {
+    
 }
 
-.inventory-Info {
+.maininv-inventory-Info {
     background-color: rgba(203, 203, 203, 0.5);;
     width: 62vw;
     height: 6vh;
@@ -93,7 +93,7 @@
     
 }
 
-.inventory-capacity {
+.maininv-inventory-capacity {
     background-color: rgb(236, 236, 236);
     color: black;
     width: 190px;
@@ -110,7 +110,7 @@
     
 }
 
-.Inventory-Data-Container {
+.maininv-Inventory-Data-Container {
     display: flex;
     flex-direction: start;
     margin-left: 1%;
@@ -118,10 +118,10 @@
     
 }
 
-.info-and-inside {
+.maininv-info-and-inside {
     flex-direction: row;
 }
-.actual-inventory {
+.maininv-actual-inventory {
     background-color: transparent;
     width: 62vw;
     height: 72.5vh;
@@ -139,14 +139,59 @@
 
 }
 
-.right-side-inv {
+.maininv-right-side-inv {
     flex-direction: column;
 }
   
-.inventory-items {
+.maininv-inventory-items {
     width: 7vw;
     height: 7vw;
-    background-color: red;
-    margin-top: 2%;
-    margin-left: 2%;
+    background-color: gray;
+    margin: 0.25rem;
+    border-radius: 10px;
 }
+
+.maininv-display {
+    width: 200vw;
+    height: 200vh;
+    background-color: red;
+    display: none;
+    color:black;
+}
+
+.maininv-item-container {
+    background-color: transparent;
+}
+
+.maininv-centered-box {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5); /* Optional dark background */
+    z-index: 1000;
+  }
+  
+  .maininv-box-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    width: 300px;
+    height: 200px;
+  }
+  
+  .maininv-close-btn {
+    position: relative;
+    margin-left: 100%;
+    margin-bottom: 100%;
+    color: black;
+    background-color: white;
+    font-size: 24px;
+    cursor: pointer;
+  }
+  
