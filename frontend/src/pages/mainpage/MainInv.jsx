@@ -116,7 +116,7 @@ const MainInv = () => {
                 <div class="maininv-sortingSquare">
                   <div class="maininv-innerSort"> filter </div>
                   <br></br>
-                  <label for="fruit" class="maininv-inventory-sorting-content">Choose a type</label>
+                  <label>Choose a type</label>
                   <br></br>
                   <select id="Sort" name="Choice" class="maininv-inventory-sorting-content">
                     <option value="All">All</option>
