@@ -130,3 +130,111 @@ exports.updateStats = async (req, res) => {
         });
     }
 };
+
+// New controller functions for frontend endpoints
+
+// Calculate XP required for a given level
+const calculateXpCap = (playerLevel) => {
+    return Math.floor(50 * Math.pow(playerLevel, 1.4));
+};
+
+// Get stats for a specific user by ID
+exports.getUserStats = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Simple validation
+        if (!userId || isNaN(userId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid user ID'
+            });
+        }
+        
+        const stats = await User.getStats(userId);
+        
+        // Return stats in the format expected by the frontend
+        res.json(stats);
+    } catch (error) {
+        console.error('Error getting user stats:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// Update stats for a specific user by ID, with level progression
+exports.updateUserStats = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { xpDelta, goldDelta, level: newLevel, resetXp, cooldownEnd } = req.body;
+        
+        console.log(`LEVEL DEBUG [Controller] - Received request with level=${newLevel}, userId=${userId}`);
+        
+        // Simple validation
+        if (!userId || isNaN(userId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid user ID'
+            });
+        }
+        
+        if (xpDelta === undefined || goldDelta === undefined) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide xpDelta and goldDelta'
+            });
+        }
+        
+        // Get current stats
+        const currentStats = await User.getStats(userId);
+        console.log(`LEVEL DEBUG [Controller] - Current stats from DB: level=${currentStats.level}, xp=${currentStats.xp}`);
+        
+        // Check if we need to update the level or if the frontend already calculated it
+        let updatedLevel = currentStats.level;
+        let updatedXp = currentStats.xp + xpDelta;
+        
+        // Handle level up scenarios
+        if (newLevel && newLevel > currentStats.level) {
+            // Frontend already calculated the new level, trust it
+            updatedLevel = newLevel;
+            console.log(`LEVEL DEBUG [Controller] - Using frontend level=${updatedLevel} (was ${currentStats.level})`);
+            
+            // Reset XP to 0 if requested
+            if (resetXp) {
+                updatedXp = 0;
+                console.log(`LEVEL DEBUG [Controller] - Resetting XP to 0 due to resetXp flag`);
+            }
+        } else {
+            // Calculate if player should level up based on new XP total
+            const currentLevelCap = calculateXpCap(currentStats.level);
+            console.log(`LEVEL DEBUG [Controller] - XP cap for level ${currentStats.level} is ${currentLevelCap}, current XP after gain would be ${updatedXp}`);
+            
+            if (updatedXp >= currentLevelCap) {
+                updatedLevel = currentStats.level + 1;
+                console.log(`LEVEL DEBUG [Controller] - Player leveled up! New level: ${updatedLevel}`);
+                
+                // Reset XP to 0 on level up
+                updatedXp = 0;
+            }
+        }
+        
+        // Update all stats in one go with absolute XP value
+        console.log(`LEVEL DEBUG [Controller] - Calling updateAllStatsAbsolute with level=${updatedLevel}`);
+        await User.updateAllStatsAbsolute(userId, updatedXp, currentStats.gold + goldDelta, updatedLevel, cooldownEnd);
+        
+        // Get updated stats
+        const updatedStats = await User.getStats(userId);
+        console.log(`LEVEL DEBUG [Controller] - After update, stats from DB: level=${updatedStats.level}, xp=${updatedStats.xp}`);
+        
+        // Return updated stats in the format expected by the frontend
+        res.json(updatedStats);
+    } catch (error) {
+        console.error('Error updating user stats:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};

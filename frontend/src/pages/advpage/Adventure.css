@@ -11,17 +11,18 @@
 
 .adventure-grid {
   display: grid;
-  grid-template-rows: 1fr 4fr;
-  gap: 1.5rem;
+  grid-template-rows: auto auto 1fr;
+  gap: 0.5rem;
   padding: 1.5rem;
   box-sizing: border-box;
 }
 
 .adventure-grid-profile {
     background-color: #101011;
-    border-radius: 12px;
+    border-radius: 12px 12px 0 0;
     padding: 1.5rem;
     border: 1.5px solid #232323;
+    border-bottom: none;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -37,6 +38,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  margin-top: 0.5rem;
 }
 
 .adventure-profile-pic {
@@ -52,6 +54,39 @@
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+  min-width: 200px;
+}
+
+/* XP Bar Styles */
+.xp-bar-container {
+  width: 100%;
+  height: 25px;
+  background-color: #232323;
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+  position: relative;
+  margin-top: -0.5rem;
+  border: 1.5px solid #232323;
+  border-top: none;
+}
+
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, #4CAF50, #8BC34A);
+  border-radius: 0 0 10px 10px;
+  transition: width 0.3s ease;
+}
+
+.xp-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.7);
+  white-space: nowrap;
 }
 
 .adventure-story {
@@ -65,7 +100,7 @@
   padding: 10px 20px;
   font-size: 16px;
   cursor: pointer;
-  background-color: #007bff;
+  background-color: #232323;
   color: #fff;
   border: none;
   border-radius: 5px;
@@ -73,28 +108,26 @@
   transition: background-color 0.3s;
 }
 
-.adventure-step-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 0%;
-  height: 100%;
-  background-color: rgba(0, 123, 255, 0.5);
-  z-index: 0;
-  transition: width linear;
-}
-
 .adventure-step-button:hover {
-  background-color: #0056b3;
+  background-color: #3a3a3a;
 }
 
 .adventure-step-button:disabled {
-  color: #fff;
   cursor: not-allowed;
 }
 
-.adventure-step-button span {
+.cooldown-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(to right, #007bff, #00c6ff);
+  border-radius: 5px;
+  transition: width 0.25s linear;
+  z-index: 0;
+}
+
+.button-text {
   position: relative;
   z-index: 1;
 }

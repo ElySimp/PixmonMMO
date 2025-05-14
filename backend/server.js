@@ -36,8 +36,14 @@ app.use(express.json());
 app.post('/api/auth/register', authController.register);
 app.post('/api/auth/login', authController.login);
 app.get('/api/auth/me', protect, authController.getMe);
+
+// Original stats routes
 app.get('/api/user/stats', protect, authController.getStats);
 app.post('/api/user/stats', protect, authController.updateStats);
+
+// New routes to match frontend endpoints
+app.get('/api/users/:userId/stats', authController.getUserStats);
+app.post('/api/users/:userId/update-stats', authController.updateUserStats);
 
 // Health check route
 app.get('/api/health', (req, res) => {
