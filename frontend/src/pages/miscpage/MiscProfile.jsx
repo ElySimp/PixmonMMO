@@ -121,7 +121,7 @@ const MiscProfile = () => {
               <div className="misc-profile-profile-stats-container">
                 <div className="misc-profile-level-display">
                   <span className="misc-profile-stat-label">Level</span>
-                  <span className="misc-profile-stat-value">10/100</span>
+                  <span className="misc-profile-stat-value">10</span>
                 </div>
                 
                 <div className="misc-profile-xp-container">
@@ -175,7 +175,7 @@ const MiscProfile = () => {
           {/* Skill Points */}
           <div className="misc-profile-skill-points-container">
             <span className="misc-profile-skill-points-label">Skill Points</span>
-            <span className="misc-profile-skill-points-value">0/100</span>
+            <span className="misc-profile-skill-points-value">0</span>
           </div>
 
           {/* Bottom section */}

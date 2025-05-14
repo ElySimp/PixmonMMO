@@ -60,7 +60,8 @@
   height: 100%;
   background-color: rgba(0, 0, 0, 0); /* ✅ Transparan hitam 50% */
   z-index: 1;
-  transition: background-color 0.4s ease;
+  transition : 0.5s ease;
+
 }
 
 .misc-profile-wallpaper-upload-btn {
@@ -156,9 +157,6 @@
   left: 50%;
   width: 0;
   height: 2px;
-  background-color: #007bff;
-  transition: all 0.3s ease;
-  transform: translateX(-50%);
 }
 
 .misc-profile-character-name:hover:after {
@@ -198,7 +196,6 @@
 
 .misc-profile-stat-value:hover {
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-  transform: scale(1.1);
 }
 
 .misc-profile-xp-container {
@@ -261,24 +258,15 @@
   background-color: #101010;
   border-radius: 10px;
   position: relative;
-  transition: all 0.3s ease;
   overflow: hidden;
 }
 
-.misc-profile-profile-status-message:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-}
 
-/* Remove the elliptical overlay animation */
-.misc-profile-profile-status-message::before {
-  display: none; /* Remove the effect completely */
-}
 
 /* Adjust edit status button position */
 .misc-profile-edit-status-btn {
   position: absolute;
-  right:-710px; /* Increased from 10px */
+  right:-720px; /* Increased from 10px */
   bottom: -24px; /* Increased from 10px */
   background-color: #007bff;
   color: white;
@@ -287,7 +275,7 @@
   padding: 4px 20px;
   font-size: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.1s ease;
   opacity: 0.8;
 }
 
@@ -313,14 +301,7 @@
   flex-direction: column;
   align-items: center;
   position: relative;
-  transition: all 0.4s ease;
   transform-origin: center;
-}
-
-.misc-profile-stat-box:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-  background-color: #151515;
 }
 
 .misc-profile-stat-info {
@@ -332,24 +313,19 @@
 
 .misc-profile-stat-icon {
   font-size: 24px;
-  transition: all 0.3s ease;
+
 }
 
-/* Improve stat icon sizing */
 .misc-profile-stat-box:hover .misc-profile-stat-icon {
-  transform: scale(1.2); /* Removed the rotation */
+  transform: scale(1); 
   color: #007bff;
 }
 
 .misc-profile-stat-name {
   font-size: 18px;
   color: white;
-  transition: all 0.3s ease;
 }
 
-.misc-profile-stat-box:hover .misc-profile-stat-name {
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-}
 
 .misc-profile-stat-plus-btn {
   width: 40px;
@@ -370,7 +346,6 @@
 .misc-profile-stat-plus-btn:hover {
   background-color: #007bff;
   border-color: #0056b3;
-  transform: scale(1.1); /* Replace rotation with simple scale */
 }
 
 .misc-profile-stat-plus-btn::after {
@@ -421,7 +396,6 @@
 .misc-profile-skill-points-label {
   font-size: 16px;
   color: white;
-  transition: all 0.3s ease;
 }
 
 .misc-profile-skill-points-value {
@@ -589,15 +563,15 @@
   font-size: 12px;
   cursor: pointer;
   position: absolute;
-  bottom: 10px;
+  bottom: 2px;
   right: -310px;
   transition: all 0.3s ease;
-  opacity: 0.8;
+  opacity: 0.7;
 }
 
 .misc-profile-edit-pet-btn:hover {
   opacity: 1;
-  transform: translateX(-5px);
+  transform: translateY(-3px);
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 }
 
@@ -702,7 +676,7 @@
 
 .misc-profile-edit-achievements-btn:hover {
   opacity: 1;
-  transform: translateX(-5px);
+  transform: translateY(-3px);
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 }
 
@@ -721,13 +695,6 @@
 .misc-profile-profile-page {
   animation: misc-profile-fadeIn 0.8s ease-out;
 }
-
-.misc-profile-stat-box:nth-child(1) { animation: misc-profile-fadeIn 0.5s ease-out 0.1s both; }
-.misc-profile-stat-box:nth-child(2) { animation: misc-profile-fadeIn 0.5s ease-out 0.2s both; }
-.misc-profile-stat-box:nth-child(3) { animation: misc-profile-fadeIn 0.5s ease-out 0.3s both; }
-.misc-profile-stat-box:nth-child(4) { animation: misc-profile-fadeIn 0.5s ease-out 0.4s both; }
-.misc-profile-stat-box:nth-child(5) { animation: misc-profile-fadeIn 0.5s ease-out 0.5s both; }
-.misc-profile-stat-box:nth-child(6) { animation: misc-profile-fadeIn 0.5s ease-out 0.6s both; }
 
 .misc-profile-favorite-pet-container { animation: misc-profile-fadeIn 0.5s ease-out 0.3s both; }
 .misc-profile-achievements-container { animation: misc-profile-fadeIn 0.5s ease-out 0.5s both; }
