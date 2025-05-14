@@ -2,9 +2,14 @@ const db = require('../config/database');
 const bcrypt = require('bcryptjs');
 
 class User {
+
+    // Login table creation
     static async createTable() {
+        // Drop table, kalo butuh
+        const dropSql = `DROP TABLE IF EXISTS NAMATABELDISINI`;
+        
         const sql = `
-            CREATE TABLE IF NOT EXISTS users (
+            CREATE TABLE IF NOT EXISTS UserLogin (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(255) NOT NULL UNIQUE,
                 email VARCHAR(255) NOT NULL UNIQUE,
@@ -14,10 +19,11 @@ class User {
             )
         `;
         try {
+            await db.query(dropSql);
             await db.query(sql);
-            console.log('Users table created or already exists');
+            console.log('UserLogin table created or already exists');
         } catch (error) {
-            console.error('Error creating users table:', error);
+            console.error('Error creating UserLogin table:', error);
             throw error;
         }
     }
@@ -33,7 +39,7 @@ class User {
             // Insert user with current date for updated_at
             const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
             const [result] = await db.query(
-                'INSERT INTO users (username, email, password, updated_at) VALUES (?, ?, ?, ?)',
+                'INSERT INTO UserLogin (username, email, password, updated_at) VALUES (?, ?, ?, ?)',
                 [username, email, hashedPassword, now]
             );
             
@@ -56,7 +62,7 @@ class User {
         try {
             // Find user
             const [users] = await db.query(
-                'SELECT * FROM users WHERE username = ?',
+                'SELECT * FROM UserLogin WHERE username = ?',
                 [username]
             );
 
@@ -75,7 +81,7 @@ class User {
             // Update the updated_at timestamp
             const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
             await db.query(
-                'UPDATE users SET updated_at = ? WHERE id = ?',
+                'UPDATE UserLogin SET updated_at = ? WHERE id = ?',
                 [now, user.id]
             );
 
@@ -90,7 +96,7 @@ class User {
     static async findById(id) {
         try {
             const [users] = await db.query(
-                'SELECT id, username, email, created_at, updated_at FROM users WHERE id = ?',
+                'SELECT id, username, email, created_at, updated_at FROM UserLogin WHERE id = ?',
                 [id]
             );
             return users[0] || null;
@@ -98,6 +104,54 @@ class User {
             throw error;
         }
     }
+    
+    static async createStatsTable() {
+        const sql = `
+            CREATE TABLE IF NOT EXISTS UserStats (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                xp INT DEFAULT 0,
+                gold INT DEFAULT 0,
+                level INT DEFAULT 1,
+                updated_at DATETIME NULL,
+                FOREIGN KEY (user_id) REFERENCES UserLogin(id) ON DELETE CASCADE
+            )
+        `;
+        try {
+            await db.query(sql);
+            console.log('UserStats table created or already exists');
+        } catch (error) {
+            console.error('Error creating UserStats table:', error);
+            throw error;
+        }
+    }
+
+    // Call this after registering a user
+    static async createUserStats(userId) {
+        const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+        await db.query(
+            'INSERT INTO UserStats (user_id, xp, gold, level, updated_at) VALUES (?, 0, 0, 1, ?)',
+            [userId, now]
+        );
+    }
+
+    // Update XP and Gold for a user
+    static async updateStats(userId, xpDelta, goldDelta) {
+        const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+        await db.query(
+            'UPDATE UserStats SET xp = xp + ?, gold = gold + ?, updated_at = ? WHERE user_id = ?',
+            [xpDelta, goldDelta, now, userId]
+        );
+    }
+
+    // Get stats for a user
+    static async getStats(userId) {
+        const [rows] = await db.query(
+            'SELECT xp, gold, level FROM UserStats WHERE user_id = ?',
+            [userId]
+        );
+        return rows[0] || { xp: 0, gold: 0, level: 1 };
+    }
 }
 
-module.exports = User; 
+module.exports = User;

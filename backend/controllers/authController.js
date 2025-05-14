@@ -97,4 +97,36 @@ exports.getMe = async (req, res) => {
             message: error.message
         });
     }
-}; 
+};
+
+exports.getStats = async (req, res) => {
+    try {
+        const stats = await User.getStats(req.user.id);
+        res.json({
+            success: true,
+            data: stats
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+exports.updateStats = async (req, res) => {
+    try {
+        const { xpDelta, goldDelta } = req.body;
+        await User.updateStats(req.user.id, xpDelta, goldDelta);
+        const stats = await User.getStats(req.user.id);
+        res.json({
+            success: true,
+            data: stats
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
