@@ -143,8 +143,15 @@ const Adventure = () => {
   }, [user]); // Re-run when user changes
 
   const handleStep = async () => {
-    if (cooldown > 0) return;
-
+    // Don't allow steps if on cooldown
+    if (cooldown > 0) {
+      return;
+    }
+    
+    // Track total steps for achievements
+    const totalSteps = localStorage.getItem(`steps_${user.id}`) ? 
+      parseInt(localStorage.getItem(`steps_${user.id}`)) : 0;
+    
     // Calculate current level XP cap
     const currentXpCap = calculateXpCap(level);
     
@@ -250,6 +257,64 @@ const Adventure = () => {
       console.log('Stats updated successfully:', response.data);
       // Check if level was updated in response
       console.log(`LEVEL DEBUG - Level in response: ${response.data.level}, Expected: ${newLevel}`);
+      
+      // Increment total steps for achievements and store in localStorage
+      const newTotalSteps = totalSteps + 1;
+      localStorage.setItem(`steps_${user.id}`, newTotalSteps);
+      
+      // Check for achievements based on new stats and step count
+      try {
+        const achievementResponse = await axios.post(`${API_URL}/users/${user.id}/check-achievements`, {
+          progressData: {
+            totalSteps: newTotalSteps,
+          }
+        });
+        
+        // If achievements were unlocked, show notifications
+        if (achievementResponse.data.newAchievements && achievementResponse.data.newAchievements.length > 0) {
+          // Show achievement notifications
+          achievementResponse.data.newAchievements.forEach(achievement => {
+            toast.success(
+              <div className="achievement-toast">
+                <div className="achievement-toast-header">
+                  <strong>Achievement Unlocked!</strong>
+                </div>
+                <div className="achievement-toast-body">
+                  <p><b>{achievement.title}</b></p>
+                  <p>{achievement.description}</p>
+                  {(achievement.rewards.xp > 0 || achievement.rewards.gold > 0) && (
+                    <div className="achievement-toast-rewards">
+                      {achievement.rewards.xp > 0 && (
+                        <span>+{achievement.rewards.xp} XP</span>
+                      )}
+                      {achievement.rewards.gold > 0 && (
+                        <span>+{achievement.rewards.gold} Gold</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>,
+              {
+                position: "top-center",
+                autoClose: 4000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                className: "achievement-notification-toast"
+              }
+            );
+          });
+          
+          // Update stats if rewards were given
+          if (achievementResponse.data.rewards.xp > 0 || achievementResponse.data.rewards.gold > 0) {
+            setXp(prevXp => prevXp + achievementResponse.data.rewards.xp);
+            setGold(prevGold => prevGold + achievementResponse.data.rewards.gold);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking achievements:', error);
+      }
     } catch (error) {
       console.error('Error updating stats:', error);
       toast.error('Failed to save your progress!');

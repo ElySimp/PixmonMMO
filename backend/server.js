@@ -3,7 +3,9 @@ const cors = require('cors');
 require('dotenv').config();
 
 const User = require('./models/User');
+const Achievement = require('./models/Achievement');
 const authController = require('./controllers/authController');
+const achievementController = require('./controllers/achievementController');
 const { protect } = require('./middleware/auth');
 
 const app = express();
@@ -32,6 +34,17 @@ app.use(express.json());
     }
 })();
 
+// Initialize Achievement tables
+(async () => {
+    try {
+        await Achievement.createTable();
+        await Achievement.createUserAchievementsTable();
+        console.log('Achievement tables initialized');
+    } catch (error) {
+        console.error('Achievement tables initialization error:', error);
+    }
+})();
+
 // Routes
 app.post('/api/auth/register', authController.register);
 app.post('/api/auth/login', authController.login);
@@ -44,6 +57,13 @@ app.post('/api/user/stats', protect, authController.updateStats);
 // New routes to match frontend endpoints
 app.get('/api/users/:userId/stats', authController.getUserStats);
 app.post('/api/users/:userId/update-stats', authController.updateUserStats);
+
+// Achievement routes
+app.get('/api/achievements', achievementController.getAllAchievements);
+app.get('/api/users/:userId/achievements', achievementController.getUserAchievements);
+app.post('/api/users/:userId/check-achievements', achievementController.checkAchievements);
+app.post('/api/users/:userId/unlock-achievement', achievementController.unlockAchievement);
+app.post('/api/init-achievements', achievementController.initAchievementTables);
 
 // Health check route
 app.get('/api/health', (req, res) => {
