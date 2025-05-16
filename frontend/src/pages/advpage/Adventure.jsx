@@ -245,18 +245,37 @@ const Adventure = () => {
     try {
       console.log(`LEVEL DEBUG - Current level: ${level}, New level: ${newLevel}`);
       console.log(`Updating stats for user ${user.id}: XP +${randomXp}, Gold +${randomGold}, Level ${newLevel}, Cooldown until ${new Date(cooldownEndTimestamp).toISOString()}`);
+      console.log('API URL:', API_URL);
+      console.log('User object:', user);
       
-      const response = await axios.post(`${API_URL}/users/${user.id}/update-stats`, {
+      // Validate the user ID before sending the request
+      if (!user || !user.id) {
+        console.error('Invalid user ID:', user?.id);
+        toast.error('Authentication error: Invalid user ID. Try logging in again.');
+        return;
+      }
+      
+      const payload = {
         xpDelta: randomXp,
         goldDelta: randomGold,
         level: newLevel,
         resetXp: newLevel > level, // Tell the backend to reset XP if we leveled up
         cooldownEnd: new Date(cooldownEndTimestamp).toISOString()
-      });
+      };
+      
+      console.log('Sending payload:', payload);
+      
+      const response = await axios.post(`${API_URL}/users/${user.id}/update-stats`, payload);
       
       console.log('Stats updated successfully:', response.data);
       // Check if level was updated in response
       console.log(`LEVEL DEBUG - Level in response: ${response.data.level}, Expected: ${newLevel}`);
+      
+      // Check if there was an error in the response
+      if (response.data.error) {
+        console.error('Error in response:', response.data.error);
+        toast.error(`Failed to save progress: ${response.data.error}`);
+      }
       
       // Increment total steps for achievements and store in localStorage
       const newTotalSteps = totalSteps + 1;
@@ -317,7 +336,39 @@ const Adventure = () => {
       }
     } catch (error) {
       console.error('Error updating stats:', error);
-      toast.error('Failed to save your progress!');
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      console.error('Error message:', error.message);
+      
+      // More detailed error logging
+      if (error.response) {
+        console.error('Response error data:', error.response.data);
+        console.error('Response error status:', error.response.status);
+        console.error('Response error headers:', error.response.headers);
+      } else if (error.request) {
+        console.error('Request was made but no response received');
+        console.error(error.request);
+      }
+      
+      // User-facing error message
+      let errorMessage = 'Failed to save your progress!';
+      
+      if (error.response?.data?.message) {
+        errorMessage = `Failed to save your progress: ${error.response.data.message}`;
+      } else if (error.message && error.message.includes('Network Error')) {
+        errorMessage = 'Network error: Could not reach the server. Check your internet connection.';
+      } else if (error.message) {
+        errorMessage = `Error: ${error.message}`;
+      }
+      
+      toast.error(errorMessage);
+      
+      // Set a flag in localStorage so we know an error occurred
+      localStorage.setItem('adventure_error_occurred', 'true');
+      localStorage.setItem('adventure_error_message', errorMessage);
+      
+      // Continue the game locally despite the error
+      console.log('Continuing with local state despite server error');
     }
   };
 

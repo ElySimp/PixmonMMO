@@ -171,6 +171,7 @@ exports.updateUserStats = async (req, res) => {
         const { xpDelta, goldDelta, level: newLevel, resetXp, cooldownEnd } = req.body;
         
         console.log(`LEVEL DEBUG [Controller] - Received request with level=${newLevel}, userId=${userId}`);
+        console.log(`LEVEL DEBUG [Controller] - Full request body:`, req.body);
         
         // Simple validation
         if (!userId || isNaN(userId)) {
@@ -219,19 +220,32 @@ exports.updateUserStats = async (req, res) => {
                 updatedXp = 0;
             }
         }
-        
-        // Update all stats in one go with absolute XP value
+          // Update all stats in one go with absolute XP value
         console.log(`LEVEL DEBUG [Controller] - Calling updateAllStatsAbsolute with level=${updatedLevel}`);
-        await User.updateAllStatsAbsolute(userId, updatedXp, currentStats.gold + goldDelta, updatedLevel, cooldownEnd);
+        try {
+            await User.updateAllStatsAbsolute(userId, updatedXp, currentStats.gold + goldDelta, updatedLevel, cooldownEnd);
+        } catch (updateError) {
+            // Check if error is related to cooldownEnd column not existing
+            if (updateError.message && updateError.message.includes('cooldownEnd')) {
+                console.log('LEVEL DEBUG [Controller] - Detected cooldownEnd column issue, trying without cooldown');
+                // Try again without the cooldownEnd parameter
+                await User.updateAllStatsAbsolute(userId, updatedXp, currentStats.gold + goldDelta, updatedLevel);
+            } else {
+                // Re-throw the error if it's not related to cooldownEnd
+                throw updateError;
+            }
+        }
         
         // Get updated stats
         const updatedStats = await User.getStats(userId);
         console.log(`LEVEL DEBUG [Controller] - After update, stats from DB: level=${updatedStats.level}, xp=${updatedStats.xp}`);
         
         // Return updated stats in the format expected by the frontend
-        res.json(updatedStats);
-    } catch (error) {
+        res.json(updatedStats);    } catch (error) {
         console.error('Error updating user stats:', error);
+        console.error('Error stack:', error.stack);
+        console.error('Request body:', req.body);
+        console.error('User ID:', userId);
         res.status(500).json({
             success: false,
             message: error.message

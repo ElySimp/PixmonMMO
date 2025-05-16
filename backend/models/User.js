@@ -125,15 +125,21 @@ class User {
             console.error('Error creating UserStats table:', error);
             throw error;
         }
-    }
-
-    // Call this after registering a user
+    }    // Call this after registering a user
     static async createUserStats(userId) {
-        const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
-        await db.query(
-            'INSERT INTO UserStats (user_id, xp, gold, level, cooldownEnd, updated_at) VALUES (?, 0, 0, 1, NULL, ?)',
-            [userId, now]
-        );
+        try {
+            console.log(`LEVEL DEBUG [Model] - Creating initial stats for user ${userId}`);
+            const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+            const [result] = await db.query(
+                'INSERT INTO UserStats (user_id, xp, gold, level, cooldownEnd, updated_at) VALUES (?, 0, 0, 1, NULL, ?)',
+                [userId, now]
+            );
+            console.log(`LEVEL DEBUG [Model] - Created stats successfully, result:`, result);
+            return true;
+        } catch (error) {
+            console.error(`LEVEL DEBUG [Model] - Error creating user stats:`, error);
+            throw error;
+        }
     }
 
     // Update XP and Gold for a user
@@ -172,9 +178,7 @@ class User {
             console.error('Error updating all stats:', error);
             throw error;
         }
-    }
-
-    // Set absolute values for XP, Gold and Level (useful for XP reset on level up)
+    }    // Set absolute values for XP, Gold and Level (useful for XP reset on level up)
     static async updateAllStatsAbsolute(userId, newXp, newGold, newLevel, cooldownEnd = null) {
         const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
         
@@ -190,6 +194,18 @@ class User {
                 await this.createUserStats(userId);
             }
             
+            // Check if the cooldownEnd column exists to avoid SQL errors
+            const [cooldownColumn] = await db.query(`
+                SELECT COUNT(*) as count 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = DATABASE()
+                AND TABLE_NAME = 'UserStats' 
+                AND COLUMN_NAME = 'cooldownEnd'
+            `);
+            
+            const cooldownColumnExists = cooldownColumn[0].count > 0;
+            console.log(`LEVEL DEBUG [Model] - cooldownEnd column exists: ${cooldownColumnExists}`);
+            
             // Format the cooldown date for MySQL or use NULL
             const cooldownSql = cooldownEnd ? cooldownEnd.slice(0, 19).replace('T', ' ') : null;
             
@@ -198,7 +214,7 @@ class User {
             console.log(`About to update stats with level=${safeLevel} (original value: ${newLevel})`);
             
             // Set absolute values for stats
-            if (cooldownSql) {
+            if (cooldownSql && cooldownColumnExists) {
                 await db.query(
                     'UPDATE UserStats SET xp = ?, gold = ?, level = ?, cooldownEnd = ?, updated_at = ? WHERE user_id = ?',
                     [newXp, newGold, safeLevel, cooldownSql, now, userId]
@@ -215,28 +231,62 @@ class User {
             console.error('Error setting absolute stats:', error);
             throw error;
         }
-    }
-
-    // Get stats for a user
+    }    // Get stats for a user
     static async getStats(userId) {
         try {
-            // First, check if this user even has stats
+            console.log(`LEVEL DEBUG [Model] - Getting stats for userId=${userId}`);
+            
+            // First, check if the user exists in UserLogin before attempting to get stats
+            const [userExists] = await db.query(
+                'SELECT COUNT(*) as count FROM UserLogin WHERE id = ?',
+                [userId]
+            );
+            
+            console.log(`LEVEL DEBUG [Model] - User exists check: ${JSON.stringify(userExists[0])}`);
+            
+            if (userExists[0].count === 0) {
+                console.log(`LEVEL DEBUG [Model] - User ${userId} does not exist in UserLogin table`);
+                return { xp: 0, gold: 0, level: 1, cooldownEnd: null, error: 'User does not exist' };
+            }
+            
+            // Check if this user has stats
             const [existCheck] = await db.query(
                 'SELECT COUNT(*) as count FROM UserStats WHERE user_id = ?',
                 [userId]
             );
             
+            console.log(`LEVEL DEBUG [Model] - Stats check result: ${JSON.stringify(existCheck[0])}`);
+            
             // If no stats found, create initial stats
             if (existCheck[0].count === 0) {
                 console.log(`LEVEL DEBUG [Model] - No stats found for user ${userId}, creating initial stats`);
-                await this.createUserStats(userId);
+                try {
+                    await this.createUserStats(userId);
+                } catch (err) {
+                    console.error(`LEVEL DEBUG [Model] - Error creating user stats:`, err);
+                    return { xp: 0, gold: 0, level: 1, cooldownEnd: null, error: 'Failed to create stats' };
+                }
             }
+              // Check if the cooldownEnd column exists
+            const [cooldownColumn] = await db.query(`
+                SELECT COUNT(*) as count 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = DATABASE()
+                AND TABLE_NAME = 'UserStats' 
+                AND COLUMN_NAME = 'cooldownEnd'
+            `);
+            
+            const cooldownColumnExists = cooldownColumn[0].count > 0;
+            console.log(`LEVEL DEBUG [Model] - cooldownEnd column exists in getStats: ${cooldownColumnExists}`);
             
             // Now get the stats
-            const [rows] = await db.query(
-                'SELECT xp, gold, level, cooldownEnd FROM UserStats WHERE user_id = ?',
-                [userId]
-            );
+            let query = 'SELECT xp, gold, level';
+            if (cooldownColumnExists) {
+                query += ', cooldownEnd';
+            }
+            query += ' FROM UserStats WHERE user_id = ?';
+            
+            const [rows] = await db.query(query, [userId]);
             
             if (rows.length > 0) {
                 console.log(`LEVEL DEBUG [Model] - Retrieved stats: ${JSON.stringify(rows[0])}`);
