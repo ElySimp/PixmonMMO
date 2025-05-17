@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Topbar.css';
 import chatIcon from '../assets/MAIN/chat.png';
@@ -15,9 +15,31 @@ function Topbar({
 }) {
   const [showProfileCard, setShowProfileCard] = useState(false);
   const navigate = useNavigate();
+  const profileCardRef = useRef(null);
+  const profileButtonRef = useRef(null);
+
+  // Close profile card when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        showProfileCard && 
+        profileCardRef.current && 
+        !profileCardRef.current.contains(event.target) &&
+        profileButtonRef.current &&
+        !profileButtonRef.current.contains(event.target)
+      ) {
+        setShowProfileCard(false);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showProfileCard]);
 
   const handleProfileClick = () => {
-    navigate('/profile');
+    setShowProfileCard(!showProfileCard);
   };
 
   const handleTopUpClick = () => {
@@ -50,6 +72,11 @@ function Topbar({
     // Logika untuk logout
   };
 
+  const handleMyProfileClick = () => {
+    navigate('/profile');
+    setShowProfileCard(false);
+  };
+
   return (
     <nav className="topbar">
       <div className="topbar-left">
@@ -72,22 +99,23 @@ function Topbar({
           <img src={notificationIcon} alt="Notifications" className="topbar-icon" />
         </button>
 
-        {/* Profile Hover Dropdown with card-hover-profile class */}
-        <div 
-          className="topbar-button card-hover-profile"
-          onMouseEnter={() => setShowProfileCard(true)}
-          onMouseLeave={() => setShowProfileCard(false)}
-        >
-          <img 
-            src={profileImage}
-            alt="Profile" 
-            className="topbar-icon" 
+        {/* Profile Button and Dropdown */}
+        <div className="topbar-button profile-dropdown-container">
+          <button 
+            ref={profileButtonRef}
             onClick={handleProfileClick} 
-          />
+            className="profile-button"
+          >
+            <img 
+              src={profileImage}
+              alt="Profile" 
+              className="topbar-icon" 
+            />
+          </button>
           
           {showProfileCard && (
-            <div className="profile-card">
-              <div className="profile-header" onClick={handleProfileClick}>
+            <div className="profile-card" ref={profileCardRef}>
+              <div className="profile-header">
                 <div className="profile-avatar">
                   <img src={profileImage} alt="Profile" />
                 </div>
@@ -98,7 +126,6 @@ function Topbar({
                     <div className="xp-bar">
                       <div className="xp-progress"></div>
                     </div>
-                    <span className="xp-text">XP</span>
                   </div>
                 </div>
               </div>
@@ -107,7 +134,7 @@ function Topbar({
                 <div className="currency-item">
                   <span className="currency-icon">🪙</span>
                   <span className="currency-label">Gold</span>
-                  <span className="currency-amount">123.456.789.123</span>
+                  <span className="currency-amount">123.456.789</span>
                   <button 
                     className="currency-add" 
                     onClick={() => handleCurrencyAdd('gold')}
@@ -116,7 +143,7 @@ function Topbar({
                 <div className="currency-item">
                   <span className="currency-icon">💎</span>
                   <span className="currency-label">Diamond</span>
-                  <span className="currency-amount">123.456.789.123</span>
+                  <span className="currency-amount">123.456.789</span>
                   <button 
                     className="currency-add"
                     onClick={() => handleCurrencyAdd('diamond')}
@@ -158,7 +185,7 @@ function Topbar({
               </div>
               
               <div className="profile-actions">
-                <button className="action-button profile" onClick={handleProfileClick}>
+                <button className="action-button profile" onClick={handleMyProfileClick}>
                   <span className="action-icon">👤</span>
                   <span>My Profile</span>
                 </button>
