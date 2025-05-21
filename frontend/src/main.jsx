@@ -12,7 +12,7 @@ import MainAchievement from './pages/mainpage/MainAchievement.jsx'
 import MiscQuest from './pages/miscpage/MiscQuest.jsx'
 import MiscProfile from './pages/miscpage/MiscProfile.jsx' 
 import MiscPets from "./pages/miscpage/MiscPets.jsx"
-import Adventure from './pages/advpage/Adventure.jsx';
+import Adventure from './pages/mainpage/advpage/Adventure.jsx';
 
 import './index.css'
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './Auth.css';
+import { TOKEN_KEY } from '../../utils/config';
 
 const Auth = ({ setIsAuthenticated }) => {
     const [isLogin, setIsLogin] = useState(true);
@@ -79,7 +80,7 @@ const Auth = ({ setIsAuthenticated }) => {
             
             if (data.success) {
                 if (isLogin) {
-                    localStorage.setItem('token', data.data.token);
+                    localStorage.setItem(TOKEN_KEY, data.data.token); // gunakan TOKEN_KEY
                     setIsAuthenticated(true);
                 } else {
                     showSuccessOverlay('Registration successful! Please login.');
@@ -195,4 +196,4 @@ const Auth = ({ setIsAuthenticated }) => {
     );
 };
 
-export default Auth; 
+export default Auth;
