@@ -2,7 +2,7 @@ import React from "react";
 import "./Overlay.css";
 
 const Overlay = ({ isOpen, onClose, children }) => {
-  return (
+  return isOpen ? (
     <div className={`modal-overlay ${isOpen ? "show" : ""}`}>
       <div className="modal-content">
         <button className="modal-close" onClick={onClose}>
@@ -21,7 +21,7 @@ const Overlay = ({ isOpen, onClose, children }) => {
         </div>
       </div>
     </div>
-  );
+  ): null;
 };
 
 export default Overlay;

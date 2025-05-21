@@ -5,8 +5,12 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const User = require('./models/User');
 const Achievement = require('./models/Achievement');
+const Inventory = require('./models/Inventory');
+const inventoryController = require('./controllers/inventoryController');
+const { initializeTables, QuestSystem, UserQuest } = require('./models/QuestSystem'); // ✅ Tambahkan QuestSystem!
 const authController = require('./controllers/authController');
 const achievementController = require('./controllers/achievementController');
+const questController = require('./controllers/questController');
 const { protect } = require('./middleware/auth');
 
 const app = express();
@@ -46,6 +50,28 @@ app.use(express.json());
     }
 })();
 
+// 
+
+(async () => {
+    try {
+        await Inventory.createIndexInvtable();
+        await Inventory.createUserInventory();
+        console.log('Inventory tables initialized');
+    } catch (error) {
+        console.error('Inventory tables initialization error:', error);
+    }
+})();
+
+// Initialize Quest tables
+(async () => {
+    try {
+        await initializeTables();
+        console.log('Quest tables initialized');
+    } catch (error) {
+        console.error('Quest tables initialization error:', error);
+    }
+})();
+
 // Routes
 app.post('/api/auth/register', authController.register);
 app.post('/api/auth/login', authController.login);
@@ -66,6 +92,53 @@ app.post('/api/users/:userId/check-achievements', achievementController.checkAch
 app.post('/api/users/:userId/unlock-achievement', achievementController.unlockAchievement);
 app.post('/api/init-achievements', achievementController.initAchievementTables);
 
+// Inventory Route
+app.get('/api/inventory', inventoryController.getAllInventory);
+app.get('/api/users/:userId/inventoryCount', inventoryController.getInventoryCount);
+
+// Quest Routes
+app.get('/api/quests', questController.getAllQuests);
+app.post('/api/user/:userId/quest/:questId/complete', questController.completeQuest);
+
+app.get('/api/user/:userId/quests', async (req, res) => {
+    try {
+        const quests = await UserQuest.getUserQuests(req.params.userId);
+        res.json(quests);
+    } catch (error) {
+        console.error("Error fetching user quests:", error);
+        res.status(500).json({ error: "Failed to fetch user quests", details: error.message });
+    }
+});
+
+app.post('/api/user/:userId/quest/:questId/claim', async (req, res) => {
+    try {
+        await QuestSystem.claimQuestReward(req.params.userId, req.params.questId);
+        res.json({ success: true, message: "Quest reward claimed!" });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+});
+
+// app.post('/api/user/:userId/regenerate-quest-points', async (req, res) => {
+//     try {
+//         await QuestSystem.regenerateQuestPoints(req.params.userId);
+//         res.json({ success: true, message: "Quest points regenerated successfully" });
+//     } catch (error) {
+//         console.error("Error regenerating quest points:", error);
+//         res.status(500).json({ error: "Failed to regenerate quest points", details: error.message });
+//     }
+// });
+
+// app.post('/api/user/:userId/bounty-quest/:questId/start', async (req, res) => {
+//     try {
+//         await QuestSystem.startBountyQuest(req.params.userId, req.params.questId);
+//         res.json({ success: true, message: "Bounty quest started successfully" });
+//     } catch (error) {
+//         console.error("Error starting bounty quest:", error);
+//         res.status(500).json({ error: "Failed to start bounty quest", details: error.message });
+//     }
+// });
+
 // Health check route
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', message: 'Server is running' });
@@ -84,3 +157,4 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+       

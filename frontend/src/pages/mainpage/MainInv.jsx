@@ -6,7 +6,7 @@ import potion from '../../assets/inv_asset/potion.png';
 
 const description = "idk what to write";
 const testAmount = 5;
-
+const effect = 20;
 function MaininvInvCreation(count) {
   return Array.from({ length: count }, (_, i) => (
     <InventoryItem key={i} index={i} />
@@ -50,7 +50,9 @@ function InventoryItem({ index }) {
             <div class="maininv-items">
                <img src={potion} alt="fix it now"/>
                 </div>
-
+            <div class="maininv-item-stats">
+                effect : {effect}%
+            </div>
             <div class="maininv-description">
                   {description}
               </div>

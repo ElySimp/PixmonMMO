@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const { UserQuest } = require('../models/QuestSystem'); 
 
 const generateToken = (user) => {
     return jwt.sign(
@@ -26,6 +27,8 @@ exports.register = async (req, res) => {
         // Register user
         const userId = await User.register(username, email, password);
         console.log('User registered with ID:', userId);
+
+        // await User.createUserStats(userId);
         
         const user = await User.findById(userId);
         console.log('User found:', user);
@@ -64,6 +67,10 @@ exports.login = async (req, res) => {
 
         // Login user
         const user = await User.login(username, password);
+        
+        await User.createUserStats(user.id);
+
+        await UserQuest.assignDailyQuests(user.id);
         
         // Generate token
         const token = generateToken(user);

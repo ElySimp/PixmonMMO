@@ -114,7 +114,10 @@ class User {
                 gold INT DEFAULT 0,
                 level INT DEFAULT 1,
                 cooldownEnd DATETIME NULL,
+                quest_points INT DEFAULT 10,
+                quest_point_cooldown DATETIME NULL,
                 updated_at DATETIME NULL,
+                last_reset TIMESTAMP NULL,
                 FOREIGN KEY (user_id) REFERENCES UserLogin(id) ON DELETE CASCADE
             )
         `;
