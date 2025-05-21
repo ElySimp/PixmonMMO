@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import './Adventure.css';
-import Sidebar from '../../components/Sidebar';
-import Topbar from '../../components/Topbar';
+import Sidebar from '../../../components/Sidebar';
+import Topbar from '../../../components/Topbar';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useAuth } from '../../context/AuthContext';
-import { API_URL } from '../../utils/config';
-import adventureStories from '../../assets/adventure_stories';
-import educationalStories from '../../assets/educational_stories';
+import { useAuth } from '../../../context/AuthContext';
+import { API_URL } from '../../../utils/config';
+import adventureStories from '../../../assets/adventure_stories';
+import educationalStories from '../../../assets/educational_stories';
 
-import avatarExample from '../../assets/MAIN/avatar_exaple.gif';
+import avatarExample from '../../../assets/MAIN/avatar_exaple.gif';
 
 const Adventure = () => {
   const [xp, setXp] = useState(0);
