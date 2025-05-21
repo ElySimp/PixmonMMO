@@ -18,7 +18,8 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.14.1"
+    "mysql2": "^3.14.1",
+    "react-toastify": "^11.0.5"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

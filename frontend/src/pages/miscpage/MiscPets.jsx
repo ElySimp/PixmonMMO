@@ -8,7 +8,7 @@ const pets = [
     name: "Cyndaquil",
     level: 350,
     role: "Assassin",
-    image: "/assets/20a8f537-08df-45ac-815b-6e4f7be0d1aa.png",
+    image: "/assets/dummy.png",
     stats: {
       ATK: "5000/5000",
       HP: "1500/1500",
@@ -22,7 +22,7 @@ const pets = [
     name: "Oshawott",
     level: 280,
     role: "Mage",
-    image: "/assets/4b591ae1-3185-408d-a2b9-28946629d942.png",
+    image: "/assets/dummy1.png",
     stats: {
       ATK: "3000/3000",
       HP: "2000/2000",
@@ -36,7 +36,7 @@ const pets = [
     name: "Snivy",
     level: 250,
     role: "Tank",
-    image: "/assets/4b591ae1-3185-408d-a2b9-28946629d942.png",
+    image: "/assets/dummy2.png",
     stats: {
       ATK: "3000/3000",
       HP: "2000/2000",
@@ -50,7 +50,7 @@ const pets = [
     name: "Chikorita",
     level: 230,
     role: "Support",
-    image: "/assets/4b591ae1-3185-408d-a2b9-28946629d942.png",
+    image: "/assets/dummy3.png",
     stats: {
       ATK: "3000/3000",
       HP: "2000/2000",
@@ -102,7 +102,7 @@ const MiscPets = () => {
 
   return (
     <div className="main-container">
-      <Sidebar profilePic="/dummy.jpg" />
+      <Sidebar profilePic="/dummy.png" />
 
       <div className="main-content">
         <Topbar />
@@ -200,5 +200,4 @@ const MiscPets = () => {
     </div>
   );
 };
-
 export default MiscPets;
