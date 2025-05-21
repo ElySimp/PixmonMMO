@@ -8,17 +8,28 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../utils/config';
 import adventureStories from '../../assets/adventure_stories';
+import educationalStories from '../../assets/educational_stories';
 
 import avatarExample from '../../assets/MAIN/avatar_exaple.gif';
 
 const Adventure = () => {
   const [xp, setXp] = useState(0);
   const [gold, setGold] = useState(0);
+  const [diamonds, setDiamonds] = useState(0);
   const [level, setLevel] = useState(1);
   const [xpToNextLevel, setXpToNextLevel] = useState(0);
   const [story, setStory] = useState('Your adventure begins...');
   const [cooldown, setCooldown] = useState(0);
   const [cooldownEndTime, setCooldownEndTime] = useState(0);
+  
+  // Educational story states
+  const [currentEduStory, setCurrentEduStory] = useState(null);
+  const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
+  const [showQuestion, setShowQuestion] = useState(false);
+  const [inEduStoryMode, setInEduStoryMode] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [answerSubmitted, setAnswerSubmitted] = useState(false);
+  
   const { user } = useAuth(); // Get user from auth context
 
   // Calculate XP required for level up
@@ -81,7 +92,7 @@ const Adventure = () => {
         
         // Check if we got valid data back
         if (response.data && typeof response.data === 'object') {
-          const { xp: userXp, gold: userGold, level: userLevel, cooldownEnd } = response.data;
+          const { xp: userXp, gold: userGold, diamonds: userDiamonds, level: userLevel, cooldownEnd } = response.data;
           
           console.log('Loaded user stats:', { userXp, userGold, userLevel, cooldownEnd });
           
@@ -116,6 +127,7 @@ const Adventure = () => {
           // Only update if we got valid numbers back
           setXp(adjustedXp);
           setGold(userGold || 0);
+          setDiamonds(userDiamonds || 0);
           setLevel(adjustedLevel);
           
           // Set XP cap for the (potentially updated) level
@@ -142,6 +154,78 @@ const Adventure = () => {
     loadUserData();
   }, [user]); // Re-run when user changes
 
+  // Start a new educational story sequence
+  const startNewEduStory = () => {
+    // Pick a random educational story
+    const randomIndex = Math.floor(Math.random() * educationalStories.length);
+    const story = educationalStories[randomIndex];
+    
+    setCurrentEduStory(story);
+    setCurrentSentenceIndex(0);
+    setShowQuestion(false);
+    setInEduStoryMode(true);
+    setSelectedAnswer(null);
+    setAnswerSubmitted(false);
+    
+    // Display first sentence with EVENT STORIES header
+    setStory(`EVENT STORIES\n${story.sentences[0]}`);
+  };
+  
+  // Handle answer selection for educational stories
+  const handleAnswerSelection = (answerIndex) => {
+    setSelectedAnswer(answerIndex);
+  };
+  
+  // Submit the answer and check if correct
+  const submitAnswer = async () => {
+    if (selectedAnswer === null) return;
+    
+    setAnswerSubmitted(true);
+    
+    // Check if answer is correct
+    const isCorrect = selectedAnswer === currentEduStory.correctAnswer;
+    
+    if (isCorrect) {
+      // Award 2 diamonds for correct answer
+      const diamondReward = 2;
+      setDiamonds(prev => prev + diamondReward);
+      
+      toast.success(`Correct! You earned ${diamondReward} diamonds!`, {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      
+      // Update backend with diamond reward
+      try {
+        await axios.post(`${API_URL}/users/${user.id}/update-stats`, {
+          diamondsDelta: diamondReward,
+        });
+      } catch (error) {
+        console.error('Error updating diamonds:', error);
+      }
+    } else {
+      toast.error("Sorry, that's not correct. Keep learning!", {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
+    
+    // Reset edu story mode after displaying result
+    setTimeout(() => {
+      setInEduStoryMode(false);
+      setCurrentEduStory(null);
+      setStory("Continue your adventure...");
+    }, 3000);
+  };
+
   const handleStep = async () => {
     // Don't allow steps if on cooldown
     if (cooldown > 0) {
@@ -152,7 +236,53 @@ const Adventure = () => {
     const totalSteps = localStorage.getItem(`steps_${user.id}`) ? 
       parseInt(localStorage.getItem(`steps_${user.id}`)) : 0;
     
-    // Calculate current level XP cap
+    // Apply cooldown first to prevent spamming
+    const randomCooldownSeconds = Math.floor(Math.random() * 5) + 3; // 3-7 seconds cooldown
+    const cooldownEndTimestamp = Date.now() + (randomCooldownSeconds * 1000);
+    setCooldownEndTime(cooldownEndTimestamp);
+    setCooldown(randomCooldownSeconds);
+    
+    // If we're in an educational story mode
+    if (inEduStoryMode) {
+      // If showing a question, don't progress until answer is submitted
+      if (showQuestion) {
+        if (!answerSubmitted) {
+          toast.info("Please select an answer", {
+            position: "top-center",
+            autoClose: 1500,
+          });
+        }
+        return;
+      }
+      
+      // Move to next sentence in the story
+      const nextIndex = currentSentenceIndex + 1;
+      
+      // If we've reached the end of the sentences, show the question
+      if (nextIndex >= currentEduStory.sentences.length) {
+        setShowQuestion(true);
+        setStory(`EVENT STORIES\n${currentEduStory.question}`);
+        return;
+      }
+      
+      // Show the next sentence
+      setCurrentSentenceIndex(nextIndex);
+      setStory(`EVENT STORIES\n${currentEduStory.sentences[nextIndex]}`);
+      return;
+    }
+    
+    // Determine if this step triggers an educational story (40% chance)
+    const triggerEduStory = Math.random() < 0.05;
+    
+    if (triggerEduStory) {
+      startNewEduStory();
+      
+      // Early return - don't process normal rewards
+      // Cooldown is already applied at the beginning of handleStep
+      return;
+    }
+    
+    // Regular adventure - Calculate current level XP cap
     const currentXpCap = calculateXpCap(level);
     
     // XP gain: 1% to 4.5% of the level cap with random decimals, 35% chance to not get any XP
@@ -173,11 +303,7 @@ const Adventure = () => {
       randomGold = Math.floor(Math.random() * 51); // 0-50 inclusive
     }
     
-    const randomCooldownSeconds = Math.floor(Math.random() * 8) + 1;
-    const cooldownEndTimestamp = Date.now() + (randomCooldownSeconds * 1000);
-    
-    setCooldownEndTime(cooldownEndTimestamp);
-    setCooldown(randomCooldownSeconds);
+    // Cooldown is already applied at the beginning of handleStep
 
     // Update XP and calculate if level up
     let newXp = xp + randomXp;
@@ -401,6 +527,7 @@ const Adventure = () => {
             <div className="adventure-stats">
               <p>Level: {level}</p>
               <p>Gold: {gold}</p>
+              <p>Diamonds: {diamonds}</p>
             </div>
           </div>
           
@@ -416,6 +543,31 @@ const Adventure = () => {
           <div className="adventure-grid-actions">
             <div className="adventure-story">
               <p>{story}</p>
+              
+              {/* Educational Story Question UI */}
+              {showQuestion && currentEduStory && (
+                <div className="edu-question-container">
+                  {currentEduStory.choices.map((choice, index) => (
+                    <div 
+                      key={index} 
+                      className={`edu-answer-choice ${selectedAnswer === index ? 'selected' : ''} ${answerSubmitted && index === currentEduStory.correctAnswer ? 'correct' : ''} ${answerSubmitted && selectedAnswer === index && selectedAnswer !== currentEduStory.correctAnswer ? 'incorrect' : ''}`}
+                      onClick={() => !answerSubmitted && handleAnswerSelection(index)}
+                    >
+                      <span className="choice-letter">{String.fromCharCode(65 + index)}</span>
+                      <span className="choice-text">{choice}</span>
+                    </div>
+                  ))}
+                  
+                  {selectedAnswer !== null && !answerSubmitted && (
+                    <button 
+                      className="submit-answer-button"
+                      onClick={submitAnswer}
+                    >
+                      Submit Answer
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
             <button 
               className="adventure-step-button" 
@@ -426,7 +578,7 @@ const Adventure = () => {
                 className="cooldown-fill" 
                 style={{ width: `${cooldownPercentage}%` }}
               ></div>
-              <span className="button-text">Take a Step</span>
+              <span className="button-text">{showQuestion ? 'Submit' : 'Take a Step'}</span>
             </button>
           </div>
         </div>
