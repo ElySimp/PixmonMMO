@@ -5,6 +5,8 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const User = require('./models/User');
 const Achievement = require('./models/Achievement');
+const Inventory = require('./models/Inventory');
+const inventoryController = require('./controllers/inventoryController');
 const authController = require('./controllers/authController');
 const achievementController = require('./controllers/achievementController');
 const { protect } = require('./middleware/auth');
@@ -46,6 +48,17 @@ app.use(express.json());
     }
 })();
 
+// 
+(async () => {
+    try {
+        await Inventory.createIndexInvtable();
+        await Inventory.createUserInventory();
+        console.log('Achievement tables initialized');
+    } catch (error) {
+        console.error('Achievement tables initialization error:', error);
+    }
+})();
+
 // Routes
 app.post('/api/auth/register', authController.register);
 app.post('/api/auth/login', authController.login);
@@ -65,6 +78,11 @@ app.get('/api/users/:userId/achievements', achievementController.getUserAchievem
 app.post('/api/users/:userId/check-achievements', achievementController.checkAchievements);
 app.post('/api/users/:userId/unlock-achievement', achievementController.unlockAchievement);
 app.post('/api/init-achievements', achievementController.initAchievementTables);
+
+// Inventory Route
+app.get('/api/inventory', inventoryController.getAllInventory);
+app.get('/api/users/:userId/inventoryCount', inventoryController.getInventoryCount);
+
 
 // Health check route
 app.get('/api/health', (req, res) => {
