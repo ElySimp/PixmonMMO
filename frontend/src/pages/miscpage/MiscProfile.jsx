@@ -2,143 +2,391 @@ import React, { useState, useEffect } from 'react';
 import './MiscProfile.css'; 
 import Topbar from '../../components/Topbar';
 import Sidebar from '../../components/Sidebar';
-import defaultWallpaper from '../../assets/backgrounds/hCUwLQ.png'; // Import wallpaper default
+import defaultWallpaper from '../../assets/backgrounds/hCUwLQ.png';
 import favoritePetImage from '../../assets/MAIN/pets_sample.png'; 
 import trophyImage from '../../assets/MAIN/trophy.png';
+import { API_URL, TOKEN_KEY } from '../../utils/config';
+import axios from 'axios';
 
 const MiscProfile = () => {
-  const handleMenuClick = () => console.log('Menu clicked');
-  const handleSupportClick = () => console.log('Support clicked');
-  const handleFriendsClick = () => console.log('Friends clicked');
-  const handleSearch = (value) => console.log('Search:', value);
-  const handleChatClick = () => console.log('Chat clicked');
-  const handleNotificationClick = () => console.log('Notifications clicked');
-  const handleEggClick = () => console.log('Egg clicked');
+  // Navigation handlers - simplified to avoid console clutter
+  const handleMenuClick = () => {};
+  const handleSupportClick = () => {};
+  const handleFriendsClick = () => {};
+  const handleSearch = () => {};
+  const handleChatClick = () => {};
+  const handleNotificationClick = () => {};
+  const handleEggClick = () => {};
 
-  const [wallpaper, setWallpaper] = useState(defaultWallpaper); // Mulai dengan wallpaper default
-  const [favoritePet, setFavoritePet] = useState('Crocodile'); // Nama hewan peliharaan favorit default
-  
-  const [characterName, setCharacterName] = useState('Character name'); // Nama karakter default
-  const [isEditing, setIsEditing] = useState(false); // Mode editing
-
+  // State variables
+  const [wallpaper, setWallpaper] = useState(defaultWallpaper);
+  const [favoritePet, setFavoritePet] = useState('');
+  const [characterName, setCharacterName] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingStatus, setIsEditingStatus] = useState(false);
+  const [customWallpaperUrl, setCustomWallpaperUrl] = useState('');
   const [isLoaded, setIsLoaded] = useState(false);
-  const [xpValue, setXpValue] = useState(10);
-  const [maxXp] = useState(100);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [xpValue, setXpValue] = useState(0);
+  const [maxXp, setMaxXp] = useState(1000);
+  const [level, setLevel] = useState(1);
+  const [totalSkillPoints, setTotalSkillPoints] = useState(0);
+  const [allocatedPoints, setAllocatedPoints] = useState({ hp: 0, damage: 0, agility: 0 });
+  const [diamonds, setDiamonds] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const [petLevel, setPetLevel] = useState(0);
+  const [petMaxLevel, setPetMaxLevel] = useState(100);
+  const [petRarity, setPetRarity] = useState('');
+
+  const RESET_COST = 10;
   
-  // State untuk skill points
-  const [totalSkillPoints, setTotalSkillPoints] = useState(10); // Total skill points yang tersedia
-  const [allocatedPoints, setAllocatedPoints] = useState({
-    hp: 0,
-    damage: 0,
-    agility: 0
-  });
-  
-  // State untuk diamond
-  const [diamonds, setDiamonds] = useState(100); // Jumlah diamond yang dimiliki user
-  const RESET_COST = 10; // Biaya reset dalam diamond
-  
-  // State untuk menampilkan panel alokasi
-  const [showAllocationPanel, setShowAllocationPanel] = useState(false);
-  const [currentStat, setCurrentStat] = useState('');
-  
-  useEffect(() => {
-    setTimeout(() => {
-      setIsLoaded(true);
-    }, 300);
+  const getUserId = () => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      // Redirect to login if no user ID is found
+      window.location.href = '/';
+      return null;
+    }
+    return userId;
+  };  useEffect(() => {
+    const fetchUserProfile = async () => {
+      setIsLoading(true);
+      setError(null);
+      const userId = getUserId();
+      
+      if (!userId) {
+        setError('User ID not found');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) {
+          setError('Authentication token not found');
+          setIsLoading(false);
+          return;
+        }
+
+        // Fetch user profile data
+        const response = await axios.get(`${API_URL}/userprofile/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!response.data) {
+          throw new Error('No data received from server');
+        }
+        
+        const profileData = response.data;
+
+        // Validate profile data
+        console.log('Profile data received:', profileData);
+
+        // Update state with fetched data
+        setCharacterName(profileData.username || 'Character name');
+        setLevel(profileData.level || 1);
+        setXpValue(profileData.xp || 0);
+        setMaxXp(profileData.maxXp || 1000);
+        setStatusMessage(profileData.status_message || '');
+        setDiamonds(profileData.diamonds || 0);
+        setTotalSkillPoints(profileData.skill_points || 0);
+        
+        // Set allocated points
+        setAllocatedPoints({
+          hp: profileData.hp_points || 0,
+          damage: profileData.damage_points || 0,
+          agility: profileData.agility_points || 0
+        });
+
+        // Set wallpaper if exists
+        if (profileData.custom_wallpaper_url) {
+          setWallpaper(profileData.custom_wallpaper_url);
+          setCustomWallpaperUrl(profileData.custom_wallpaper_url);
+        }
+
+        // Set favorite pet if exists
+        if (profileData.favorite_pet_id) {
+          try {
+            const petResponse = await axios.get(`${API_URL}/pets/${profileData.favorite_pet_id}`);
+            if (petResponse.data) {
+              setFavoritePet(petResponse.data.name);
+              setPetLevel(petResponse.data.level || 0);
+              setPetMaxLevel(petResponse.data.max_level || 100);
+              setPetRarity(petResponse.data.rarity || 'Common');
+            }
+          } catch (petError) {
+            console.error('Error fetching pet data:', petError);
+          }
+        }
+
+        setError(null);
+      } catch (apiError) {
+        console.error('API Error:', apiError);
+        setError('Failed to load profile data. Please try again later.');
+      } finally {
+        setIsLoading(false);
+        setTimeout(() => setIsLoaded(true), 300);
+      }
+    };
+
+    fetchUserProfile();
   }, []);
 
-  // Mendapatkan jumlah available points
   const getAvailablePoints = () => {
     const usedPoints = Object.values(allocatedPoints).reduce((a, b) => a + b, 0);
     return totalSkillPoints - usedPoints;
   };
 
-  const handleStatIncrement = (statType) => {
-    if (getAvailablePoints() > 0) {
-      setAllocatedPoints(prev => ({
-        ...prev,
-        [statType]: prev[statType] + 1
-      }));
+  const handleStatChange = async (statType, increment) => {
+    // Prevent decrement below 0 or increment beyond available points
+    if ((increment < 0 && allocatedPoints[statType] <= 0) || 
+        (increment > 0 && getAvailablePoints() <= 0)) {
+      return;
+    }
+
+    // Create new points object with the updated value
+    const newPoints = { 
+      ...allocatedPoints, 
+      [statType]: allocatedPoints[statType] + increment 
+    };
+    
+    // Update state immediately for UI responsiveness
+    setAllocatedPoints(newPoints);
+    setIsSaving(true);
+    
+    // Save to server
+    const userId = getUserId();
+    try {
+      await saveSkillPoints(userId, {
+        hp_points: newPoints.hp,
+        damage_points: newPoints.damage,
+        agility_points: newPoints.agility,
+      });
+      // Success - state is already updated
+      setSaveError(null);
+    } catch (error) {
+      // Rollback changes if save fails
+      setAllocatedPoints(allocatedPoints);
+      console.error('Failed to update skill points', error);
+      setSaveError('Failed to update skill points. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
-  
-  const handleStatDecrement = (statType) => {
-    if (allocatedPoints[statType] > 0) {
-      setAllocatedPoints(prev => ({
-        ...prev,
-        [statType]: prev[statType] - 1
-      }));
+
+  const saveSkillPoints = async (userId, pointsData) => {
+    try {
+      const response = await axios.put(`${API_URL}/userprofile/${userId}/skills`, pointsData, {
+        headers: { Authorization: `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+      });
+      if (response.data.skill_points !== undefined) {
+        setTotalSkillPoints(response.data.skill_points);
+      }
+      return response;
+    } catch (error) {
+      console.error('API Error saving skill points:', error);
+      throw error;
     }
   };
-  
-  const handleMaxAllocation = (statType) => {
-    const availablePoints = getAvailablePoints();
-    if (availablePoints > 0) {
-      setAllocatedPoints(prev => ({
-        ...prev,
-        [statType]: prev[statType] + availablePoints
-      }));
+
+  const handleResetWithDiamond = async () => {
+    if (diamonds < RESET_COST) {
+      alert("Not enough diamonds to reset skill points!");
+      return;
     }
-  };
-  
-  // Fungsi untuk mereset skill points dengan diamond
-  const handleResetWithDiamond = () => {
-    if (diamonds >= RESET_COST) {
-      // Kurangi jumlah diamond
-      setDiamonds(prev => prev - RESET_COST);
-      
-      // Reset alokasi points
-      setAllocatedPoints({
-        hp: 0,
-        damage: 0,
-        agility: 0
+    
+    if (!window.confirm(`Are you sure you want to reset all skill points? This will cost ${RESET_COST} diamonds.`)) {
+      return;
+    }
+    
+    setIsSaving(true);
+    const userId = getUserId();
+    try {
+      const response = await axios.post(`${API_URL}/userprofile/${userId}/reset-skills`, {
+        diamonds_cost: RESET_COST,
+        hp_points: 0,
+        damage_points: 0,
+        agility_points: 0
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
       });
       
-      // Tambahkan efek animasi atau notifikasi jika diinginkan
-      alert(`Reset successful! ${RESET_COST} diamonds spent.`);
-    } else {
-      alert("Not enough diamonds to reset skill points!");
+      if (response.data && response.data.success) {
+        // Reset all points to 0
+        setAllocatedPoints({ hp: 0, damage: 0, agility: 0 });
+        // Update diamonds
+        setDiamonds(response.data.diamonds);
+        // Reset total skill points to initial value from response
+        setTotalSkillPoints(response.data.skill_points || totalSkillPoints);
+        alert(`Reset successful! ${RESET_COST} diamonds spent.`);
+        setSaveError(null);
+      } else {
+        throw new Error('Invalid server response');
+      }
+    } catch (error) {
+      console.error('Error resetting skills:', error);
+      setSaveError("Failed to reset skill points. Please try again.");
+      alert("Failed to reset skill points. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
-  
-  const handleResetAllocation = () => {
-    setAllocatedPoints({
-      hp: 0,
-      damage: 0,
-      agility: 0
-    });
-  };
-  
-  const toggleAllocationPanel = (statType) => {
-    setCurrentStat(statType);
-    setShowAllocationPanel(!showAllocationPanel);
-  };
+  const handleEditProfile = () => setIsEditing(true);  
 
-  const handleEditProfile = () => {
-    setIsEditing(true);
-  };
+  const handleSaveChanges = async () => {
+    setIsSaving(true);
+    setSaveError(null);
+    const userId = getUserId();
 
-  const handleSaveChanges = () => {
-    setIsEditing(false);
-  };
+    try {
+      // First, get the current user stats to ensure we don't lose XP/level data
+      const statsResponse = await axios.get(`${API_URL}/userprofile/${userId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+      });
+      
+      const currentStats = statsResponse.data;
 
-  const handleWallpaperChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const imageUrl = URL.createObjectURL(file);
-      setWallpaper(imageUrl);
+      // Now save the profile updates while preserving stats
+      const response = await axios.put(`${API_URL}/userprofile/${userId}`, {
+        username: characterName,
+        status_message: statusMessage,
+        custom_wallpaper_url: customWallpaperUrl,
+        hp_points: allocatedPoints.hp,
+        damage_points: allocatedPoints.damage,
+        agility_points: allocatedPoints.agility,
+        xp: currentStats.xp || 0,
+        level: currentStats.level || 1
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+      });
+
+      if (response.data && response.data.success) {
+        // Update local state with server response
+        const updatedData = response.data;
+        setStatusMessage(updatedData.status_message || statusMessage);
+        setXpValue(updatedData.xp || currentStats.xp || 0);
+        setLevel(updatedData.level || currentStats.level || 1);
+        setMaxXp(updatedData.maxXp || currentStats.maxXp || 1000);
+        
+        if (updatedData.custom_wallpaper_url) {
+          setCustomWallpaperUrl(updatedData.custom_wallpaper_url);
+          setWallpaper(updatedData.custom_wallpaper_url);
+        }
+
+        if (isEditingStatus) {
+          setIsEditingStatus(false);
+        }
+        if (isEditing) {
+          setIsEditing(false);
+        }
+        
+        setSaveError(null);
+      } else {
+        throw new Error('Failed to save changes');
+      }
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to save changes. Please try again.';
+      setSaveError(errorMessage);
+      alert(errorMessage);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  const handleWallpaperChange = async (e) => {
+    if (!e.target.files || !e.target.files[0]) return;
+    
+    const file = e.target.files[0];
+    const tempImageUrl = URL.createObjectURL(file);
+    const previousWallpaper = wallpaper;
+    setWallpaper(tempImageUrl);
+    setIsSaving(true);
+    
+    const formData = new FormData();
+    formData.append('file', file); // Ubah 'wallpaper' menjadi 'file' sesuai backend
+    const userId = getUserId();
+    
+    try {
+      const response = await axios.post(`${API_URL}/userprofile/${userId}/wallpaper`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+        }
+      });
+      
+      if (response.data && response.data.url) {
+        setCustomWallpaperUrl(response.data.url);
+        setSaveError(null);
+      } else {
+        throw new Error('Invalid server response');
+      }
+    } catch (error) {
+      console.error('Error uploading wallpaper:', error);
+      setWallpaper(previousWallpaper);
+      setSaveError('Failed to upload wallpaper. Please try again.');
+      alert('Failed to upload wallpaper. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleNameChange = (e) => {
-    setCharacterName(e.target.value);
+  const handleStatusChange = (e) => setStatusMessage(e.target.value);
+  const handleEditStatus = () => setIsEditingStatus(true);
+
+  const getStatBonus = (statType) => (allocatedPoints[statType] * 0.5).toFixed(1);
+
+  // Handle MAX button click - adds all available points to the selected stat
+  const handleMaxStat = (statType) => {
+    const availablePoints = getAvailablePoints();
+    if (availablePoints > 0) {
+      handleStatChange(statType, availablePoints);
+    }
   };
-  
-  // Mendapatkan bonus stat berdasarkan allocated points
-  const getStatBonus = (statType) => {
-    const bonus = allocatedPoints[statType] * 0.5;
-    return bonus.toFixed(1);
+
+  const handlePetEdit = () => {
+    alert('Pet edit feature will be implemented soon!');
   };
+
+  const handleViewAllAchievements = () => {
+    alert('View all achievements feature will be implemented soon!');
+  };
+
+  if (isLoading && !isLoaded) {
+    return (
+      <div className="main-container">
+        <Sidebar />
+        <div className="main-content profile-main-content">
+          <Topbar
+            onMenuClick={handleMenuClick}
+            onSupportClick={handleSupportClick}
+            onFriendsClick={handleFriendsClick}
+            onSearch={handleSearch}
+            onChatClick={handleChatClick}
+            onNotificationClick={handleNotificationClick}
+            onEggClick={handleEggClick}
+          />
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>Loading profile...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="misc-profile-error-container">
+        <div className="misc-profile-error-message">
+          Error: {error?.response?.data?.message || error?.message || 'Failed to load profile data. Please try again later.'}
+        </div>
+        <button onClick={() => window.location.reload()}>Retry</button>
+      </div>
+    );
+  }
 
   return (
     <div className="main-container">
@@ -155,16 +403,21 @@ const MiscProfile = () => {
         />
 
         <div className={`misc-profile-profile-page ${isLoaded ? 'loaded' : ''}`}>
-          {/* Edit Profile button */}
           <div className="misc-profile-profile-edit-button-container">
             {isEditing ? (
-              <button className="misc-profile-profile-edit-btn" onClick={handleSaveChanges}>Save Changes</button>
+              <button 
+                className="misc-profile-profile-edit-btn" 
+                onClick={handleSaveChanges}
+                disabled={isSaving}
+              >
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </button>
             ) : (
               <button className="misc-profile-profile-edit-btn" onClick={handleEditProfile}>Edit Profile</button>
             )}
+            {saveError && <div className="save-error">{saveError}</div>}
           </div>
 
-          {/* Profile container with wallpaper */}
           <div 
             className="misc-profile-profile-wallpaper-container" 
             style={{ backgroundImage: `url(${wallpaper})` }}
@@ -185,36 +438,25 @@ const MiscProfile = () => {
               </div>
             )}
 
-            <div className="misc-profile-profile-inner-container">
-             <div className="misc-profile-profile-character-container">
+            <div className="misc-profile-profile-inner-container">                <div className="misc-profile-profile-character-container">
                 <div className="misc-profile-profile-character-avatar">
-                <img src="/dummy1.jpg" alt="Character" className="misc-profile-pixel-character" />
-                </div>
-
-                {isEditing ? (
-                  <input 
-                    type="text" 
-                    value={characterName} 
-                    onChange={handleNameChange} 
-                    className="misc-profile-character-name-input"
-                  />
-                ) : (
-                  <div className="misc-profile-character-name">{characterName}</div>
-                )}
+                  <img src="/dummy1.jpg" alt="Character" className="misc-profile-pixel-character" />
+                </div>                <div className="misc-profile-character-name">{characterName}</div>
               </div>
 
               <div className="misc-profile-profile-stats-container">
                 <div className="misc-profile-level-display">
                   <span className="misc-profile-stat-label">Level</span>
-                  <span className="misc-profile-stat-value">10</span>
+                  <span className="misc-profile-stat-value">{level}</span>
                 </div>
-                
-                <div className="misc-profile-xp-container">
+                  <div className="misc-profile-xp-container">
                   <span className="misc-profile-stat-label">Xp</span>
                   <div className="misc-profile-xp-bar">
                     <div 
-                      className="misc-profile-xp-fill" 
-                      style={{ '--fill-width': `${xpValue}%` }}
+                      className="misc-profile-xp-fill"                      style={{ 
+                        width: `${Math.min((xpValue / maxXp) * 100, 100)}%`,
+                        backgroundColor: xpValue === 0 ? '#333' : '#ff4444'
+                      }}
                     ></div>
                   </div>
                   <span className="misc-profile-stat-value">{xpValue}/{maxXp}</span>
@@ -223,25 +465,41 @@ const MiscProfile = () => {
             </div>
           </div>
 
-          {/* Status message */}
           <div className="misc-profile-profile-status-message">
-            Tetap Semangat jangan putus asa, yang penting mah udah usaha :(
-            <button className="misc-profile-edit-status-btn">Edit</button>
+            {isEditingStatus ? (
+              <input 
+                type="text" 
+                value={statusMessage} 
+                onChange={handleStatusChange} 
+                className="misc-profile-status-input"
+              />
+            ) : (
+              statusMessage || "No status message"
+            )}            {isEditing && !isEditingStatus ? (
+              <button className="misc-profile-edit-status-btn" onClick={handleEditStatus}>Edit</button>
+            ) : isEditingStatus ? (
+              <button 
+                className="misc-profile-edit-status-btn" 
+                onClick={handleSaveChanges}
+                disabled={isSaving}
+              >
+                {isSaving ? 'Saving...' : 'Done'}
+              </button>
+            ) : null}
           </div>
 
-          {/* Skill Points */}          
           <div className="misc-profile-skill-points-container">            
             <div className="misc-profile-skill-points-info">
-              <span className="misc-profile-skill-points-label">Skill Points</span>
+              <span className="misc-profile-skill-points-label">Skill Points Available</span>
               <span className="misc-profile-skill-points-value">{getAvailablePoints()}</span>
             </div>
 
-            {/* Reset button with diamond cost */}
-            {getAvailablePoints() < totalSkillPoints && (
+            {(getAvailablePoints() < totalSkillPoints) && (
               <button 
                 className="misc-profile-reset-points-btn"
                 onClick={handleResetWithDiamond}
-                title={`Reset all points`}
+                title={`Reset all points (costs ${RESET_COST} diamonds)`}
+                disabled={isSaving || diamonds < RESET_COST}
               >
                 <span className="misc-profile-reset-points-cost">
                   <span className="misc-profile-diamond-icon">💎</span>
@@ -251,18 +509,18 @@ const MiscProfile = () => {
               </button>
             )}
           </div>
+          
+          {saveError && <div className="error-message">{saveError}</div>}
 
-          {/* Stats section */}
           <div className="misc-profile-profile-stats-grid">
-            {/* Semua stat box */}
             {['hp', 'damage', 'agility'].map((stat, index) => (
               <div 
                 key={stat}
                 className={`misc-profile-stat-box ${isLoaded ? 'animated' : ''}`}
-                style={{ '--animation-order': index + 1 }}
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="misc-profile-stat-info">
-                  <div className={`stat-icon ${stat}-icon`}>
+                  <div className={`misc-profile-stat-icon ${stat}-icon`}>
                     {stat === 'hp' ? '❤' : stat === 'damage' ? '💪' : '⚡'}
                   </div>
                   <div className="misc-profile-stat-name">
@@ -277,71 +535,36 @@ const MiscProfile = () => {
                 </div>
                 
                 <div className="misc-profile-stat-controls">
-                  {/* Container untuk tombol + dan - */}
-                  <div className="misc-profile-stat-button-container" style={{ display: 'flex', justifyContent: 'center' }}>
-                    {/* Tombol plus */}
+                  {/* Stat buttons container */}                  
+                  <div className="misc-profile-stat-button-container">
+                    {/* Plus button */}
                     <button 
-                      className={`misc-profile-stat-plus-btn ${getAvailablePoints() === 0 ? 'disabled' : ''}`}
-                      onClick={() => handleStatIncrement(stat)}
-                      disabled={getAvailablePoints() === 0}
-                      style={{ 
-                        width: '40px', 
-                        height: '40px', 
-                        borderRadius: '50%',
-                        backgroundColor: '#333',
-                        border: '2px solid #555',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        cursor: 'pointer',
-                        margin: '10px 5px',
-                        position: 'relative',
-                        overflow: 'hidden'
-                      }}
+                      className={`misc-profile-stat-plus-btn ${getAvailablePoints() <= 0 ? 'disabled' : ''}`}
+                      onClick={() => handleStatChange(stat, 1)}
+                      disabled={getAvailablePoints() <= 0 || isSaving}
                     >
                       <div className="misc-profile-plus-icon">+</div>
-                    </button>                    {/* Tombol minus - hanya muncul jika ada allocated points dan masih ada skill points tersisa */}
+                    </button>
+                    
+                    {/* Minus button - only show if there are points to subtract and total points not 0 */}
                     {allocatedPoints[stat] > 0 && getAvailablePoints() > 0 && (
                       <button 
                         className="misc-profile-stat-minus-btn"
-                        onClick={() => handleStatDecrement(stat)}
-                        style={{ 
-                          width: '40px', 
-                          height: '40px', 
-                          borderRadius: '50%',
-                          backgroundColor: '#333',
-                          border: '2px solid #555',
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          cursor: 'pointer',
-                          margin: '10px 5px',
-                          position: 'relative',
-                          overflow: 'hidden'
-                        }}
+                        onClick={() => handleStatChange(stat, -1)}
+                        disabled={isSaving}
                       >
-                        <div className="misc-profile-minus-icon" style={{ fontSize: '24px', color: 'white', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>-</div>
+                        <div className="misc-profile-minus-icon">-</div>
                       </button>
                     )}
                   </div>
                   
-                  {/* Tombol MAX untuk alokasi maksimum */}
+                  {/* MAX button with improved styling */}
                   {getAvailablePoints() > 0 && (
                     <button 
                       className="misc-profile-stat-max-btn"
-                      onClick={() => handleMaxAllocation(stat)}
+                      onClick={() => handleMaxStat(stat)}
                       title={`Add all ${getAvailablePoints()} points to this stat`}
-                      style={{
-                        backgroundColor: '#333',
-                        color: '#3498db',
-                        border: '1px solid #555',
-                        borderRadius: '15px',
-                        padding: '5px 15px',
-                        margin: '5px',
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        cursor: 'pointer'
-                      }}
+                      disabled={isSaving}
                     >
                       MAX
                     </button>
@@ -362,52 +585,59 @@ const MiscProfile = () => {
                 )}
               </div>
             ))}
-          </div>          {/* Reset button removed from here */}
+          </div>
 
-          {/* Bottom section */}
           <div className="misc-profile-bottom-section">
-            {/* Favorite Pet */}
             <div className={`misc-profile-favorite-pet-container ${isLoaded ? 'animated' : ''}`}>
               <h3 className="misc-profile-section-title">Favorite Pet</h3>
               <div className="misc-profile-pet-display">
-              <img src={favoritePetImage} alt="Crocodile" className="misc-profile-pet-image" />
+                <img src={favoritePetImage} alt={favoritePet} className="misc-profile-pet-image" />
                 
                 <div className="misc-profile-pet-info">
                   <div className="misc-profile-pet-detail">
                     <span className="misc-profile-pet-label">Name</span>
-                    <span className="misc-profile-pet-value">Crocodile</span>
+                    <span className="misc-profile-pet-value">{favoritePet || 'None selected'}</span>
                   </div>
                   <div className="misc-profile-pet-detail">
                     <span className="misc-profile-pet-label">Level</span>
-                    <span className="misc-profile-pet-value">100/100</span>
+                    <span className="misc-profile-pet-value">{petLevel}/{petMaxLevel}</span>
                   </div>
                   <div className="misc-profile-pet-detail">
                     <span className="misc-profile-pet-label">Rarity</span>
-                    <span className="misc-profile-pet-value">Legendary</span>
+                    <span className="misc-profile-pet-value">{petRarity}</span>
                   </div>
                 </div>
               </div>
-              <button className="misc-profile-edit-pet-btn">Edit</button>
+              <button 
+                className="misc-profile-edit-pet-btn"
+                onClick={handlePetEdit}
+              >
+                Edit
+              </button>
             </div>
 
-            {/* Achievements */}
             <div className={`misc-profile-achievements-container ${isLoaded ? 'animated' : ''}`}>
               <h3 className="misc-profile-section-title">Achievements</h3>
               <div className="misc-profile-achievements-grid">
                 <div className="misc-profile-achievement-item">
-                <img src={trophyImage} alt="misc-profile-achievement-trophy"className="misc-profile-achievement-icon" />
+                  <img src={trophyImage} alt="Achievement Trophy" className="misc-profile-achievement-icon" />
                   <div className="misc-profile-achievement-text">Have Played The Game For 1000 Match</div>
                 </div>
                 <div className="misc-profile-achievement-item">
-                <img src={trophyImage} alt="misc-profile-achievement Trophy" className="misc-profile-achievement-icon" />
+                  <img src={trophyImage} alt="Achievement Trophy" className="misc-profile-achievement-icon" />
                   <div className="misc-profile-achievement-text">Have Collected 100 Pets</div>
                 </div>
                 <div className="misc-profile-achievement-item">
-                <img src={trophyImage} alt="misc-profile-achievement Trophy" className="misc-profile-achievement-icon" />
+                  <img src={trophyImage} alt="Achievement Trophy" className="misc-profile-achievement-icon" />
                   <div className="misc-profile-achievement-text">Has Reached Max Level</div>
                 </div>
               </div>
-              <button className="misc-profile-edit-achievements-btn">Edit</button>
+              <button 
+                className="misc-profile-edit-achievements-btn"
+                onClick={handleViewAllAchievements}
+              >
+                View All
+              </button>
             </div>
           </div>
         </div>

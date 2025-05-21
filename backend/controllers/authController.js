@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const UserProfile = require('../models/UserProfile');
 const { UserQuest } = require('../models/QuestSystem'); 
 
 const generateToken = (user) => {
@@ -27,6 +28,25 @@ exports.register = async (req, res) => {
         // Register user
         const userId = await User.register(username, email, password);
         console.log('User registered with ID:', userId);
+
+           // Create initial user stats
+        try {
+            await User.createUserStats(userId);
+            console.log('Initial user stats created for ID:', userId);
+        } catch (statsError) {
+            console.error('Error creating initial stats:', statsError);
+            // Don't fail registration if stats creation fails
+        }
+
+        // Create initial user profile
+        try {
+            await UserProfile.createDefaultProfile(userId);
+            console.log('Initial user profile created for ID:', userId);
+        } catch (profileError) {
+            console.error('Error creating initial profile:', profileError);
+            // Don't fail registration if profile creation fails
+        }
+        
 
         // await User.createUserStats(userId);
         

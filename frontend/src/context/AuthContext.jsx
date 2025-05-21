@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check if user is logged in (token exists)
-    const token = localStorage.getItem(TOKEN_KEY);
+    const token = localStorage.getItem(TOKEN_KEY); // gunakan TOKEN_KEY
     if (token) {
       fetchUser(token);
     } else {
@@ -26,10 +26,10 @@ export const AuthProvider = ({ children }) => {
           Authorization: `Bearer ${token}`
         }
       });
-      
       if (response.ok) {
         const data = await response.json();
         setUser(data.data);
+        localStorage.setItem('userId', data.data.id);
       } else {
         // Token invalid, remove it
         localStorage.removeItem(TOKEN_KEY);
@@ -52,13 +52,10 @@ export const AuthProvider = ({ children }) => {
         },
         body: JSON.stringify({ username, password })
       });
-      
       const data = await response.json();
-      
       if (response.ok) {
         setUser(data.data.user);
-        localStorage.setItem(TOKEN_KEY, data.data.token);
-        // localStorage.setItem('userId', data.data.user.id);
+        localStorage.setItem(TOKEN_KEY, data.data.token); // gunakan TOKEN_KEY
         navigate('/main');
         return { success: true };
       } else {
@@ -82,9 +79,7 @@ export const AuthProvider = ({ children }) => {
         },
         body: JSON.stringify({ username, email, password })
       });
-      
       const data = await response.json();
-      
       if (response.ok) {
         return { success: true, message: 'Registration successful! Please login.' };
       } else {
@@ -100,7 +95,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_KEY); // gunakan TOKEN_KEY
     navigate('/');
   };
 
@@ -121,4 +116,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}; 
+};
