@@ -377,7 +377,7 @@ const Adventure = () => {
   
   // Calculate cooldown fill percentage (100% when no cooldown, 0% at max cooldown)
   const cooldownPercentage = cooldownEndTime > 0 
-    ? Math.max(0, 100 - ((cooldownEndTime - Date.now()) / (cooldown * 1000)) * 100) 
+    ? Math.max(0, 100 - ((cooldownEndTime - Date.now()) / (cooldown * 500)) * 100) 
     : 100;
 
   return (

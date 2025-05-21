@@ -123,7 +123,7 @@
   height: 100%;
   background: linear-gradient(to right, #007bff, #00c6ff);
   border-radius: 5px;
-  transition: width 0.25s linear;
+  transition: width 1.2s ease;
   z-index: 0;
 }
 
