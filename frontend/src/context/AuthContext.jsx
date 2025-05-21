@@ -58,6 +58,7 @@ export const AuthProvider = ({ children }) => {
       if (response.ok) {
         setUser(data.data.user);
         localStorage.setItem(TOKEN_KEY, data.data.token);
+        // localStorage.setItem('userId', data.data.user.id);
         navigate('/main');
         return { success: true };
       } else {

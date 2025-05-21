@@ -262,11 +262,15 @@
 }
 
 
+/* Remove the elliptical overlay animation */
+.misc-profile-profile-status-message::before {
+  display: none; /* Remove the effect completely */
+}
 
 /* Adjust edit status button position */
 .misc-profile-edit-status-btn {
   position: absolute;
-  right:-720px; /* Increased from 10px */
+  right:-710px; /* Increased from 10px */
   bottom: -24px; /* Increased from 10px */
   background-color: #007bff;
   color: white;
@@ -275,7 +279,7 @@
   padding: 4px 20px;
   font-size: 12px;
   cursor: pointer;
-  transition: all 0.1s ease;
+  transition: all 0.3s ease;
   opacity: 0.8;
 }
 
@@ -313,19 +317,24 @@
 
 .misc-profile-stat-icon {
   font-size: 24px;
-
+  transition: all 0.3s ease;
 }
 
+/* Improve stat icon sizing */
 .misc-profile-stat-box:hover .misc-profile-stat-icon {
-  transform: scale(1); 
+  transform: scale(1.2); /* Removed the rotation */
   color: #007bff;
 }
 
 .misc-profile-stat-name {
   font-size: 18px;
   color: white;
+  transition: all 0.3s ease;
 }
 
+.misc-profile-stat-box:hover .misc-profile-stat-name {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
 
 .misc-profile-stat-plus-btn {
   width: 40px;
@@ -337,15 +346,17 @@
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  margin: 10px 0;
+  margin: 10px 5px; /* Ubah margin untuk memberikan ruang antar tombol */
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
 }
 
+
 .misc-profile-stat-plus-btn:hover {
   background-color: #007bff;
   border-color: #0056b3;
+  transform: scale(1.1); /* Replace rotation with simple scale */
 }
 
 .misc-profile-stat-plus-btn::after {
@@ -387,37 +398,63 @@
 /* Skill points */
 .misc-profile-skill-points-container {
   margin: 20px;
+  width: calc(100% - 40px); /* Menggunakan calc untuk menyesuaikan dengan grid stats */
+  background-color: #101010;
+  border-radius: 10px;
+  padding: 15px 20px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.misc-profile-skill-points-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  justify-content: center;
+  text-align: center;
+}
+
+.misc-profile-reset-points-btn {
+  background-color: #333;
+  color: #007bff;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 15px;
+  display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.misc-profile-skill-points-label {
-  font-size: 16px;
-  color: white;
-}
-
-.misc-profile-skill-points-value {
-  font-size: 16px;
-  color: white;
+  cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
+  overflow: hidden;
 }
 
-.misc-profile-skill-points-value::after {
-  content: '';
-  position: absolute;
-  bottom: -5px;
-  left: 0;
-  width: 0;
-  height: 2px;
+.misc-profile-reset-points-btn:hover {
   background-color: #007bff;
-  transition: all 0.4s ease;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.misc-profile-skill-points-container:hover .misc-profile-skill-points-value::after {
-  width: 100%;
+.misc-profile-reset-points-cost {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+}
+
+.misc-profile-reset-points-btn i {
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.misc-profile-diamond-icon {
+  font-size: 16px;
+  filter: drop-shadow(0 0 3px rgba(52, 152, 219, 0.7));
 }
 
 /* Bottom section */
@@ -563,15 +600,15 @@
   font-size: 12px;
   cursor: pointer;
   position: absolute;
-  bottom: 2px;
+  bottom: 10px;
   right: -310px;
   transition: all 0.3s ease;
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
 .misc-profile-edit-pet-btn:hover {
   opacity: 1;
-  transform: translateY(-3px);
+  transform: translateX(-5px);
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 }
 
@@ -676,7 +713,7 @@
 
 .misc-profile-edit-achievements-btn:hover {
   opacity: 1;
-  transform: translateY(-3px);
+  transform: translateX(-5px);
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 }
 
@@ -695,6 +732,13 @@
 .misc-profile-profile-page {
   animation: misc-profile-fadeIn 0.8s ease-out;
 }
+
+.misc-profile-stat-box:nth-child(1) { animation: misc-profile-fadeIn 0.5s ease-out 0.1s both; }
+.misc-profile-stat-box:nth-child(2) { animation: misc-profile-fadeIn 0.5s ease-out 0.2s both; }
+.misc-profile-stat-box:nth-child(3) { animation: misc-profile-fadeIn 0.5s ease-out 0.3s both; }
+.misc-profile-stat-box:nth-child(4) { animation: misc-profile-fadeIn 0.5s ease-out 0.4s both; }
+.misc-profile-stat-box:nth-child(5) { animation: misc-profile-fadeIn 0.5s ease-out 0.5s both; }
+.misc-profile-stat-box:nth-child(6) { animation: misc-profile-fadeIn 0.5s ease-out 0.6s both; }
 
 .misc-profile-favorite-pet-container { animation: misc-profile-fadeIn 0.5s ease-out 0.3s both; }
 .misc-profile-achievements-container { animation: misc-profile-fadeIn 0.5s ease-out 0.5s both; }

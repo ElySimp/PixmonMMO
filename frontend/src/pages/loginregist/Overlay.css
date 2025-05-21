@@ -1,11 +1,11 @@
 @keyframes modalFadeIn {
     from {
       opacity: 0;
-      transform: translateY(-50px);
+      /* transform: scale(0.9); */
     }
     to {
       opacity: 1;
-      transform: translateY(0);
+      /* transform: scale(1); */
     }
   }
 
@@ -22,7 +22,7 @@
   z-index: 1000;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.75s ease, visibility 0.75s ease;
+  transition: opacity 1s ease, visibility 1s ease;
 }
 
 .modal-overlay.show {
@@ -38,7 +38,7 @@
   height: 100%;
   position: relative;
   border-radius: 16px;
-  animation: modalFadeIn 0.75s ease;
+  animation: modalFadeIn 1.5s ease;
   overflow: hidden;
 }
 

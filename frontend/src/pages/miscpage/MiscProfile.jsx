@@ -24,15 +24,94 @@ const MiscProfile = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [xpValue, setXpValue] = useState(10);
   const [maxXp] = useState(100);
-
+  
+  // State untuk skill points
+  const [totalSkillPoints, setTotalSkillPoints] = useState(10); // Total skill points yang tersedia
+  const [allocatedPoints, setAllocatedPoints] = useState({
+    hp: 0,
+    damage: 0,
+    agility: 0
+  });
+  
+  // State untuk diamond
+  const [diamonds, setDiamonds] = useState(100); // Jumlah diamond yang dimiliki user
+  const RESET_COST = 10; // Biaya reset dalam diamond
+  
+  // State untuk menampilkan panel alokasi
+  const [showAllocationPanel, setShowAllocationPanel] = useState(false);
+  const [currentStat, setCurrentStat] = useState('');
+  
   useEffect(() => {
     setTimeout(() => {
       setIsLoaded(true);
     }, 300);
   }, []);
 
+  // Mendapatkan jumlah available points
+  const getAvailablePoints = () => {
+    const usedPoints = Object.values(allocatedPoints).reduce((a, b) => a + b, 0);
+    return totalSkillPoints - usedPoints;
+  };
+
   const handleStatIncrement = (statType) => {
-    console.log(`Increasing ${statType} stat`);
+    if (getAvailablePoints() > 0) {
+      setAllocatedPoints(prev => ({
+        ...prev,
+        [statType]: prev[statType] + 1
+      }));
+    }
+  };
+  
+  const handleStatDecrement = (statType) => {
+    if (allocatedPoints[statType] > 0) {
+      setAllocatedPoints(prev => ({
+        ...prev,
+        [statType]: prev[statType] - 1
+      }));
+    }
+  };
+  
+  const handleMaxAllocation = (statType) => {
+    const availablePoints = getAvailablePoints();
+    if (availablePoints > 0) {
+      setAllocatedPoints(prev => ({
+        ...prev,
+        [statType]: prev[statType] + availablePoints
+      }));
+    }
+  };
+  
+  // Fungsi untuk mereset skill points dengan diamond
+  const handleResetWithDiamond = () => {
+    if (diamonds >= RESET_COST) {
+      // Kurangi jumlah diamond
+      setDiamonds(prev => prev - RESET_COST);
+      
+      // Reset alokasi points
+      setAllocatedPoints({
+        hp: 0,
+        damage: 0,
+        agility: 0
+      });
+      
+      // Tambahkan efek animasi atau notifikasi jika diinginkan
+      alert(`Reset successful! ${RESET_COST} diamonds spent.`);
+    } else {
+      alert("Not enough diamonds to reset skill points!");
+    }
+  };
+  
+  const handleResetAllocation = () => {
+    setAllocatedPoints({
+      hp: 0,
+      damage: 0,
+      agility: 0
+    });
+  };
+  
+  const toggleAllocationPanel = (statType) => {
+    setCurrentStat(statType);
+    setShowAllocationPanel(!showAllocationPanel);
   };
 
   const handleEditProfile = () => {
@@ -53,6 +132,12 @@ const MiscProfile = () => {
 
   const handleNameChange = (e) => {
     setCharacterName(e.target.value);
+  };
+  
+  // Mendapatkan bonus stat berdasarkan allocated points
+  const getStatBonus = (statType) => {
+    const bonus = allocatedPoints[statType] * 0.5;
+    return bonus.toFixed(1);
   };
 
   return (
@@ -144,6 +229,29 @@ const MiscProfile = () => {
             <button className="misc-profile-edit-status-btn">Edit</button>
           </div>
 
+          {/* Skill Points */}          
+          <div className="misc-profile-skill-points-container">            
+            <div className="misc-profile-skill-points-info">
+              <span className="misc-profile-skill-points-label">Skill Points</span>
+              <span className="misc-profile-skill-points-value">{getAvailablePoints()}</span>
+            </div>
+
+            {/* Reset button with diamond cost */}
+            {getAvailablePoints() < totalSkillPoints && (
+              <button 
+                className="misc-profile-reset-points-btn"
+                onClick={handleResetWithDiamond}
+                title={`Reset all points`}
+              >
+                <span className="misc-profile-reset-points-cost">
+                  <span className="misc-profile-diamond-icon">💎</span>
+                  {RESET_COST}
+                </span>
+                <i>↺</i>
+              </button>
+            )}
+          </div>
+
           {/* Stats section */}
           <div className="misc-profile-profile-stats-grid">
             {/* Semua stat box */}
@@ -160,23 +268,101 @@ const MiscProfile = () => {
                   <div className="misc-profile-stat-name">
                     {stat === 'hp' ? 'Max Hp' : stat === 'damage' ? 'Bonus Damage' : 'Agility'}
                   </div>
+                  
+                  {allocatedPoints[stat] > 0 && (
+                    <div className="misc-profile-allocated-counter">
+                      +{allocatedPoints[stat]}
+                    </div>
+                  )}
                 </div>
-                <button 
-                  className="misc-profile-stat-plus-btn"
-                  onClick={() => handleStatIncrement(stat)}
-                >
-                  <div className="misc-profile-plus-icon">+</div>
-                </button>
-                <div className="misc-profile-stat-bonus">+ 0,5% {stat.charAt(0).toUpperCase() + stat.slice(1)} / SP</div>
+                
+                <div className="misc-profile-stat-controls">
+                  {/* Container untuk tombol + dan - */}
+                  <div className="misc-profile-stat-button-container" style={{ display: 'flex', justifyContent: 'center' }}>
+                    {/* Tombol plus */}
+                    <button 
+                      className={`misc-profile-stat-plus-btn ${getAvailablePoints() === 0 ? 'disabled' : ''}`}
+                      onClick={() => handleStatIncrement(stat)}
+                      disabled={getAvailablePoints() === 0}
+                      style={{ 
+                        width: '40px', 
+                        height: '40px', 
+                        borderRadius: '50%',
+                        backgroundColor: '#333',
+                        border: '2px solid #555',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                        margin: '10px 5px',
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <div className="misc-profile-plus-icon">+</div>
+                    </button>                    {/* Tombol minus - hanya muncul jika ada allocated points dan masih ada skill points tersisa */}
+                    {allocatedPoints[stat] > 0 && getAvailablePoints() > 0 && (
+                      <button 
+                        className="misc-profile-stat-minus-btn"
+                        onClick={() => handleStatDecrement(stat)}
+                        style={{ 
+                          width: '40px', 
+                          height: '40px', 
+                          borderRadius: '50%',
+                          backgroundColor: '#333',
+                          border: '2px solid #555',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          cursor: 'pointer',
+                          margin: '10px 5px',
+                          position: 'relative',
+                          overflow: 'hidden'
+                        }}
+                      >
+                        <div className="misc-profile-minus-icon" style={{ fontSize: '24px', color: 'white', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>-</div>
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Tombol MAX untuk alokasi maksimum */}
+                  {getAvailablePoints() > 0 && (
+                    <button 
+                      className="misc-profile-stat-max-btn"
+                      onClick={() => handleMaxAllocation(stat)}
+                      title={`Add all ${getAvailablePoints()} points to this stat`}
+                      style={{
+                        backgroundColor: '#333',
+                        color: '#3498db',
+                        border: '1px solid #555',
+                        borderRadius: '15px',
+                        padding: '5px 15px',
+                        margin: '5px',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      MAX
+                    </button>
+                  )}
+                </div>
+                
+                <div className="misc-profile-stat-bonus">
+                  + {getStatBonus(stat)}% {stat.charAt(0).toUpperCase() + stat.slice(1)}
+                </div>
+                
+                {allocatedPoints[stat] > 0 && (
+                  <div className="misc-profile-stat-progress">
+                    <div 
+                      className="misc-profile-stat-bar-fill"
+                      style={{ width: `${Math.min(allocatedPoints[stat] * 10, 100)}%` }}
+                    ></div>
+                  </div>
+                )}
               </div>
             ))}
-          </div>
-
-          {/* Skill Points */}
-          <div className="misc-profile-skill-points-container">
-            <span className="misc-profile-skill-points-label">Skill Points</span>
-            <span className="misc-profile-skill-points-value">0</span>
-          </div>
+          </div>          {/* Reset button removed from here */}
 
           {/* Bottom section */}
           <div className="misc-profile-bottom-section">

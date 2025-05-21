@@ -85,15 +85,15 @@ input:autofill {
 
 .error-message {
   position: fixed;
-  top: 9.5rem;
-  left: calc(50% + 0.57rem);
+  top: 13.5rem;
+  left: calc(50% + 2.45rem);
   background-color: #ffebee;
   border: 1px solid #ef9a9a;
   color: #c62828;
   padding: 10px;
   border-radius: 4px;
   text-align: center;
-  margin-bottom: 16px;
+  /* margin-bottom: 3rem; */
 }
 
 .success-message {
