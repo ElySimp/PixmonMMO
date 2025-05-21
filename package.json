@@ -18,10 +18,7 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-<<<<<<< HEAD
-=======
     "moment-timezone": "^0.5.48",
->>>>>>> dbd15927dc7a352f0b9c1b16c5ca51be01985a3e
     "mysql2": "^3.14.1",
     "react-toastify": "^11.0.5"
   },

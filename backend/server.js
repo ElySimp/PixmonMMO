@@ -5,12 +5,9 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const User = require('./models/User');
 const Achievement = require('./models/Achievement');
-<<<<<<< HEAD
 const Inventory = require('./models/Inventory');
 const inventoryController = require('./controllers/inventoryController');
-=======
 const { initializeTables, QuestSystem, UserQuest } = require('./models/QuestSystem'); // ✅ Tambahkan QuestSystem!
->>>>>>> dbd15927dc7a352f0b9c1b16c5ca51be01985a3e
 const authController = require('./controllers/authController');
 const achievementController = require('./controllers/achievementController');
 const questController = require('./controllers/questController');
@@ -53,16 +50,18 @@ app.use(express.json());
     }
 })();
 
-<<<<<<< HEAD
 // 
+
 (async () => {
     try {
         await Inventory.createIndexInvtable();
         await Inventory.createUserInventory();
-        console.log('Achievement tables initialized');
+        console.log('Inventory tables initialized');
     } catch (error) {
-        console.error('Achievement tables initialization error:', error);
-=======
+        console.error('Inventory tables initialization error:', error);
+    }
+})();
+
 // Initialize Quest tables
 (async () => {
     try {
@@ -70,7 +69,6 @@ app.use(express.json());
         console.log('Quest tables initialized');
     } catch (error) {
         console.error('Quest tables initialization error:', error);
->>>>>>> dbd15927dc7a352f0b9c1b16c5ca51be01985a3e
     }
 })();
 
@@ -94,12 +92,10 @@ app.post('/api/users/:userId/check-achievements', achievementController.checkAch
 app.post('/api/users/:userId/unlock-achievement', achievementController.unlockAchievement);
 app.post('/api/init-achievements', achievementController.initAchievementTables);
 
-<<<<<<< HEAD
 // Inventory Route
 app.get('/api/inventory', inventoryController.getAllInventory);
 app.get('/api/users/:userId/inventoryCount', inventoryController.getInventoryCount);
 
-=======
 // Quest Routes
 app.get('/api/quests', questController.getAllQuests);
 app.post('/api/user/:userId/quest/:questId/complete', questController.completeQuest);
@@ -142,7 +138,6 @@ app.post('/api/user/:userId/quest/:questId/claim', async (req, res) => {
 //         res.status(500).json({ error: "Failed to start bounty quest", details: error.message });
 //     }
 // });
->>>>>>> dbd15927dc7a352f0b9c1b16c5ca51be01985a3e
 
 // Health check route
 app.get('/api/health', (req, res) => {
@@ -162,3 +157,4 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+       
