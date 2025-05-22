@@ -72,17 +72,30 @@ exports.updateUserProfile = async (req, res) => {
         const userId = req.params.userId;
         const updates = req.body;
         
+        console.log('Received update request for user:', userId);
+        console.log('Update data:', updates);
+        
         // Validate input
         if (!updates) {
             return res.status(400).json({
                 success: false,
                 message: 'No updates provided'
             });
-        }        // Ensure profile exists
+        }
+
+        // Ensure profile exists
         await UserProfile.ensureProfileExists(userId);
         
-        // Update the profile
-        const updatedProfile = await UserProfile.update(userId, updates);
+        // Filter updates to only include valid fields
+        const validUpdates = {};
+        if (updates.status_message !== undefined) validUpdates.status_message = updates.status_message;
+        if (updates.custom_wallpaper_url !== undefined) validUpdates.custom_wallpaper_url = updates.custom_wallpaper_url;
+        if (updates.hp_points !== undefined) validUpdates.hp_points = updates.hp_points;
+        if (updates.damage_points !== undefined) validUpdates.damage_points = updates.damage_points;
+        if (updates.agility_points !== undefined) validUpdates.agility_points = updates.agility_points;
+        
+        // Update the profile with filtered updates
+        const updatedProfile = await UserProfile.update(userId, validUpdates);
         
         if (!updatedProfile) {
             return res.status(404).json({
@@ -91,28 +104,29 @@ exports.updateUserProfile = async (req, res) => {
             });
         }
 
-        // Get the latest stats to include in response
+        // Get the latest stats
         const stats = await User.getStats(userId);
         
         // Calculate max XP based on current level
         const maxXp = Math.floor(50 * Math.pow(stats.level || 1, 1.4));
         
-        // Combine profile and stats data
+        // Prepare response data
         const responseData = {
             success: true,
             ...updatedProfile,
-            xp: stats.xp || 0,
             level: stats.level || 1,
-            maxXp: maxXp
+            xp: stats.xp || 0,
+            maxXp,
+            gold: stats.gold || 0
         };
-        
+
+        console.log('Sending response:', responseData);
         res.json(responseData);
     } catch (error) {
         console.error('Error updating user profile:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Error updating user profile',
-            error: error.message
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Error updating user profile'
         });
     }
 };
