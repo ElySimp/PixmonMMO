@@ -1,9 +1,9 @@
-// Script to remove duplicate UserStats entries without using temporary tables
+// Script to remove duplicate UserStats entries, keeping only the most recent for each user
 const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
-const db = require('../config/database');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+const db = require('../../config/database');
 
-async function fixUserStatsDuplicatesSimple() {
+async function fixUserStatsDuplicates() {
   try {
     console.log('Checking for duplicates in UserStats table...');
     
@@ -23,38 +23,38 @@ async function fixUserStatsDuplicatesSimple() {
     console.log(`Found ${userCounts.length} users with duplicate stats records:`);
     console.table(userCounts);
     
+    // Create a temporary table with only the latest record for each user
+    console.log('Creating temporary table with latest records...');
+    await db.query(`
+      CREATE TEMPORARY TABLE latest_user_stats
+      SELECT us1.*
+      FROM UserStats us1
+      JOIN (
+          SELECT user_id, MAX(updated_at) as max_updated
+          FROM UserStats
+          GROUP BY user_id
+      ) us2 ON us1.user_id = us2.user_id AND us1.updated_at = us2.max_updated
+    `);
+    
     // Count records before cleanup
     const [beforeCount] = await db.query('SELECT COUNT(*) as count FROM UserStats');
     console.log(`Total records in UserStats before cleanup: ${beforeCount[0].count}`);
     
-    // For each user with duplicates, keep only the latest record
-    let totalRemoved = 0;
+    // Delete all records from UserStats
+    console.log('Deleting all records from UserStats...');
+    await db.query('DELETE FROM UserStats');
     
-    for (const user of userCounts) {
-      const userId = user.user_id;
-      const latestUpdate = user.latest_update;
-      
-      // Get all records for this user except the latest one
-      const [records] = await db.query(`
-        SELECT id
-        FROM UserStats
-        WHERE user_id = ? AND updated_at < ?
-        ORDER BY updated_at DESC
-      `, [userId, latestUpdate]);
-      
-      console.log(`User ID ${userId} has ${records.length} older records to remove.`);
-      
-      // Delete older records one by one
-      for (const record of records) {
-        await db.query('DELETE FROM UserStats WHERE id = ?', [record.id]);
-        totalRemoved++;
-      }
-    }
+    // Insert only the latest records back
+    console.log('Inserting only the latest records for each user...');
+    await db.query(`
+      INSERT INTO UserStats
+      SELECT * FROM latest_user_stats
+    `);
     
     // Count records after cleanup
     const [afterCount] = await db.query('SELECT COUNT(*) as count FROM UserStats');
     console.log(`Total records in UserStats after cleanup: ${afterCount[0].count}`);
-    console.log(`Removed ${totalRemoved} duplicate records.`);
+    console.log(`Removed ${beforeCount[0].count - afterCount[0].count} duplicate records.`);
     
     // Verify the cleanup
     const [usersAfter] = await db.query(`
@@ -75,4 +75,4 @@ async function fixUserStatsDuplicatesSimple() {
   }
 }
 
-fixUserStatsDuplicatesSimple();
+fixUserStatsDuplicates();
