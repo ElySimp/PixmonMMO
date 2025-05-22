@@ -15,6 +15,7 @@ const achievementController = require('./controllers/achievementController');
 const questController = require('./controllers/questController');
 const userProfileController = require('./controllers/userProfileController');
 const { protect } = require('./middleware/auth');
+const checkAndFixDuplicateStats = require('./scripts/check-and-fix-stats');
 
 const app = express();
 
@@ -194,6 +195,17 @@ async function initializeDatabaseTables() {
         await UserProfile.createWallpapersTable();
         
         console.log('All database tables initialized successfully');
+        
+        // Check for and fix any duplicate stats records
+        await checkAndFixDuplicateStats();
+        
+        // Schedule periodic monitoring of UserStats table
+        try {
+            const scheduleMonitoring = require('./scripts/schedule-monitoring');
+            scheduleMonitoring();
+        } catch (monitorError) {
+            console.error('Warning: Could not schedule UserStats monitoring:', monitorError);
+        }
     } catch (error) {
         console.error('Error initializing database tables:', error);
         throw error;

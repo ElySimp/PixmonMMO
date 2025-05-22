@@ -140,13 +140,28 @@ class User {
                 throw new Error('Cannot create stats for non-existent user');
             }
 
+            // Check if user already has stats
+            const [existingStats] = await db.query(
+                'SELECT COUNT(*) as count FROM UserStats WHERE user_id = ?',
+                [userId]
+            );
+
+            // If user already has stats, delete all existing records first to prevent duplicates
+            if (existingStats[0].count > 0) {
+                console.log(`User ${userId} already has ${existingStats[0].count} stats records. Cleaning up duplicates...`);
+                await db.query('DELETE FROM UserStats WHERE user_id = ?', [userId]);
+                console.log(`Cleaned up old stats records for user ${userId}`);
+            }
+
             const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
             
             // Create initial stats
             await db.query(
-                'INSERT INTO UserStats (user_id, xp, gold, level, cooldownEnd, updated_at) VALUES (?, 0, 0, 1, NULL, ?)',
+                'INSERT INTO UserStats (user_id, xp, gold, level, cooldownEnd, updated_at, quest_points) VALUES (?, 0, 0, 1, NULL, ?, 10)',
                 [userId, now]
             );
+
+            console.log(`Created new stats record for user ${userId}`);
 
             // Return default stats object
             return {
@@ -157,7 +172,8 @@ class User {
             };
         } catch (error) {
             if (error.code === 'ER_DUP_ENTRY') {
-                // If stats already exist, just return them
+                console.log(`Duplicate entry prevented for user ${userId}. Getting existing stats instead.`);
+                // If stats already exist due to unique constraint, just return them
                 return await this.getStats(userId);
             }
             console.error('Error creating user stats:', error);
@@ -273,16 +289,47 @@ class User {
     }    // Get stats for a user
     static async getStats(userId) {
         try {
-            // First check if stats exist
+            // Check if multiple stats records exist for this user
+            const [statCount] = await db.query(
+                'SELECT COUNT(*) as count FROM UserStats WHERE user_id = ?',
+                [userId]
+            );
+
+            // If multiple records exist, clean them up
+            if (statCount[0].count > 1) {
+                console.log(`Found ${statCount[0].count} stat records for user ${userId}. Keeping only the most recent.`);
+                
+                // Get the ID of the most recent record
+                const [latestRecord] = await db.query(
+                    'SELECT id FROM UserStats WHERE user_id = ? ORDER BY updated_at DESC LIMIT 1',
+                    [userId]
+                );
+                
+                if (latestRecord.length > 0) {
+                    const latestId = latestRecord[0].id;
+                    
+                    // Delete all other records
+                    await db.query(
+                        'DELETE FROM UserStats WHERE user_id = ? AND id != ?',
+                        [userId, latestId]
+                    );
+                    
+                    console.log(`Cleaned up duplicate stat records for user ${userId}`);
+                }
+            }
+            
+            // Get the user's stats (now there should be only one record or none)
             const [existingStats] = await db.query(
                 'SELECT level, xp, gold, cooldownEnd FROM UserStats WHERE user_id = ?',
                 [userId]
             );
+            
             if (existingStats.length === 0) {
-                // Buat default stats jika tidak ada
+                // Create default stats if none exist
                 await this.createUserStats(userId);
                 return { level: 1, xp: 0, gold: 0, cooldownEnd: null };
             }
+            
             return {
                 level: existingStats[0].level || 1,
                 xp: existingStats[0].xp || 0,
@@ -410,6 +457,67 @@ class User {
         } catch (error) {
             console.error('Error checking level up:', error);
             throw error;
+        }
+    }
+
+    // Ensure user has only one stats record
+    static async ensureSingleStatsRecord(userId) {
+        try {
+            // Check if multiple stats records exist for this user
+            const [statCount] = await db.query(
+                'SELECT COUNT(*) as count FROM UserStats WHERE user_id = ?',
+                [userId]
+            );
+
+            // If no records exist, create one
+            if (statCount[0].count === 0) {
+                return await this.createUserStats(userId);
+            }
+            
+            // If multiple records exist, keep only the most recent
+            if (statCount[0].count > 1) {
+                console.log(`Found ${statCount[0].count} stat records for user ${userId}. Cleaning up...`);
+                
+                // Get the ID of the most recent record
+                const [latestRecord] = await db.query(
+                    'SELECT id FROM UserStats WHERE user_id = ? ORDER BY updated_at DESC LIMIT 1',
+                    [userId]
+                );
+                
+                if (latestRecord.length > 0) {
+                    const latestId = latestRecord[0].id;
+                    
+                    // Delete all other records
+                    await db.query(
+                        'DELETE FROM UserStats WHERE user_id = ? AND id != ?',
+                        [userId, latestId]
+                    );
+                    
+                    console.log(`Cleaned up duplicate stat records for user ${userId}`);
+                }
+            }
+            
+            // Get the user's stats (now there should be only one record)
+            const [stats] = await db.query(
+                'SELECT level, xp, gold, cooldownEnd FROM UserStats WHERE user_id = ?',
+                [userId]
+            );
+            
+            return {
+                level: stats[0].level || 1,
+                xp: stats[0].xp || 0,
+                gold: stats[0].gold || 0,
+                cooldownEnd: stats[0].cooldownEnd
+            };
+        } catch (error) {
+            console.error('Error ensuring single stats record:', error);
+            // Return default values on error for graceful fallback
+            return {
+                level: 1,
+                xp: 0,
+                gold: 0,
+                cooldownEnd: null
+            };
         }
     }
 }

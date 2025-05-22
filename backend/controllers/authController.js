@@ -27,11 +27,9 @@ exports.register = async (req, res) => {
 
         // Register user
         const userId = await User.register(username, email, password);
-        console.log('User registered with ID:', userId);
-
-           // Create initial user stats
+        console.log('User registered with ID:', userId);        // Create initial user stats
         try {
-            await User.createUserStats(userId);
+            await User.ensureSingleStatsRecord(userId);
             console.log('Initial user stats created for ID:', userId);
         } catch (statsError) {
             console.error('Error creating initial stats:', statsError);
@@ -88,7 +86,8 @@ exports.login = async (req, res) => {
         // Login user
         const user = await User.login(username, password);
         
-        await User.createUserStats(user.id);
+        // Ensure user has only one stats record
+        await User.ensureSingleStatsRecord(user.id);
 
         await UserQuest.assignDailyQuests(user.id);
         
