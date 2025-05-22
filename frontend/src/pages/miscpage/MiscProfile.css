@@ -1,4 +1,6 @@
-.misc-profile-profile-page {
+.misc-profile-stat-box:hover .misc-profile-stat-bonus {
+  color: #00d9ff;
+}.misc-profile-profile-page {
   flex: 1;
   padding: 0;
   position: relative;
@@ -30,22 +32,6 @@
   opacity: 1;
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-
-/* BARU: Section edit button yang diposisikan di pojok kanan bawah setiap section */
-.misc-profile-section-edit-btn {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 20px;
-  padding: 5px 15px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  z-index: 5;
 }
 
 /* Profile wallpaper container */
@@ -80,19 +66,37 @@
   transition: 0.5s ease;
 }
 
-.misc-profile-wallpaper-upload-btn {
+/* Fixed wallpaper upload container - improved z-index and positioning */
+.misc-profile-edit-wallpaper-container {
   position: absolute;
-  top: 11px;
-  right: 120px;
-  background-color: #007bff;
+  top: 15px;
+  left: 15px;
+  z-index: 15; /* Higher z-index to ensure it's always clickable */
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 10px;
+  border-radius: 8px;
+  backdrop-filter: blur(5px);
+}
+
+.misc-profile-wallpaper-upload-label {
   color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
+  font-size: 14px;
   cursor: pointer;
-  font-size: 13px;
-  z-index: 5;
-  transition: all 0.3s ease;
-  opacity: 0.8;
+  display: block;
+}
+
+.misc-profile-wallpaper-input {
+  margin-top: 8px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+  width: 100%;
+}
+
+.misc-profile-wallpaper-input:hover {
+  border-color: #007bff;
 }
 
 .misc-profile-profile-inner-container {
@@ -253,14 +257,84 @@
   }
 }
 
-/* Status message */
+/* Fixed Status message section with proper button positioning */
 .misc-profile-profile-status-message {
   margin: 20px;
-  padding: 35px;
+  padding: 20px;
   background-color: #101010;
   border-radius: 10px;
   position: relative;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.misc-profile-status-content {
+  flex: 1;
+}
+
+.misc-profile-status-text {
+  color: white;
+  font-size: 16px;
+}
+
+.misc-profile-status-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #333;
+  border-radius: 5px;
+  background-color: #222;
+  color: white;
+  font-size: 16px;
+}
+
+.misc-profile-status-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
+
+/* Status edit buttons container - positioned at the right */
+.misc-profile-status-edit-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.misc-profile-edit-status-btn,
+.misc-profile-save-status-btn,
+.misc-profile-cancel-status-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 15px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.misc-profile-cancel-status-btn {
+  background-color: #6c757d;
+}
+
+.misc-profile-edit-status-btn:hover,
+.misc-profile-save-status-btn:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+.misc-profile-cancel-status-btn:hover {
+  background-color: #545b62;
+  transform: translateY(-1px);
+}
+
+.misc-profile-status-action-buttons {
+  display: flex;
+  gap: 8px;
 }
 
 /* Stats section */
@@ -309,17 +383,35 @@
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
-/* Buttons container - Modified to display buttons horizontally */
-.misc-profile-stat-buttons-container {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 10px;
-  flex-direction: row; /* Ensure buttons are side by side */
+.misc-profile-allocated-counter {
+  background-color: #007bff;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-left: 10px;
 }
 
-/* Style for plus and minus buttons */
-.misc-profile-stat-plus-btn, .misc-profile-stat-minus-btn {
+/* Fixed stat controls - improved button layout */
+.misc-profile-stat-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.misc-profile-stat-button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px; /* Increased gap for better spacing */
+}
+
+/* Fixed plus and minus buttons */
+.misc-profile-stat-plus-btn, 
+.misc-profile-stat-minus-btn {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -334,19 +426,26 @@
   overflow: hidden;
 }
 
-.misc-profile-stat-plus-btn:hover {
+.misc-profile-stat-plus-btn:not(.disabled):hover {
   background-color: #007bff;
   border-color: #0056b3;
   transform: scale(1.1);
 }
 
-.misc-profile-stat-minus-btn:hover {
+.misc-profile-stat-minus-btn:not(.disabled):hover {
   background-color: #dc3545;
   border-color: #b02a37;
   transform: scale(1.1);
 }
 
-.misc-profile-stat-plus-btn::after, .misc-profile-stat-minus-btn::after {
+.misc-profile-stat-plus-btn.disabled,
+.misc-profile-stat-minus-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.misc-profile-stat-plus-btn::after, 
+.misc-profile-stat-minus-btn::after {
   content: '';
   position: absolute;
   top: 0;
@@ -357,12 +456,13 @@
   transition: all 0.4s ease;
 }
 
-.misc-profile-stat-plus-btn:hover::after, .misc-profile-stat-minus-btn:hover::after {
+.misc-profile-stat-plus-btn:not(.disabled):hover::after, 
+.misc-profile-stat-minus-btn:not(.disabled):hover::after {
   left: 100%;
 }
 
-/* Icon styling for plus and minus buttons */
-.misc-profile-plus-icon, .misc-profile-minus-icon {
+.misc-profile-plus-icon, 
+.misc-profile-minus-icon {
   font-size: 24px;
   color: white;
   position: absolute;
@@ -372,28 +472,32 @@
   transition: all 0.3s ease;
 }
 
-/* Max value style */
-.misc-profile-stat-max {
-  font-size: 14px;
-  color: #aaa;
-  margin-top: 5px;
-  margin-right: 10px;
-  align-self: flex-end;
+/* MAX button styling */
+.misc-profile-stat-max-btn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 15px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
   transition: all 0.3s ease;
+  margin-top: 5px;
 }
 
-.misc-profile-stat-box:hover .misc-profile-stat-max {
-  color: #00d9ff;
+.misc-profile-stat-max-btn:hover {
+  background-color: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .misc-profile-stat-bonus {
   font-size: 14px;
   color: #aaa;
   transition: all 0.3s ease;
-}
-
-.misc-profile-stat-box:hover .misc-profile-stat-bonus {
-  color: #00d9ff;
+  text-align: center;
+  margin-top: 8px;
 }
 
 /* Skill points */
@@ -409,7 +513,7 @@
   gap: 30px;
   transition: all 0.3s ease;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  position: relative; /* Ditambahkan untuk mendukung posisi tombol edit */
+  position: relative;
 }
 
 .misc-profile-skill-points-info {
@@ -418,6 +522,17 @@
   gap: 15px;
   justify-content: center;
   text-align: center;
+}
+
+.misc-profile-skill-points-label {
+  font-size: 16px;
+  color: white;
+}
+
+.misc-profile-skill-points-value {
+  font-size: 20px;
+  color: #007bff;
+  font-weight: bold;
 }
 
 .misc-profile-reset-points-btn {
@@ -435,11 +550,16 @@
   overflow: hidden;
 }
 
-.misc-profile-reset-points-btn:hover {
+.misc-profile-reset-points-btn:not(:disabled):hover {
   background-color: #007bff;
   color: white;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.misc-profile-reset-points-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .misc-profile-reset-points-cost {
@@ -583,7 +703,7 @@
 
 .misc-profile-pet-value {
   flex: 1;
-  text-align: middle;
+  text-align: right;
   color: white;
   font-weight: 600;
   transition: all 0.3s ease;
@@ -593,10 +713,26 @@
   color: #007bff;
 }
 
-.misc-profile-trophy-icon {
-  width: 50px;
-  height: 50px;
-  object-fit: contain;
+/* Fixed positioning for Edit Pet button */
+.misc-profile-edit-pet-btn {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 15px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 5;
+}
+
+.misc-profile-edit-pet-btn:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .misc-profile-achievements-container {
@@ -616,6 +752,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+  margin-bottom: 40px; /* Added margin for the button */
 }
 
 .misc-profile-achievement-item {
@@ -624,7 +761,7 @@
   align-items: center;
   text-align: center;
   transition: all 0.3s ease;
-  padding-top: 70px;
+  padding-top: 10px;
 }
 
 .misc-profile-achievement-item:hover {
@@ -632,8 +769,8 @@
 }
 
 .misc-profile-achievement-icon {
-  width: 70px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   border-radius: 5px;
   margin-bottom: 10px;
   transition: all 0.4s ease;
@@ -675,6 +812,80 @@
   color: #007bff;
 }
 
+/* Fixed positioning for View All Achievements button */
+.misc-profile-view-achievements-btn {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 15px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 5;
+}
+
+.misc-profile-view-achievements-btn:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Error and loading states */
+.misc-profile-error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+  background-color: #101010;
+  border-radius: 10px;
+  margin: 20px;
+}
+
+.misc-profile-error-message {
+  color: #dc3545;
+  font-size: 16px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.save-error, .error-message {
+  color: #dc3545;
+  font-size: 14px;
+  margin-top: 10px;
+  padding: 8px;
+  background-color: rgba(220, 53, 69, 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: white;
+}
+
+.loading-spinner {
+  border: 4px solid #333;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* Animation for elements */
 @keyframes misc-profile-fadeIn {
   from {
@@ -694,9 +905,6 @@
 .misc-profile-stat-box:nth-child(1) { animation: misc-profile-fadeIn 0.5s ease-out 0.1s both; }
 .misc-profile-stat-box:nth-child(2) { animation: misc-profile-fadeIn 0.5s ease-out 0.2s both; }
 .misc-profile-stat-box:nth-child(3) { animation: misc-profile-fadeIn 0.5s ease-out 0.3s both; }
-.misc-profile-stat-box:nth-child(4) { animation: misc-profile-fadeIn 0.5s ease-out 0.4s both; }
-.misc-profile-stat-box:nth-child(5) { animation: misc-profile-fadeIn 0.5s ease-out 0.5s both; }
-.misc-profile-stat-box:nth-child(6) { animation: misc-profile-fadeIn 0.5s ease-out 0.6s both; }
 
 .misc-profile-favorite-pet-container { animation: misc-profile-fadeIn 0.5s ease-out 0.3s both; }
 .misc-profile-achievements-container { animation: misc-profile-fadeIn 0.5s ease-out 0.5s both; }
@@ -718,30 +926,31 @@
   .misc-profile-profile-wallpaper-container {
     height: 300px;
   }
-}
-
-.misc-profile-stat-saving {
-  position: relative;
-}
-
-.misc-profile-stat-saving::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  pointer-events: none;
-}
-
-.misc-profile-stat-animation {
-  animation: statSuccess 0.5s ease;
-}
-
-@keyframes statSuccess {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.02); background-color: rgba(40, 167, 69, 0.1); }
-  100% { transform: scale(1); }
+  
+  .misc-profile-profile-inner-container {
+    width: 90%;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .misc-profile-profile-character-container {
+    flex: none;
+    margin-left: 0;
+  }
+  
+  .misc-profile-profile-stats-container {
+    flex: none;
+    padding-left: 0;
+    width: 100%;
+  }
+  
+  .misc-profile-profile-status-message {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .misc-profile-status-edit-container {
+    justify-content: center;
+  }
 }

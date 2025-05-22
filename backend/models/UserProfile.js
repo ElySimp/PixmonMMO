@@ -14,7 +14,6 @@ class UserProfile {
                 CREATE TABLE IF NOT EXISTS UserProfile (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     user_id INT NOT NULL,
-                    username VARCHAR(255) NOT NULL,
                     status_message TEXT,
                     diamonds INT DEFAULT 0,
                     skill_points INT DEFAULT 0,
@@ -24,7 +23,6 @@ class UserProfile {
                     wallpaper_id INT,
                     custom_wallpaper_url VARCHAR(255),                    
                     favorite_pet_id INT,
-                    level INT DEFAULT 1,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at DATETIME DEFAULT NULL,
                     FOREIGN KEY (user_id) REFERENCES UserLogin(id) ON DELETE CASCADE,
@@ -59,49 +57,27 @@ class UserProfile {
     }    // Get user profile by user ID
     static async getByUserId(userId) {
         try {
-            // First verify the user exists in UserLogin
-            const [userExists] = await db.query(
-                'SELECT id, username FROM UserLogin WHERE id = ?',
-                [userId]
-            );
-            if (!userExists || userExists.length === 0) {
-                throw new Error('User not found');
-            }
-            // Get profile with JOIN to ensure it belongs to an existing user
             const [profiles] = await db.query(
-                `SELECT p.*, u.username as login_username 
+                `SELECT 
+                    p.*,
+                    u.username,
+                    COALESCE(s.level, 1) as level,
+                    COALESCE(s.xp, 0) as xp,
+                    COALESCE(s.gold, 0) as gold
                 FROM UserProfile p
                 JOIN UserLogin u ON p.user_id = u.id
+                LEFT JOIN UserStats s ON p.user_id = s.user_id
                 WHERE p.user_id = ?`,
                 [userId]
             );
-            if (profiles.length === 0) {
-                // Create default profile if none exists
-                return await this.createDefaultProfile(userId);
+
+            if (!profiles || profiles.length === 0) {
+                return null;
             }
-            // Update username if it's out of sync
-            if (profiles[0].username !== profiles[0].login_username) {
-                try {
-                    await this.syncUsername(userId, profiles[0].login_username);
-                    profiles[0].username = profiles[0].login_username;
-                } catch (e) {
-                    console.error('Error syncing username in getByUserId:', e);
-                }
-            }
+
             return profiles[0];
         } catch (error) {
             console.error('Error getting user profile:', error);
-            throw error;
-        }
-    }    // Sync username with UserLogin table
-    static async syncUsername(userId, newUsername) {
-        try {
-            await db.query(
-                'UPDATE UserProfile SET username = ?, updated_at = NOW() WHERE user_id = ?',
-                [newUsername, userId]
-            );
-        } catch (error) {
-            console.error('Error syncing username:', error);
             throw error;
         }
     }    // Create a default profile for new users
@@ -116,75 +92,44 @@ class UserProfile {
             if (!userResult || userResult.length === 0) {
                 throw new Error('User not found in UserLogin table');
             }
-            console.log('Creating default profile for user:', userId);
-            
-            // First check if profile already exists
-            const [existingProfile] = await db.query(
-                'SELECT id FROM UserProfile WHERE user_id = ?',
-                [userId]
-            );
-            
-            if (existingProfile && existingProfile.length > 0) {
-                console.log(`Profile already exists for user ${userId}`);
-                return await this.getByUserId(userId);
-            }
 
-            // Get username from UserLogin
-            const [userRows] = await db.query(
-                'SELECT username FROM UserLogin WHERE id = ?',
-                [userId]
-            );
-            
-            if (!userRows || userRows.length === 0) {
-                throw new Error('User not found in UserLogin table');
-            }
-            
-            const username = userRows[0].username;
-            console.log('Found username:', username);
-
-            // Get user stats for level-based calculations
-            const [statsRows] = await db.query(
+            // Get level from UserStats
+            const [statsResult] = await db.query(
                 'SELECT level FROM UserStats WHERE user_id = ?',
                 [userId]
             );
 
-            // Default values
-            const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
-            const level = statsRows?.[0]?.level || 1;
+            const level = statsResult?.[0]?.level || 1;
             const initialSkillPoints = level * 3; // 3 skill points per level
             const initialDiamonds = 100;
+            const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
             
-            // Insert default profile with calculated values
+            // Insert default profile
             await db.query(
                 `INSERT INTO UserProfile (
                     user_id,
-                    username,
                     status_message,
                     diamonds,
                     skill_points,
                     hp_points,
                     damage_points,
                     agility_points,
-                    level,
                     created_at,
                     updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     userId,
-                    username,
                     'Ready for adventure!',
                     initialDiamonds,
                     initialSkillPoints,
                     0, // Initial hp points
                     0, // Initial damage points
                     0, // Initial agility points
-                    level,
                     now,
                     now
                 ]
             );
             
-            console.log('Created default profile successfully');
             return await this.getByUserId(userId);
         } catch (error) {
             console.error('Error creating default profile:', error);
@@ -212,77 +157,84 @@ class UserProfile {
     }    // Update basic user profile info (non-skill related)
     static async update(userId, updates) {
         try {
-            await db.query('START TRANSACTION');
+            console.log('Updating user profile:', userId);
+            console.log('Update data:', updates);
 
-            const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
-            const allowedUpdates = [
-                'username',
-                'status_message',
-                'custom_wallpaper_url',
-                'favorite_pet_id',
-                'diamonds',
-                'skill_points',
-                'hp_points',
-                'damage_points',
-                'agility_points',
-                'level',
-                'wallpaper_id'
-            ];
-
-            // Filter out any updates that aren't in allowedUpdates
-            const validUpdates = Object.keys(updates)
-                .filter(key => allowedUpdates.includes(key))
-                .reduce((obj, key) => ({ ...obj, [key]: updates[key] }), {});
-
-            if (Object.keys(validUpdates).length === 0) {
-                await db.query('ROLLBACK');
-                return null;
+            const updateFields = [];
+            const updateValues = [];
+            
+            // Handle each updatable field from the UserProfile table
+            if (updates.status_message !== undefined) {
+                updateFields.push('status_message = ?');
+                updateValues.push(updates.status_message);
+                console.log('Adding status_message update:', updates.status_message);
             }
-
-            // First verify the profile exists and belongs to this user
-            const [existingProfile] = await db.query(
-                'SELECT id FROM UserProfile WHERE user_id = ?',
-                [userId]
-            );
-
-            if (!existingProfile || existingProfile.length === 0) {
-                await db.query('ROLLBACK');
-                throw new Error('Profile not found for this user');
+            if (updates.custom_wallpaper_url !== undefined) {
+                updateFields.push('custom_wallpaper_url = ?');
+                updateValues.push(updates.custom_wallpaper_url);
             }
-
-            // If username is being updated, sync it with UserLogin
-            if (validUpdates.username) {
-                await db.query(
-                    'UPDATE UserLogin SET username = ? WHERE id = ?',
-                    [validUpdates.username, userId]
-                );
+            if (updates.diamonds !== undefined) {
+                updateFields.push('diamonds = ?');
+                updateValues.push(updates.diamonds);
             }
-
-            // Build UPDATE query
-            const updateFields = Object.keys(validUpdates)
-                .map(key => `${key} = ?`)
-                .join(', ');
-            const updateValues = [...Object.values(validUpdates)];
-
+            if (updates.skill_points !== undefined) {
+                updateFields.push('skill_points = ?');
+                updateValues.push(updates.skill_points);
+            }
+            if (updates.hp_points !== undefined) {
+                updateFields.push('hp_points = ?');
+                updateValues.push(updates.hp_points);
+            }
+            if (updates.damage_points !== undefined) {
+                updateFields.push('damage_points = ?');
+                updateValues.push(updates.damage_points);
+            }
+            if (updates.agility_points !== undefined) {
+                updateFields.push('agility_points = ?');
+                updateValues.push(updates.agility_points);
+            }
+            
+            // Add updated_at timestamp
+            updateFields.push('updated_at = CURRENT_TIMESTAMP');
+            
+            // If no fields to update, return current profile
+            if (updateFields.length === 0) {
+                console.log('No fields to update');
+                return await this.getByUserId(userId);
+            }
+            
+            // Add userId to values array
+            updateValues.push(userId);
+            
+            // Construct and execute update query
             const query = `
                 UPDATE UserProfile 
-                SET ${updateFields}, updated_at = ?
+                SET ${updateFields.join(', ')}
                 WHERE user_id = ?
             `;
-
-            await db.query(query, [...updateValues, now, userId]);
-
-            // Get and return updated profile
-            const [updatedProfile] = await db.query(
-                'SELECT * FROM UserProfile WHERE user_id = ?',
+            
+            console.log('Executing query:', query);
+            console.log('With values:', updateValues);
+            
+            await db.query(query, updateValues);
+            
+            // Get updated profile by joining with UserLogin and UserStats
+            const [profiles] = await db.query(
+                `SELECT 
+                    p.*,
+                    u.username,
+                    COALESCE(s.level, 1) as level,
+                    COALESCE(s.xp, 0) as xp
+                FROM UserProfile p
+                JOIN UserLogin u ON p.user_id = u.id
+                LEFT JOIN UserStats s ON p.user_id = s.user_id
+                WHERE p.user_id = ?`,
                 [userId]
             );
-
-            await db.query('COMMIT');
-            return updatedProfile[0];
-
+            
+            console.log('Updated profile:', profiles[0]);
+            return profiles[0];
         } catch (error) {
-            await db.query('ROLLBACK');
             console.error('Error updating user profile:', error);
             throw error;
         }

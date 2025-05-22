@@ -30,7 +30,7 @@ const MiscProfile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [xpValue, setXpValue] = useState(0);
-  const [maxXp, setMaxXp] = useState(1000);
+  const [maxXp, setMaxXp] = useState();
   const [level, setLevel] = useState(1);
   const [totalSkillPoints, setTotalSkillPoints] = useState(0);
   const [allocatedPoints, setAllocatedPoints] = useState({ hp: 0, damage: 0, agility: 0 });
@@ -51,7 +51,9 @@ const MiscProfile = () => {
       return null;
     }
     return userId;
-  };  useEffect(() => {
+  };
+
+  useEffect(() => {
     const fetchUserProfile = async () => {
       setIsLoading(true);
       setError(null);
@@ -180,7 +182,10 @@ const MiscProfile = () => {
   const saveSkillPoints = async (userId, pointsData) => {
     try {
       const response = await axios.put(`${API_URL}/userprofile/${userId}/skills`, pointsData, {
-        headers: { Authorization: `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+        headers: { 
+          'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`,
+          'Content-Type': 'application/json'
+        }
       });
       if (response.data.skill_points !== undefined) {
         setTotalSkillPoints(response.data.skill_points);
@@ -211,7 +216,10 @@ const MiscProfile = () => {
         damage_points: 0,
         agility_points: 0
       }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+        headers: { 
+          'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`,
+          'Content-Type': 'application/json'
+        }
       });
       
       if (response.data && response.data.success) {
@@ -234,6 +242,7 @@ const MiscProfile = () => {
       setIsSaving(false);
     }
   };
+
   const handleEditProfile = () => setIsEditing(true);  
 
   const handleSaveChanges = async () => {
@@ -242,50 +251,43 @@ const MiscProfile = () => {
     const userId = getUserId();
 
     try {
-      // First, get the current user stats to ensure we don't lose XP/level data
-      const statsResponse = await axios.get(`${API_URL}/userprofile/${userId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
-      });
-      
-      const currentStats = statsResponse.data;
-
-      // Now save the profile updates while preserving stats
-      const response = await axios.put(`${API_URL}/userprofile/${userId}`, {
-        username: characterName,
-        status_message: statusMessage,
+      // Prepare the data to send - only send status_message if we're editing it
+      const updateData = {
+        status_message: isEditingStatus ? statusMessage : undefined,
         custom_wallpaper_url: customWallpaperUrl,
         hp_points: allocatedPoints.hp,
         damage_points: allocatedPoints.damage,
-        agility_points: allocatedPoints.agility,
-        xp: currentStats.xp || 0,
-        level: currentStats.level || 1
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+        agility_points: allocatedPoints.agility
+      };
+
+      console.log('Saving profile updates:', updateData);
+
+      // Save the profile updates
+      const response = await axios.put(`${API_URL}/userprofile/${userId}`, updateData, {
+        headers: { 
+          'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`,
+          'Content-Type': 'application/json'
+        }
       });
+
+      console.log('Server response:', response.data);
 
       if (response.data && response.data.success) {
         // Update local state with server response
-        const updatedData = response.data;
-        setStatusMessage(updatedData.status_message || statusMessage);
-        setXpValue(updatedData.xp || currentStats.xp || 0);
-        setLevel(updatedData.level || currentStats.level || 1);
-        setMaxXp(updatedData.maxXp || currentStats.maxXp || 1000);
-        
-        if (updatedData.custom_wallpaper_url) {
-          setCustomWallpaperUrl(updatedData.custom_wallpaper_url);
-          setWallpaper(updatedData.custom_wallpaper_url);
-        }
-
-        if (isEditingStatus) {
+        if (isEditingStatus && response.data.status_message !== undefined) {
+          setStatusMessage(response.data.status_message);
           setIsEditingStatus(false);
         }
-        if (isEditing) {
-          setIsEditing(false);
+        if (response.data.custom_wallpaper_url) {
+          setCustomWallpaperUrl(response.data.custom_wallpaper_url);
+          setWallpaper(response.data.custom_wallpaper_url);
         }
-        
+
+        // Exit edit mode
+        setIsEditing(false);
         setSaveError(null);
       } else {
-        throw new Error('Failed to save changes');
+        throw new Error('Server returned unsuccessful response');
       }
     } catch (error) {
       console.error('Error saving profile:', error);
@@ -296,40 +298,68 @@ const MiscProfile = () => {
       setIsSaving(false);
     }
   };
+
   const handleWallpaperChange = async (e) => {
     if (!e.target.files || !e.target.files[0]) return;
     
     const file = e.target.files[0];
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB');
+      return;
+    }
+
     const tempImageUrl = URL.createObjectURL(file);
     const previousWallpaper = wallpaper;
     setWallpaper(tempImageUrl);
     setIsSaving(true);
     
     const formData = new FormData();
-    formData.append('file', file); // Ubah 'wallpaper' menjadi 'file' sesuai backend
+    formData.append('file', file);
     const userId = getUserId();
     
     try {
+      console.log('Uploading wallpaper for user:', userId);
+      
       const response = await axios.post(`${API_URL}/userprofile/${userId}/wallpaper`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+          'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
         }
       });
       
+      console.log('Wallpaper upload response:', response.data);
+      
       if (response.data && response.data.url) {
         setCustomWallpaperUrl(response.data.url);
+        setWallpaper(response.data.url);
         setSaveError(null);
+        console.log('Wallpaper updated successfully');
       } else {
-        throw new Error('Invalid server response');
+        throw new Error('Invalid server response - no URL received');
       }
     } catch (error) {
       console.error('Error uploading wallpaper:', error);
       setWallpaper(previousWallpaper);
-      setSaveError('Failed to upload wallpaper. Please try again.');
-      alert('Failed to upload wallpaper. Please try again.');
+      
+      let errorMessage = 'Failed to upload wallpaper. Please try again.';
+      if (error.response) {
+        errorMessage = error.response.data?.message || `Upload failed: ${error.response.status}`;
+      }
+      
+      setSaveError(errorMessage);
+      alert(errorMessage);
     } finally {
       setIsSaving(false);
+      // Clean up the temporary URL
+      URL.revokeObjectURL(tempImageUrl);
     }
   };
 
@@ -426,22 +456,25 @@ const MiscProfile = () => {
 
             {isEditing && (
               <div className="misc-profile-edit-wallpaper-container">
-                <label className="wallpaper-upload-label">
+                <label className="misc-profile-wallpaper-upload-label">
                   Change Wallpaper:
                   <input 
                     type="file" 
                     accept="image/*" 
                     onChange={handleWallpaperChange} 
-                    style={{ display: 'block', marginTop: '5px' }}
+                    className="misc-profile-wallpaper-input"
+                    disabled={isSaving}
                   />
                 </label>
               </div>
             )}
 
-            <div className="misc-profile-profile-inner-container">                <div className="misc-profile-profile-character-container">
+            <div className="misc-profile-profile-inner-container">
+              <div className="misc-profile-profile-character-container">
                 <div className="misc-profile-profile-character-avatar">
                   <img src="/dummy1.jpg" alt="Character" className="misc-profile-pixel-character" />
-                </div>                <div className="misc-profile-character-name">{characterName}</div>
+                </div>
+                <div className="misc-profile-character-name">{characterName}</div>
               </div>
 
               <div className="misc-profile-profile-stats-container">
@@ -449,11 +482,12 @@ const MiscProfile = () => {
                   <span className="misc-profile-stat-label">Level</span>
                   <span className="misc-profile-stat-value">{level}</span>
                 </div>
-                  <div className="misc-profile-xp-container">
+                <div className="misc-profile-xp-container">
                   <span className="misc-profile-stat-label">Xp</span>
                   <div className="misc-profile-xp-bar">
                     <div 
-                      className="misc-profile-xp-fill"                      style={{ 
+                      className="misc-profile-xp-fill"
+                      style={{ 
                         width: `${Math.min((xpValue / maxXp) * 100, 100)}%`,
                         backgroundColor: xpValue === 0 ? '#333' : '#ff4444'
                       }}
@@ -466,26 +500,64 @@ const MiscProfile = () => {
           </div>
 
           <div className="misc-profile-profile-status-message">
-            {isEditingStatus ? (
-              <input 
-                type="text" 
-                value={statusMessage} 
-                onChange={handleStatusChange} 
-                className="misc-profile-status-input"
-              />
-            ) : (
-              statusMessage || "No status message"
-            )}            {isEditing && !isEditingStatus ? (
-              <button className="misc-profile-edit-status-btn" onClick={handleEditStatus}>Edit</button>
-            ) : isEditingStatus ? (
-              <button 
-                className="misc-profile-edit-status-btn" 
-                onClick={handleSaveChanges}
-                disabled={isSaving}
-              >
-                {isSaving ? 'Saving...' : 'Done'}
-              </button>
-            ) : null}
+            <div className="misc-profile-status-content">
+              {isEditingStatus ? (
+                <input 
+                  type="text" 
+                  value={statusMessage} 
+                  onChange={handleStatusChange} 
+                  className="misc-profile-status-input"
+                  placeholder="Enter your status message..."
+                  maxLength={100}
+                />
+              ) : (
+                <span className="misc-profile-status-text">
+                  {statusMessage || "No status message"}
+                </span>
+              )}
+            </div>
+            
+            {isEditing && (
+              <div className="misc-profile-status-edit-container">
+                {!isEditingStatus ? (
+                  <button 
+                    className="misc-profile-edit-status-btn" 
+                    onClick={handleEditStatus}
+                  >
+                    Edit Status
+                  </button>
+                ) : (
+                  <div className="misc-profile-status-action-buttons">
+                    <button 
+                      className="misc-profile-save-status-btn" 
+                      onClick={handleSaveChanges}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? 'Saving...' : 'Save'}
+                    </button>
+                    <button 
+                      className="misc-profile-cancel-status-btn" 
+                      onClick={() => {
+                        setIsEditingStatus(false);
+                        // Reset to the last saved value
+                        const userId = getUserId();
+                        axios.get(`${API_URL}/userprofile/${userId}`, {
+                          headers: { Authorization: `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+                        }).then(response => {
+                          if (response.data && response.data.status_message) {
+                            setStatusMessage(response.data.status_message);
+                          }
+                        }).catch(error => {
+                          console.error('Error resetting status message:', error);
+                        });
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="misc-profile-skill-points-container">            
@@ -535,7 +607,6 @@ const MiscProfile = () => {
                 </div>
                 
                 <div className="misc-profile-stat-controls">
-                  {/* Stat buttons container */}                  
                   <div className="misc-profile-stat-button-container">
                     {/* Plus button */}
                     <button 
@@ -546,7 +617,7 @@ const MiscProfile = () => {
                       <div className="misc-profile-plus-icon">+</div>
                     </button>
                     
-                    {/* Minus button - only show if there are points to subtract and total points not 0 */}
+                    {/* Minus button - only show when available points > 0 (meaning user can still modify) */}
                     {allocatedPoints[stat] > 0 && getAvailablePoints() > 0 && (
                       <button 
                         className="misc-profile-stat-minus-btn"
@@ -558,7 +629,7 @@ const MiscProfile = () => {
                     )}
                   </div>
                   
-                  {/* MAX button with improved styling */}
+                  {/* MAX button */}
                   {getAvailablePoints() > 0 && (
                     <button 
                       className="misc-profile-stat-max-btn"
@@ -574,15 +645,6 @@ const MiscProfile = () => {
                 <div className="misc-profile-stat-bonus">
                   + {getStatBonus(stat)}% {stat.charAt(0).toUpperCase() + stat.slice(1)}
                 </div>
-                
-                {allocatedPoints[stat] > 0 && (
-                  <div className="misc-profile-stat-progress">
-                    <div 
-                      className="misc-profile-stat-bar-fill"
-                      style={{ width: `${Math.min(allocatedPoints[stat] * 10, 100)}%` }}
-                    ></div>
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -633,7 +695,7 @@ const MiscProfile = () => {
                 </div>
               </div>
               <button 
-                className="misc-profile-edit-achievements-btn"
+                className="misc-profile-view-achievements-btn"
                 onClick={handleViewAllAchievements}
               >
                 View All
