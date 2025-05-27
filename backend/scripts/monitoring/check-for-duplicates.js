@@ -1,5 +1,5 @@
 // Script to check for duplicate UserStats records
-const db = require('../../config/database');
+const db = require('../config/database');
 
 async function checkDuplicates() {
   try {

@@ -15,7 +15,7 @@ const achievementController = require('./controllers/achievementController');
 const questController = require('./controllers/questController');
 const userProfileController = require('./controllers/userProfileController');
 const { protect } = require('./middleware/auth');
-const checkAndFixDuplicateStats = require('./scripts/maintenance/check-and-fix-stats');
+const checkAndFixDuplicateStats = require('./scripts/check-and-fix-stats');
 
 const app = express();
 
@@ -201,7 +201,7 @@ async function initializeDatabaseTables() {
         
         // Schedule periodic monitoring of UserStats table
         try {
-            const scheduleMonitoring = require('./scripts/monitoring/schedule-monitoring');
+            const scheduleMonitoring = require('./scripts/schedule-monitoring');
             scheduleMonitoring();
         } catch (monitorError) {
             console.error('Warning: Could not schedule UserStats monitoring:', monitorError);

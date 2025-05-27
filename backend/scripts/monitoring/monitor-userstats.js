@@ -1,6 +1,6 @@
 // Script to monitor UserStats table for duplicates over time
 // This can be run periodically to ensure duplicates don't reappear
-const db = require('../../config/database');
+const db = require('../config/database');
 const fs = require('fs');
 const path = require('path');
 
@@ -82,8 +82,9 @@ async function monitorUserStats() {
     } else {
       summary.push('No duplicate records found.');
     }
-      // Write to log file
-    const logDir = path.join(__dirname, '../../logs');
+    
+    // Write to log file
+    const logDir = path.join(__dirname, '../logs');
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir);
     }

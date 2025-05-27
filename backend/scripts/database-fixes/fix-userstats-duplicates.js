@@ -1,7 +1,7 @@
 // Script to remove duplicate UserStats entries, keeping only the most recent for each user
 const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
-const db = require('../../config/database');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+const db = require('../config/database');
 
 async function fixUserStatsDuplicates() {
   try {

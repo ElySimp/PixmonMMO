@@ -1,7 +1,7 @@
 // Script to check for and fix duplicate UserStats records
 // This will be imported and run when the server starts
 
-const db = require('../../config/database');
+const db = require('../config/database');
 
 async function checkAndFixDuplicateStats() {
   try {

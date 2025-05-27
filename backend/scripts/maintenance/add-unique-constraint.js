@@ -1,5 +1,5 @@
 // Script to add a unique constraint to the UserStats table
-const db = require('../../config/database');
+const db = require('../config/database');
 
 async function addUniqueConstraint() {
   try {

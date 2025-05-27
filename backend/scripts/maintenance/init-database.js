@@ -1,5 +1,5 @@
-const db = require('../../config/database');
-const UserProfile = require('../../models/UserProfile');
+const db = require('../config/database');
+const UserProfile = require('../models/UserProfile');
 
 async function initDatabase() {
     try {

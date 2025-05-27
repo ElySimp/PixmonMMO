@@ -1,7 +1,7 @@
 // Script to completely clean up UserStats table with correct column names
 const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
-const db = require('../../config/database');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+const db = require('../config/database');
 
 async function fixUserStatsComplete() {
   try {
