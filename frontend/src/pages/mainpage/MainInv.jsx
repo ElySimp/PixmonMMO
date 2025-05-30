@@ -48,6 +48,25 @@ const MainInv = () => {
   const [count, setCount] = useState(null);
   const [inventory, setInventory] = useState([]);
   const [inventoryIndex, setInventoryIndex] = useState([]);
+  const [selectedOption, setSelectedOption] = useState("all");
+  const [showInventory, setShowInventory] = useState(true);
+
+  const handleChange = (e) => {
+  const newValue = e.target.value;
+
+  // Hide inventory content immediately
+  setShowInventory(false);
+
+  // Update the filter option
+  setSelectedOption(newValue);
+
+  // Show the inventory again after state update
+  setTimeout(() => {
+    setShowInventory(true);
+  }, 0);
+};
+
+  
 
   useEffect(() => {
     if (authLoading) return;
@@ -80,9 +99,15 @@ const MainInv = () => {
     }
   }, [user, authLoading]);
 
-  function InventoryItem({ item }) {
+  function InventoryItem({ item , filter}) {
     const [isOpen, setIsOpen] = useState(false);
-
+    if ( filter === "all" ){
+      console.log("no filter");
+    }
+    else if (filter !== item.item_type) {
+      return null;
+    }
+    
     // Safely get description and image with fallbacks
     return (
       <div className="maininv-item-container">
@@ -102,7 +127,7 @@ const MainInv = () => {
                 <img src={potion} alt="potion" />
               </div>
               <div className="maininv-item-stats">effect : {item.effect_value || 0}%</div>
-              <div className="maininv-description">{inventoryIndex[item.index_id].description}</div>
+              <div className="maininv-description">{inventoryIndex[item.index_id - 1].description}</div>
             </div>
           </div>
         )}
@@ -110,9 +135,9 @@ const MainInv = () => {
     );
   }
 
- function MainInvCreation({ inventory }) {
+ function MainInvCreation({ inventory, filter }) {
   return inventory.map((item, index) => (
-    <InventoryItem key={item.id || index} item={item} />
+    <InventoryItem key={item.id || index} item={item} filter={filter}/>
   ));
 }
 
@@ -139,23 +164,33 @@ const MainInv = () => {
             <br />
             <label>Choose a type</label>
             <br />
-            <select id="Sort" name="Choice" className="maininv-inventory-sorting-content">
-              <option value="All">All</option>
-              <option value="Rarity">Rarity</option>
-              <option value="Effectivity">Effectivity</option>
-              <option value="Obtainment">Obtainment</option>
-            </select>
+            <select
+                id="Sort"
+                name="Choice"
+                className="maininv-inventory-sorting-content"
+                value={selectedOption}
+                onChange={handleChange}
+              >
+                <option value="all">All</option>
+                <option value="potion">Potion</option>
+                <option value="food">Food</option>
+                <option value="key">Key</option>
+              </select>
           </div>
 
           <div className="maininv-right-side-inv">
             <div className="maininv-inventory-Info">
               <label className="maininv-inv-word">Inventory</label>
               <div className="maininv-inventory-capacity">
-                capacity : {count} / 100 (User ID: {user?.id}) {inventoryIndex[0].description}
+                capacity : {count} / 100 (User ID: {user?.id}) {inventoryIndex[0].description} {selectedOption}
               </div>
             </div>
             <div className="maininv-actual-inventory">
-              <MainInvCreation inventory={inventory}/>
+              {showInventory ? (
+                <MainInvCreation inventory={inventory} filter={selectedOption} />
+              ) : (
+                <></> // Empty content during "cleared" state
+              )}
             </div>
           </div>
         </div>
