@@ -125,8 +125,9 @@ app.post('/api/upload-wallpaper', upload.single('wallpaper'), userProfileControl
 app.post('/api/init-userprofile', userProfileController.initUserProfileTables);
 
 // Inventory Route
-app.get('/api/users/:userId/inventoryGet', inventoryController.getAllInventory);
-app.get('/api/users/:userId/inventoryCount', inventoryController.getInventoryCount);
+app.get('/api/users/:userId/inventoryGet', inventoryController.getAllInventory); // user data
+app.get('/api/users/:userId/inventoryCount', inventoryController.getInventoryCount); // user data count
+app.get('/api/inventoryIndex', inventoryController.getInventoryIndex);
 
 
 

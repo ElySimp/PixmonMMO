@@ -268,7 +268,10 @@
     margin: 0 auto;
     margin-top: 7%;
     text-align: center;
+    line-height: 1.2; /* Add this line */
+    color: white;     /* Optional: to make text visible on black background */
 }
+
 
 .maininv-item-stats {
     height: 5vh;

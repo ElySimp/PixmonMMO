@@ -5,17 +5,10 @@ import Sidebar from '../../components/Sidebar';
 import potion from '../../assets/inv_asset/potion.png';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../utils/config';
-import axios from 'axios';
 
-const description = "idk what to write";
-const testAmount = 5;
-const effect = 20;
-
-// Fetch count from backend
 async function getInventoryCount(userId) {
   try {
     const res = await fetch(`${API_URL}/users/${userId}/inventoryCount`);
-
     const data = await res.json();
     if (data.success) return data.count;
     throw new Error('Failed to get inventory count');
@@ -28,29 +21,47 @@ async function getInventoryCount(userId) {
 async function getInventoryData(userId) {
   try {
     const res = await fetch(`${API_URL}/users/${userId}/inventoryGet`);
-
     const data = await res.json();
-    if (data.success) return data.inventory; 
-
+    if (data.success) return data.inventory;
     throw new Error('Failed to get inventory data');
   } catch (e) {
     console.error(e);
-    return []; 
+    return [];
+  }
+}
+
+async function getIndexInventory() {
+  try {
+    const res = await fetch(`${API_URL}/inventoryIndex`);
+    const data = await res.json();
+    if (data.success) return data.inventoryIndex;
+    console.error('Failed to get inventory index');
+    return [];
+  } catch (error) {
+    console.error("Error fetching inventory index:", error);
+    return [];
   }
 }
 
 const MainInv = () => {
   const { user, loading: authLoading } = useAuth();
-  const [count, setCount] = useState(null); // null = loading
+  const [count, setCount] = useState(null);
   const [inventory, setInventory] = useState([]);
+  const [inventoryIndex, setInventoryIndex] = useState([]);
 
   useEffect(() => {
     if (authLoading) return;
+    getIndexInventory()
+      .then(setInventoryIndex)
+      .catch(() => setInventoryIndex([]));
+  }, [authLoading]);
 
+  useEffect(() => {
+    if (authLoading) return;
     if (user && user.id) {
       getInventoryCount(user.id)
         .then(setCount)
-        .catch(() => setCount(0)); // fallback
+        .catch(() => setCount(0));
     } else {
       console.log('No user found');
       setCount(0);
@@ -58,27 +69,27 @@ const MainInv = () => {
   }, [user, authLoading]);
 
   useEffect(() => {
-  if (authLoading) return;
-
-  if (user && user.id) {
-    getInventoryData(user.id)
-      .then(setInventory)
-      .catch(() => setInventory([])); // fallback
-  } else {
-    console.log('No user found');
-    setInventory([]);
-  }
+    if (authLoading) return;
+    if (user && user.id) {
+      getInventoryData(user.id)
+        .then(setInventory)
+        .catch(() => setInventory([]));
+    } else {
+      console.log('No user found');
+      setInventory([]);
+    }
   }, [user, authLoading]);
 
   function InventoryItem({ item }) {
     const [isOpen, setIsOpen] = useState(false);
 
+    // Safely get description and image with fallbacks
     return (
       <div className="maininv-item-container">
         <div className="maininv-inventory-items" onClick={() => setIsOpen(true)}>
-          <div className="maininv-amt"> x{testAmount} </div>
+          <div className="maininv-amt"> x{item.amount || 1} </div>
           <div className="maininv-items">
-            <img src={potion} alt="potion" />
+            <img src={potion} alt="potion"/>
           </div>
         </div>
 
@@ -90,22 +101,21 @@ const MainInv = () => {
               <div className="maininv-items">
                 <img src={potion} alt="potion" />
               </div>
-              <div className="maininv-item-stats">effect : {item.effect_value}%</div>
-              <div className="maininv-description">{description}</div>
+              <div className="maininv-item-stats">effect : {item.effect_value || 0}%</div>
+              <div className="maininv-description">{inventoryIndex[item.index_id].description}</div>
             </div>
           </div>
         )}
       </div>
-  );
-}
-
-  function MainInvCreation({ inventory }) {
-    return inventory.map((item, index) => (
-      <InventoryItem key={item.id || index} item={item} />
-    ));
+    );
   }
 
-  console.log('Inventory:', inventory);
+ function MainInvCreation({ inventory }) {
+  return inventory.map((item, index) => (
+    <InventoryItem key={item.id || index} item={item} />
+  ));
+}
+
 
 
   if (count === null) return <div>Loading inventory...</div>;
@@ -141,11 +151,11 @@ const MainInv = () => {
             <div className="maininv-inventory-Info">
               <label className="maininv-inv-word">Inventory</label>
               <div className="maininv-inventory-capacity">
-                capacity : {count} / 100 (User ID: {user?.id})
+                capacity : {count} / 100 (User ID: {user?.id}) {inventoryIndex[0].description}
               </div>
             </div>
             <div className="maininv-actual-inventory">
-              <MainInvCreation inventory={inventory} count={count}/>
+              <MainInvCreation inventory={inventory}/>
             </div>
           </div>
         </div>

@@ -171,6 +171,14 @@ class Inventory {
         } 
     }
 
+    static async indexItemObtain () {
+        try {
+            const [rows] = await db.query('SELECT * FROM IndexInventory');
+            return rows;
+        } catch (error) {
+            console.error("error pulling data");
+        }
+    }
 }
 
 module.exports = Inventory;

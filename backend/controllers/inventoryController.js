@@ -82,3 +82,13 @@ exports.getInventoryCount = async (req, res) => {
     }
 };
 
+exports.getInventoryIndex = async (req, res) => {
+    try {
+        const indexInventory = await Inventory.indexItemObtain();
+        console.log("index received");
+        return res.status(200).json({ success: true, inventoryIndex: indexInventory });
+    } catch (error) {
+        console.error('Error pulling data', error);
+        return res.status(500).json({ success: false, message: 'Failed to retrieve inventory index', error: error.message });
+    }
+}
