@@ -180,7 +180,10 @@ exports.getUserStats = async (req, res) => {
         const stats = await User.getStats(userId);
         
         // Return stats in the format expected by the frontend
-        res.json(stats);
+        res.json({
+            success: true,
+            data: stats
+        });
     } catch (error) {
         console.error('Error getting user stats:', error);
         res.status(500).json({

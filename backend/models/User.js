@@ -116,6 +116,9 @@ class User {
                     level INT DEFAULT 1,
                     xp INT DEFAULT 0,
                     gold INT DEFAULT 0,
+                    diamonds INT DEFAULT 0,
+                    quest_points INT DEFAULT 10,
+                    quest_point_cooldown DATETIME DEFAULT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at DATETIME DEFAULT NULL,
                     FOREIGN KEY (user_id) REFERENCES UserLogin(id) ON DELETE CASCADE,
@@ -157,7 +160,7 @@ class User {
             
             // Create initial stats
             await db.query(
-                'INSERT INTO UserStats (user_id, xp, gold, level, cooldownEnd, updated_at, quest_points) VALUES (?, 0, 0, 1, NULL, ?, 10)',
+                'INSERT INTO UserStats (user_id, xp, gold, level, cooldownEnd, updated_at, quest_points, diamonds) VALUES (?, 0, 0, 1, NULL, ?, 10, o)',
                 [userId, now]
             );
 
@@ -168,6 +171,8 @@ class User {
                 level: 1,
                 xp: 0,
                 gold: 0,
+                diamonds: 0,
+                quest_points: 10,
                 cooldownEnd: null
             };
         } catch (error) {
@@ -320,20 +325,31 @@ class User {
             
             // Get the user's stats (now there should be only one record or none)
             const [existingStats] = await db.query(
-                'SELECT level, xp, gold, cooldownEnd FROM UserStats WHERE user_id = ?',
+                'SELECT level, xp, gold, diamonds, quest_points, quest_point_cooldown, cooldownEnd FROM UserStats WHERE user_id = ?',
                 [userId]
             );
             
             if (existingStats.length === 0) {
                 // Create default stats if none exist
-                await this.createUserStats(userId);
-                return { level: 1, xp: 0, gold: 0, cooldownEnd: null };
+                // await this.createUserStats(userId);
+                return { 
+                    level: 1, 
+                    xp: 0, 
+                    gold: 0, 
+                    diamonds: 0, 
+                    quest_points: 10, 
+                    quest_point_cooldown: null, 
+                    cooldownEnd: null 
+                };
             }
-            
+            // const stats = existingStats[0];
             return {
                 level: existingStats[0].level || 1,
                 xp: existingStats[0].xp || 0,
                 gold: existingStats[0].gold || 0,
+                diamonds: existingStats[0].diamonds || 0,
+                quest_points: existingStats[0].quest_points || 0,
+                quest_point_cooldown: existingStats[0].quest_point_cooldown,
                 cooldownEnd: existingStats[0].cooldownEnd
             };
         } catch (error) {
@@ -343,6 +359,9 @@ class User {
                 level: 1,
                 xp: 0,
                 gold: 0,
+                diamonds: 0,
+                quest_points: 10,
+                quest_point_cooldown: null,
                 cooldownEnd: null
             };
         }
