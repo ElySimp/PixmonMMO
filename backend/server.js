@@ -15,7 +15,7 @@ const achievementController = require('./controllers/achievementController');
 const questController = require('./controllers/questController');
 const userProfileController = require('./controllers/userProfileController');
 const { protect } = require('./middleware/auth');
-const checkAndFixDuplicateStats = require('./scripts/check-and-fix-stats');
+const checkAndFixDuplicateStats = require('./scripts/maintenance/check-and-fix-stats');
 
 const app = express();
 

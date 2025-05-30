@@ -30,7 +30,7 @@ function DailyQuest() {
             const response = await axios.post(`${API_URL}/api/user/${userId}/quest/${id}/claim`);
             if (response.data.success) {
                 await refreshQuestStatus();
-                alert('✅ Quest Claimed!');
+                if (onClaimReward) onClaimReward('✅ Quest Claimed!');
             }
         } catch (error) {
             console.error("🚨 Error claiming quest:", error);
@@ -39,10 +39,10 @@ function DailyQuest() {
 
     const handleClaimMainReward = () => {
         if (userQuests.filter(q => q.claimed).length === userQuests.length && !mainRewardClaimed) {
-            alert('Reward diklaim!');
+            if (onClaimReward) onClaimReward('🎉 Main Reward Claimed!');
             setMainRewardClaimed(true);
         } else {
-            alert('Selesaikan semua quest dulu!');
+            if (onClaimReward) onClaimReward('Selesaikan semua quest dulu!');
         }
     };
 

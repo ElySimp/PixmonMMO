@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './Topbar.css';
 import chatIcon from '../assets/MAIN/chat.png';
 import notificationIcon from '../assets/MAIN/notification.png';
@@ -8,13 +8,14 @@ const profileImage = '/dummy1.jpg';
 function Topbar({ 
   onMenuClick, 
   onSupportClick, 
-  onFriendsClick, 
   onSearch, 
   onChatClick, 
   onNotificationClick 
 }) {
   const [showProfileCard, setShowProfileCard] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const isActive = (path) => location.pathname === path;
   const profileCardRef = useRef(null);
   const profileButtonRef = useRef(null);
 
@@ -82,7 +83,9 @@ function Topbar({
       <div className="topbar-left">
         <button className="topbar-menu" onClick={onMenuClick}>☰</button>
         <button onClick={onSupportClick}>Support Service</button>
-        <button onClick={onFriendsClick}>Friends</button>
+        <button 
+          className={`topbar-item ${isActive('/friends') ? 'active' : ''}`}
+          onClick={() => navigate('/friends')}>Friends</button>
       </div>
 
       <div className="topbar-right">
