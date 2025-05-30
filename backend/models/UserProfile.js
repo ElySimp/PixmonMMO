@@ -100,7 +100,7 @@ class UserProfile {
             );
 
             const level = statsResult?.[0]?.level || 1;
-            const initialSkillPoints = level * 3; // 3 skill points per level
+            const initialSkillPoints = level * 1; 
             const initialDiamonds = 100;
             const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
             

@@ -48,7 +48,7 @@ function Topbar({
   };
 
   const handleCurrencyAdd = (currencyType) => {
-    console.log(`Add ${currencyType} clicked`);
+    console.log('Add ${currencyType} clicked');
     // Logika untuk menambahkan mata uang
   };
 
@@ -67,15 +67,41 @@ function Topbar({
     // Navigasi ke halaman settings
   };
 
-  const handleLogoutClick = () => {
-    console.log('Logout clicked');
-    // Logika untuk logout
-  };
 
   const handleMyProfileClick = () => {
     navigate('/profile');
     setShowProfileCard(false);
   };
+  
+   // Perbaikan untuk fungsi handleLogoutClick
+  const handleLogoutClick = () => {
+  console.log('Logout clicked');
+  
+  try {
+    // Hapus semua data pengguna dari localStorage
+    localStorage.removeItem('token'); // atau sesuaikan dengan nama key token Anda
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userProfile');
+    
+    // Atau hapus semua localStorage (opsional)
+    // localStorage.clear();
+    
+    // Tutup profile card
+    setShowProfileCard(false);
+    
+    // Redirect ke halaman utama
+    navigate('/');
+    
+    // Refresh halaman untuk memastikan state ter-reset (opsional)
+    // window.location.reload();
+    
+  } catch (error) {
+    console.error('Error during logout:', error);
+    // Tetap redirect meskipun ada error
+    navigate('/');
+   }
+ };
 
   return (
     <nav className="topbar">
@@ -194,7 +220,7 @@ function Topbar({
                   <span>Membership</span>
                 </button>
                 <button className="action-button settings" onClick={handleSettingsClick}>
-                  <span className="action-icon">⚙️</span>
+                  <span className="action-icon">⚙</span>
                   <span>Settings</span>
                 </button>
                 <button className="action-button logout" onClick={handleLogoutClick}>
