@@ -15,7 +15,7 @@ const achievementController = require('./controllers/achievementController');
 const questController = require('./controllers/questController');
 const userProfileController = require('./controllers/userProfileController');
 const { protect } = require('./middleware/auth');
-const checkAndFixDuplicateStats = require('./scripts/check-and-fix-stats');
+const checkAndFixDuplicateStats = require('./scripts/maintenance/check-and-fix-stats');
 
 const app = express();
 
@@ -125,8 +125,10 @@ app.post('/api/upload-wallpaper', upload.single('wallpaper'), userProfileControl
 app.post('/api/init-userprofile', userProfileController.initUserProfileTables);
 
 // Inventory Route
-app.get('/api/inventory', inventoryController.getAllInventory);
+app.get('/api/users/:userId/inventoryGet', inventoryController.getAllInventory);
 app.get('/api/users/:userId/inventoryCount', inventoryController.getInventoryCount);
+
+
 
 // Quest Routes
 app.get('/api/quests', questController.getAllQuests);

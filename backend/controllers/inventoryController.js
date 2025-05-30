@@ -1,3 +1,4 @@
+const db = require('../config/database');
 const Inventory = require('../models/Inventory');
 const User = require('../models/User');
 
@@ -19,9 +20,24 @@ exports.initInventoryTables = async (req, res) => {
 
 exports.getAllInventory = async (req, res) => {
     try {
-        const inventory = await InventoryModel.getAllInventory();
-        res.json({ success: true, data: inventory });
+        const userId = req.params.userId;
+        let inventory = [];
+
+        if (userId) {
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).json({ success: false, message: 'User not found' });
+            }
+            inventory = await Inventory.UserDataObtain(userId);
+        } else {
+            // Optionally handle the case if no userId is provided
+            return res.status(400).json({ success: false, message: 'User ID required' });
+        }
+        
+        res.json({ success: true, inventory });
+        console.log('success getting user inventory data');
     } catch (error) {
+        console.error('Error in getAllInventory:', error);
         res.status(500).json({ success: false, message: 'Failed to retrieve inventory' });
     }
 }
@@ -39,18 +55,30 @@ exports.forceObtain = async (req, res) => {
 
 exports.getInventoryCount = async (req, res) => {
     try {
-        const userId = req.params.userId;  // get userId from URL params
+        const userId = req.params.userId;
         let count;
 
-        if(userId) {
+        if (userId) {
+            // Pastikan user tersebut ada
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).json({ success: false, message: 'User not found' });
+            }
+
             count = await Inventory.countUserInventory(userId);
         } else {
             count = await Inventory.countAllInventory();
         }
 
         res.json({ success: true, count });
-    } catch(error) {
+        console.log("Success getting inventory count");
+    } catch (error) {
         console.error('Error getting inventory count:', error);
-        res.status(500).json({ success: false, message: 'Failed to get inventory count', error: error.message });
+        res.status(500).json({
+            success: false,
+            message: 'Failed to get inventory count',
+            error: error.message
+        });
     }
 };
+
