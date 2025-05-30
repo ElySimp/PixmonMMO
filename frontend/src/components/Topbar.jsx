@@ -49,7 +49,7 @@ function Topbar({
   };
 
   const handleCurrencyAdd = (currencyType) => {
-    console.log('Add ${currencyType} clicked');
+    console.log(`Add ${currencyType} clicked`);
     // Logika untuk menambahkan mata uang
   };
 
