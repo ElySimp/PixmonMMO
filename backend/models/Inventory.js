@@ -40,6 +40,7 @@ class Inventory {
                 def_value int,
                 index_id int(11),
                 user_id int(11),
+                item_type varchar(100),
                 FOREIGN KEY (index_id) REFERENCES index_inventory (item_id) ON DELETE CASCADE,
                 FOREIGN KEY (user_id) REFERENCES UserLogin(id) ON DELETE CASCADE
             )
@@ -47,7 +48,7 @@ class Inventory {
         
         try {
             await db.query(sql);
-            console.log('UserAchievements table created or already exists');
+            console.log('UserInventory table created or already exists');
         } catch (error) {
             console.error('Error creating UserAchievements table:', error);
             throw error;
@@ -118,16 +119,6 @@ class Inventory {
         }
     }
 
-    static async InventoryReceive () {
-        try {
-        const [rows] = await db.query('SELECT * FROM Inventory');
-        return rows;
-    } catch (error) {
-        console.error('Error fetching inventory:', error);
-        throw error;
-    }
-    }
-
     static async force_send (id) {
         const test_items = [
             {
@@ -153,6 +144,7 @@ class Inventory {
                     test_items.index_id,
                     test_items.user_id
                 ]);
+            console.log('Insert successful: item added to UserInventory');
         } catch (error){
             console.error('Error sending data to UserInventory table:', error);
             throw error;
@@ -170,8 +162,23 @@ class Inventory {
     }
 
 
-    
+    static async UserDataObtain(userId) {
+        try {
+            const [rows] = await db.query('SELECT * FROM UserInventory WHERE user_id = ?', [userId]);
+            return rows;
+        } catch(error) {
+            console.error(`error gathering data for user`, error);
+        } 
+    }
 
+    static async indexItemObtain () {
+        try {
+            const [rows] = await db.query('SELECT * FROM IndexInventory');
+            return rows;
+        } catch (error) {
+            console.error("error pulling data");
+        }
+    }
 }
 
 module.exports = Inventory;

@@ -65,7 +65,7 @@ const Auth = ({ setIsAuthenticated }) => {
         const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
         
         try {
-            const response = await fetch(`http://localhost:5000${endpoint}`, {
+            const response = await fetch('http://localhost:5000${endpoint}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -80,7 +80,9 @@ const Auth = ({ setIsAuthenticated }) => {
             
             if (data.success) {
                 if (isLogin) {
+                    localStorage.removeItem(TOKEN_KEY);
                     localStorage.setItem(TOKEN_KEY, data.data.token); // gunakan TOKEN_KEY
+                    await fetchUserProfile();
                     setIsAuthenticated(true);
                 } else {
                     showSuccessOverlay('Registration successful! Please login.');

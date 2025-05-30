@@ -33,6 +33,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         // Token invalid, remove it
         localStorage.removeItem(TOKEN_KEY);
+        localStorage.setItem(TOKEN_KEY, data.data.token);
       }
     } catch (error) {
       console.error('Error fetching user:', error);
