@@ -46,7 +46,7 @@ exports.claimDailyMainReward = async (req, res) => {
     try {
         await db.query('UPDATE UserStats SET diamonds = diamonds + 5 WHERE user_id = ?', [userId]);
         await db.query('INSERT INTO UserInventory (item_name, user_id) VALUES (?, ?)', ['Normal Key', userId]);
-        res.json({ success: true, message: 'Claimed 5 diamonds & 1 key!' });
+        res.json({ success: true, message: 'Claimed 5 diamonds' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

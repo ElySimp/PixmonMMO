@@ -1,5 +1,6 @@
 const db = require('../config/database');
 const moment = require('moment-timezone');
+const cron = require('node-cron');
 
 class Quest {
     static async createTable() {
@@ -152,6 +153,17 @@ class QuestSystem {
         if (!questStatus.length) throw new Error('Quest not found for this user');
         if (!questStatus[0].completed) throw new Error('Quest must be completed before claiming reward');
         if (questStatus[0].claimed) throw new Error('Quest reward already claimed');
+        
+        const [questData] = await db.query(
+            'SELECT xp_reward, gold_reward FROM Quest WHERE id = ?',
+            [questId]
+        );
+
+        // Update UserStats
+        await db.query(
+            'UPDATE UserStats SET xp = xp + ?, gold = gold + ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?',
+            [questData[0].xp_reward, questData[0].gold_reward, userId]
+        );
 
         await db.query(
             'UPDATE UserQuest SET claimed = TRUE WHERE user_id = ? AND quest_id = ?',
@@ -177,17 +189,25 @@ class QuestSystem {
                 );
 
                 await db.query(
-                    'DELETE FROM UserQuest WHERE user_id = ? AND quest_id IN (SELECT id FROM Quest WHERE repeat_type = "daily")',
+                    `UPDATE UserQuest uq
+                    JOIN Quest q ON uq.quest_id = q.id
+                    SET uq.completed = FALSE, uq.claimed = FALSE
+                    WHERE uq.user_id = ? AND q.repeat_type = "daily"`,
                     [user.user_id]
                 );
 
+                // Tambahkan quest harian yang belum ada (jika ada quest baru)
                 await db.query(
                     `INSERT INTO UserQuest (user_id, quest_id, completed, claimed)
-                    SELECT ?, id,
-                        CASE WHEN LOWER(name) LIKE '%login%' THEN TRUE ELSE FALSE END,
+                    SELECT ?, q.id, 
+                        CASE WHEN LOWER(q.name) LIKE '%login%' THEN TRUE ELSE FALSE END,
                         FALSE
-                    FROM Quest WHERE repeat_type = "daily"`,
-                    [user.user_id]
+                    FROM Quest q
+                    WHERE q.repeat_type = "daily"
+                    AND NOT EXISTS (
+                        SELECT 1 FROM UserQuest uq2 WHERE uq2.user_id = ? AND uq2.quest_id = q.id
+                    )`,
+                    [user.user_id, user.user_id]
                 );
 
                 console.log(`✅ Daily quests reset for user ${user.user_id}`);
@@ -196,9 +216,11 @@ class QuestSystem {
     }
 
     static startDailyQuestResetSchedule() {
-        setInterval(async () => {
+        cron.schedule('0 7 * * *', async () => {
             await QuestSystem.resetDailyQuests();
-        }, 5 * 60 * 1000); // ✅ Jalankan reset setiap 5 menit
+        }, {
+            timezone: "Asia/Jakarta"
+        });
     }
 
 }

@@ -1,12 +1,12 @@
 // models/UserProfile.js
-const db = require('../config/database');
+db = require('../config/database');
 const path = require('path');
 
 // Import User model for skill points synchronization
 const User = require('./User');
 
 class UserProfile {
-    // Create UserProfile table
+    // Create UserProfile table 
     static async createTable() {
         try {
             // Create the table
@@ -15,7 +15,6 @@ class UserProfile {
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     user_id INT NOT NULL,
                     status_message TEXT,
-                    diamonds INT DEFAULT 0,
                     skill_points INT DEFAULT 0,
                     hp_points INT DEFAULT 0,
                     damage_points INT DEFAULT 0,
@@ -37,7 +36,7 @@ class UserProfile {
         }
     }
 
-    // Create Wallpapers table (if needed)
+   
     static async createWallpapersTable() {
         try {
             const result = await db.query(`
@@ -54,7 +53,9 @@ class UserProfile {
             console.error('Error creating Wallpapers table:', error);
             throw error;
         }
-    }    // Get user profile by user ID
+    }
+
+    // Get user profile by user ID
     static async getByUserId(userId) {
         try {
             const [profiles] = await db.query(
@@ -63,7 +64,9 @@ class UserProfile {
                     u.username,
                     COALESCE(s.level, 1) as level,
                     COALESCE(s.xp, 0) as xp,
-                    COALESCE(s.gold, 0) as gold
+                    COALESCE(s.gold, 0) as gold,
+                    COALESCE(s.diamonds, 0) as diamonds
+
                 FROM UserProfile p
                 JOIN UserLogin u ON p.user_id = u.id
                 LEFT JOIN UserStats s ON p.user_id = s.user_id
@@ -80,7 +83,9 @@ class UserProfile {
             console.error('Error getting user profile:', error);
             throw error;
         }
-    }    // Create a default profile for new users
+    }
+
+    // Create a default profile for new users 
     static async createDefaultProfile(userId) {
         try {
             // Get username from UserLogin
@@ -101,32 +106,26 @@ class UserProfile {
 
             const level = statsResult?.[0]?.level || 1;
             const initialSkillPoints = level * 1; 
-            const initialDiamonds = 100;
-            const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
             
-            // Insert default profile
+            // Insert default profile - Set both timestamps explicitly
             await db.query(
                 `INSERT INTO UserProfile (
                     user_id,
                     status_message,
-                    diamonds,
                     skill_points,
                     hp_points,
                     damage_points,
                     agility_points,
                     created_at,
                     updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                ) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
                 [
                     userId,
                     'Ready for adventure!',
-                    initialDiamonds,
                     initialSkillPoints,
                     0, // Initial hp points
                     0, // Initial damage points
-                    0, // Initial agility points
-                    now,
-                    now
+                    0  // Initial agility points
                 ]
             );
             
@@ -154,11 +153,55 @@ class UserProfile {
             console.error('Error ensuring profile exists:', error);
             throw error;
         }
-    }    // Update basic user profile info (non-skill related)
+    }
+
+    // NEW METHOD: Sync skill points when user levels up
+    static async syncSkillPointsOnLevelUp(userId, newLevel) {
+        try {
+            console.log(`Syncing skill points for user ${userId} to level ${newLevel}`);
+            
+            // Calculate total skill points based on level (1 point per level)
+            const totalSkillPoints = newLevel * 1;
+            
+            // Get current allocated points
+            const [currentProfile] = await db.query(
+                'SELECT hp_points, damage_points, agility_points FROM UserProfile WHERE user_id = ?',
+                [userId]
+            );
+            
+            let availableSkillPoints = totalSkillPoints;
+            
+            if (currentProfile && currentProfile.length > 0) {
+                const allocatedPoints = (currentProfile[0].hp_points || 0) + 
+                                      (currentProfile[0].damage_points || 0) + 
+                                      (currentProfile[0].agility_points || 0);
+                availableSkillPoints = totalSkillPoints - allocatedPoints;
+            }
+            
+            // Update skill_points in UserProfile
+            await db.query(
+                `UPDATE UserProfile 
+                SET skill_points = ?, updated_at = NOW()
+                WHERE user_id = ?`,
+                [Math.max(0, availableSkillPoints), userId]
+            );
+            
+            console.log(`Updated skill points for user ${userId}: ${availableSkillPoints} available`);
+            return availableSkillPoints;
+        } catch (error) {
+            console.error('Error syncing skill points on level up:', error);
+            throw error;
+        }
+    }
+
+    // Update basic user profile info (non-skill related) - FIXED VERSION
     static async update(userId, updates) {
         try {
             console.log('Updating user profile:', userId);
             console.log('Update data:', updates);
+
+            // First ensure profile exists
+            await this.ensureProfileExists(userId);
 
             const updateFields = [];
             const updateValues = [];
@@ -169,18 +212,29 @@ class UserProfile {
                 updateValues.push(updates.status_message);
                 console.log('Adding status_message update:', updates.status_message);
             }
+            
+            // Handle wallpaper updates
+            if (updates.wallpaper_id !== undefined) {
+                updateFields.push('wallpaper_id = ?');
+                updateValues.push(updates.wallpaper_id);
+                console.log('Adding wallpaper_id update:', updates.wallpaper_id);
+            }
+            
             if (updates.custom_wallpaper_url !== undefined) {
                 updateFields.push('custom_wallpaper_url = ?');
                 updateValues.push(updates.custom_wallpaper_url);
+                console.log('Adding custom_wallpaper_url update:', updates.custom_wallpaper_url);
             }
-            if (updates.diamonds !== undefined) {
-                updateFields.push('diamonds = ?');
-                updateValues.push(updates.diamonds);
+            
+            // Handle pet updates
+            if (updates.favorite_pet_id !== undefined) {
+                updateFields.push('favorite_pet_id = ?');
+                updateValues.push(updates.favorite_pet_id);
+                console.log('Adding favorite_pet_id update:', updates.favorite_pet_id);
             }
-            if (updates.skill_points !== undefined) {
-                updateFields.push('skill_points = ?');
-                updateValues.push(updates.skill_points);
-            }
+            
+            // Handle skill points - IMPORTANT: Don't directly update skill_points here
+            // skill_points should be calculated based on level and allocated points
             if (updates.hp_points !== undefined) {
                 updateFields.push('hp_points = ?');
                 updateValues.push(updates.hp_points);
@@ -194,8 +248,14 @@ class UserProfile {
                 updateValues.push(updates.agility_points);
             }
             
-            // Add updated_at timestamp
-            updateFields.push('updated_at = CURRENT_TIMESTAMP');
+            // Handle level updates - sync skill points when level changes
+            if (updates.level !== undefined) {
+                updateFields.push('level = ?');
+                updateValues.push(updates.level);
+                
+                // Sync skill points based on new level
+                await this.syncSkillPointsOnLevelUp(userId, updates.level);
+            }
             
             // If no fields to update, return current profile
             if (updateFields.length === 0) {
@@ -205,6 +265,9 @@ class UserProfile {
             
             // Add userId to values array
             updateValues.push(userId);
+            
+            // Add updated_at to the update fields
+            updateFields.push('updated_at = NOW()');
             
             // Construct and execute update query
             const query = `
@@ -216,64 +279,87 @@ class UserProfile {
             console.log('Executing query:', query);
             console.log('With values:', updateValues);
             
-            await db.query(query, updateValues);
+            const [result] = await db.query(query, updateValues);
+            
+            // Check if update was successful
+            if (result.affectedRows === 0) {
+                console.log('No rows affected - profile might not exist');
+                // Try to create profile if it doesn't exist
+                await this.createDefaultProfile(userId);
+                // Retry the update
+                const [retryResult] = await db.query(query, updateValues);
+                console.log('Retry result:', retryResult);
+            }
             
             // Get updated profile by joining with UserLogin and UserStats
-            const [profiles] = await db.query(
-                `SELECT 
-                    p.*,
-                    u.username,
-                    COALESCE(s.level, 1) as level,
-                    COALESCE(s.xp, 0) as xp
-                FROM UserProfile p
-                JOIN UserLogin u ON p.user_id = u.id
-                LEFT JOIN UserStats s ON p.user_id = s.user_id
-                WHERE p.user_id = ?`,
-                [userId]
-            );
+            const updatedProfile = await this.getByUserId(userId);
             
-            console.log('Updated profile:', profiles[0]);
-            return profiles[0];
+            console.log('Updated profile:', updatedProfile);
+            return updatedProfile;
         } catch (error) {
             console.error('Error updating user profile:', error);
             throw error;
         }
     }
 
-    // Update skill points
+    // Update skill points - IMPROVED VERSION with proper skill_points calculation
     static async updateSkillPoints(userId, updates) {
         try {
+            console.log('Updating skill points for user:', userId);
+            console.log('Skill point updates:', updates);
+            
             // Start transaction
             await db.query('START TRANSACTION');
 
-            // Update skill points
+            // Get current profile and level
+            const currentProfile = await this.getByUserId(userId);
+            if (!currentProfile) {
+                throw new Error('User profile not found');
+            }
+            
+            const currentLevel = currentProfile.level || 1;
+            const totalSkillPoints = currentLevel * 1; // 1 point per level
+            
+            // Calculate new allocated points
+            const newAllocatedPoints = (updates.hp_points || 0) + 
+                                     (updates.damage_points || 0) + 
+                                     (updates.agility_points || 0);
+            
+            // Calculate remaining skill points
+            const remainingSkillPoints = totalSkillPoints - newAllocatedPoints;
+            
+            console.log(`Level: ${currentLevel}, Total: ${totalSkillPoints}, Allocated: ${newAllocatedPoints}, Remaining: ${remainingSkillPoints}`);
+            
+            // Update skill points allocation and remaining points
             const updateQuery = `
                 UPDATE UserProfile 
                 SET 
                     hp_points = ?,
                     damage_points = ?,
                     agility_points = ?,
+                    skill_points = ?,
                     updated_at = NOW()
                 WHERE user_id = ?
             `;
 
-            await db.query(updateQuery, [
-                updates.hp_points,
-                updates.damage_points,
-                updates.agility_points,
+            const [result] = await db.query(updateQuery, [
+                updates.hp_points || 0,
+                updates.damage_points || 0,
+                updates.agility_points || 0,
+                Math.max(0, remainingSkillPoints), // Ensure non-negative
                 userId
             ]);
+            
+            console.log('Update result:', result);
 
             // Get updated profile
-            const [rows] = await db.query(
-                'SELECT * FROM UserProfile WHERE user_id = ?',
-                [userId]
-            );
+            const updatedProfile = await this.getByUserId(userId);
 
             // Commit transaction
             await db.query('COMMIT');
-
-            return rows[0];
+            
+            console.log('Skill points updated successfully:', updatedProfile);
+            return updatedProfile;
         } catch (error) {
             // Rollback on error
             await db.query('ROLLBACK');
@@ -282,55 +368,71 @@ class UserProfile {
         }
     }
     
-    // Reset skill points
+    // Reset skill points - Updated to use diamonds from UserStats
     static async resetSkillPoints(userId, diamondsCost) {
         try {
             // Start a transaction
             await db.query('START TRANSACTION');
             
-            // Get current profile
-            const [rows] = await db.query(
-                'SELECT * FROM UserProfile WHERE user_id = ?',
+            // Get current diamonds from UserStats
+            const [statsRows] = await db.query(
+                'SELECT diamonds FROM UserStats WHERE user_id = ?',
                 [userId]
             );
             
-            if (rows.length === 0) {
-                throw new Error('Profile not found');
+            if (statsRows.length === 0) {
+                throw new Error('User stats not found');
             }
             
-            const profile = rows[0];
+            const currentDiamonds = statsRows[0].diamonds || 0;
             
             // Check if user has enough diamonds
-            if (profile.diamonds < diamondsCost) {
+            if (currentDiamonds < diamondsCost) {
                 throw new Error('Not enough diamonds');
             }
             
-            // Update profile: reset points and deduct diamonds
+            // Get current level to calculate total skill points
+            const currentProfile = await this.getByUserId(userId);
+            const currentLevel = currentProfile?.level || 1;
+            const totalSkillPoints = currentLevel * 1;
+            
+            // Update UserStats: deduct diamonds
             await db.query(
-                `UPDATE UserProfile 
-                SET 
-                    diamonds = diamonds - ?,
-                    hp_points = 0,
-                    damage_points = 0,
-                    agility_points = 0,
-                    updated_at = NOW()
+                `UPDATE UserStats 
+                SET diamonds = diamonds - ?
                 WHERE user_id = ?`,
                 [diamondsCost, userId]
             );
             
-            // Get updated profile
-            const [updatedRows] = await db.query(
-                'SELECT * FROM UserProfile WHERE user_id = ?',
+            // Update UserProfile: reset skill points and restore available points
+            await db.query(
+                `UPDATE UserProfile 
+                SET 
+                    hp_points = 0,
+                    damage_points = 0,
+                    agility_points = 0,
+                    skill_points = ?,
+                    updated_at = NOW()
+                WHERE user_id = ?`,
+                [totalSkillPoints, userId]
+            );
+            
+            // Get updated stats
+            const [updatedStatsRows] = await db.query(
+                'SELECT * FROM UserStats WHERE user_id = ?',
                 [userId]
             );
+            
+            // Get updated profile
+            const updatedProfile = await this.getByUserId(userId);
             
             // Commit transaction
             await db.query('COMMIT');
             
             return {
                 success: true,
-                diamonds: updatedRows[0].diamonds,
-                skill_points: updatedRows[0].skill_points,
+                diamonds: updatedStatsRows[0].diamonds,
+                skill_points: totalSkillPoints,
                 hp_points: 0,
                 damage_points: 0,
                 agility_points: 0
@@ -395,10 +497,9 @@ class UserProfile {
     // Update username in UserProfile when it changes in UserLogin
     static async syncUsername(userId, newUsername) {
         try {
-            const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
             await db.query(
-                'UPDATE UserProfile SET username = ?, updated_at = ? WHERE user_id = ?',
-                [newUsername, now, userId]
+                'UPDATE UserProfile SET username = ? WHERE user_id = ?',
+                [newUsername, userId]
             );
             return true;
         } catch (error) {

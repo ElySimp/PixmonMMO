@@ -43,6 +43,11 @@ class User {
                 'INSERT INTO UserLogin (username, email, password, updated_at) VALUES (?, ?, ?, ?)',
                 [username, email, hashedPassword, now]
             );
+
+            const newUserId = result.insertId;
+            
+            await UserProfile.ensureProfileExists(newUserId);
+
             
             console.log('User registered successfully:', result.insertId);
             return result.insertId;
@@ -371,7 +376,7 @@ class User {
     static async createDefaultStats(userId) {
         try {
             const [result] = await db.query(
-                `INSERT INTO UserStats (user_id, level, xp, gold, updated_at)
+                `INSERT INTO UserStats (user_id, diamonds,  level, xp, gold, updated_at)
                 VALUES (?, 1, 0, 0, NOW())`,
                 [userId]
             );
@@ -379,7 +384,8 @@ class User {
             return {
                 level: 1,
                 xp: 0,
-                gold: 0
+                gold: 0,
+                diamonds: 0
             };
         } catch (error) {
             console.error('Error creating default stats:', error);
@@ -431,7 +437,7 @@ class User {
                 [newLevel, now, userId]
             );
             // Update UserProfile level and add skill points
-            const skillPointsToAdd = 3; // 3 points per level
+            const skillPointsToAdd = 1;
             await db.query(
                 'UPDATE UserProfile SET level = ?, skill_points = skill_points + ?, updated_at = ? WHERE user_id = ?',
                 [newLevel, skillPointsToAdd, now, userId]
