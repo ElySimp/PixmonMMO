@@ -2,6 +2,7 @@ const db = require('../config/database');
 
 // Fungsi murni untuk inisialisasi tabel
 async function createPetsTables() {
+    // Buat tabel UserPets
     const createUserPetsTable = `
         CREATE TABLE IF NOT EXISTS UserPets (
             id INTEGER PRIMARY KEY AUTO_INCREMENT,
@@ -16,6 +17,7 @@ async function createPetsTables() {
     `;
     await db.query(createUserPetsTable);
 
+    // Buat tabel Pets
     const createPetsTable = `
         CREATE TABLE IF NOT EXISTS Pets (
             id INTEGER PRIMARY KEY AUTO_INCREMENT,
@@ -35,7 +37,7 @@ async function createPetsTables() {
     await db.query(createPetsTable);
 }
 
-// Fungsi Express (dipakai kalau perlu endpoint API)
+// Endpoint Express opsional untuk trigger via API
 exports.initPetsTables = async (req, res) => {
     try {
         await createPetsTables();
@@ -46,14 +48,21 @@ exports.initPetsTables = async (req, res) => {
     }
 };
 
-// Fungsi untuk keperluan server.js
+// Ekspor untuk digunakan di server.js
 exports.createPetsTables = createPetsTables;
 
-// Dapatkan data pet user
+// Dapatkan data pet milik user dari relasi UserPets -> Pets
 exports.PetsDataObtain = async (req, res) => {
     try {
         const userId = req.params.userId;
-        const [rows] = await db.query('SELECT * FROM namatabellu WHERE user_id = ?', [userId]);
+
+        const [rows] = await db.query(`
+            SELECT Pets.*, UserPets.nickname, UserPets.equipped, UserPets.current_level, UserPets.current_hp, UserPets.current_mana
+            FROM UserPets
+            JOIN Pets ON UserPets.Pets_id = Pets.id
+            WHERE UserPets.user_id = ?
+        `, [userId]);
+
         res.json({ success: true, data: rows });
     } catch (error) {
         console.error('Error gathering data for user:', error);

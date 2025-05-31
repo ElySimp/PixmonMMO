@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './MiscPets.css';
 import Topbar from '../../components/Topbar';
 import Sidebar from '../../components/Sidebar';
@@ -12,6 +12,7 @@ const pets = [
     name: "Cyndaquil",
     level: 350,
     role: "Assassin",
+    rarity: "Legendary",
     image: dummy,
     stats: {
       ATK: "5000/5000",
@@ -20,12 +21,14 @@ const pets = [
       DEF_MAGE: "2000/2000",
       MAX_MANA: "1200/1200",
       AGILITY: "500/500"
-    }
+    },
+    status: { happiness: 100, hunger: 50, health: 100 }
   },
   {
     name: "Oshawott",
     level: 280,
     role: "Mage",
+    rarity: "Epic",
     image: dummy1,
     stats: {
       ATK: "3000/3000",
@@ -34,26 +37,14 @@ const pets = [
       DEF_MAGE: "3000/3000",
       MAX_MANA: "5000/5000",
       AGILITY: "400/400"
-    }
+    },
+    status: { happiness: 100, hunger: 40, health: 100 }
   },
   {
     name: "Snivy",
     level: 250,
     role: "Tank",
-    image: dummy2,
-    stats: {
-      ATK: "3000/3000",
-      HP: "2000/2000",
-      DEF_PHY: "1000/1000",
-      DEF_MAGE: "3000/3000",
-      MAX_MANA: "5000/5000",
-      AGILITY: "400/400"
-    }
-  },
-  {
-    name: "Chikorita",
-    level: 230,
-    role: "Support",
+    rarity: "Elite",
     image: dummy3,
     stats: {
       ATK: "3000/3000",
@@ -62,31 +53,81 @@ const pets = [
       DEF_MAGE: "3000/3000",
       MAX_MANA: "5000/5000",
       AGILITY: "400/400"
-    }
+    },
+    status: { happiness: 100, hunger: 30, health: 100 }
+  },
+  {
+    name: "Chikorita",
+    level: 230,
+    role: "Support",
+    rarity: "Common",
+    image: dummy2,
+    stats: {
+      ATK: "3000/3000",
+      HP: "2000/2000",
+      DEF_PHY: "1000/1000",
+      DEF_MAGE: "3000/3000",
+      MAX_MANA: "5000/5000",
+      AGILITY: "400/400"
+    },
+    status: { happiness: 100, hunger: 20, health: 100 }
   }
 ];
 
 const MiscPets = () => {
   const [selectedRole, setSelectedRole] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedRarity, setSelectedRarity] = useState('');
   const [equippedPetName, setEquippedPetName] = useState('');
 
-  const handleRoleChange = (e) => {
-    setSelectedRole(e.target.value.toLowerCase());
-  };
+  const [petStatuses, setPetStatuses] = useState(
+    pets.reduce((acc, pet) => {
+      acc[pet.name] = { ...pet.status };
+      return acc;
+    }, {})
+  );
 
-  const handleStatusChange = (e) => {
-    setSelectedStatus(e.target.value.toUpperCase().replace('-', '_'));
-  };
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPetStatuses((prevStatuses) => {
+        const updated = { ...prevStatuses };
+        Object.keys(updated).forEach((name) => {
+          updated[name] = {
+            happiness: Math.max(0, updated[name].happiness - 1),
+            hunger: Math.min(100, updated[name].hunger + 1),
+            health: Math.max(0, updated[name].health - (updated[name].hunger > 80 ? 1 : 0))
+          };
+        });
+        return updated;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
+  const handleRoleChange = (e) => setSelectedRole(e.target.value.toLowerCase());
+  const handleStatusChange = (e) => setSelectedStatus(e.target.value.toUpperCase().replace('-', '_'));
+  const handleRarityChange = (e) => setSelectedRarity(e.target.value.toLowerCase());
   const handleResetFilter = () => {
     setSelectedRole('');
     setSelectedStatus('');
+    setSelectedRarity('');
   };
+  const handleEquipClick = (petName) => setEquippedPetName((prev) => (prev === petName ? '' : petName));
 
-  const handleEquipClick = (petName) => {
-    setEquippedPetName((prev) => (prev === petName ? '' : petName));
-  };
+  const feedPet = (name) => setPetStatuses((prev) => ({
+    ...prev,
+    [name]: { ...prev[name], hunger: Math.max(0, prev[name].hunger - 20) }
+  }));
+
+  const playWithPet = (name) => setPetStatuses((prev) => ({
+    ...prev,
+    [name]: { ...prev[name], happiness: Math.min(100, prev[name].happiness + 10) }
+  }));
+
+  const healPet = (name) => setPetStatuses((prev) => ({
+    ...prev,
+    [name]: { ...prev[name], health: Math.min(100, prev[name].health + 15) }
+  }));
 
   const getStatPercent = (statString) => {
     const [current, max] = statString.split('/').map(Number);
@@ -94,13 +135,8 @@ const MiscPets = () => {
   };
 
   let filteredPets = pets;
-
-  if (selectedRole) {
-    filteredPets = filteredPets.filter(
-      (pet) => pet.role.toLowerCase() === selectedRole
-    );
-  }
-
+  if (selectedRole) filteredPets = filteredPets.filter((pet) => pet.role.toLowerCase() === selectedRole);
+  if (selectedRarity) filteredPets = filteredPets.filter((pet) => pet.rarity.toLowerCase() === selectedRarity);
   if (selectedStatus) {
     filteredPets = [...filteredPets].sort((a, b) => {
       const aVal = Number(a.stats[selectedStatus]?.split('/')[0] || 0);
@@ -114,8 +150,6 @@ const MiscPets = () => {
       <Sidebar profilePic="/dummy.jpg" />
       <div className="main-content">
         <Topbar />
-
-        {/* Filter Section */}
         <div className="filter-container">
           <div className="filter-item">
             <label htmlFor="roleFilter" className="role-label">Sort by Role:</label>
@@ -127,7 +161,6 @@ const MiscPets = () => {
               <option value="support">Support</option>
             </select>
           </div>
-
           <div className="filter-item">
             <label htmlFor="statusFilter" className="status-label">Sort by Status:</label>
             <select id="statusFilter" onChange={handleStatusChange} value={selectedStatus}>
@@ -140,17 +173,24 @@ const MiscPets = () => {
               <option value="agility">AGILITY</option>
             </select>
           </div>
-
+          <div className="filter-item">
+            <label htmlFor="rarityFilter" className="rarity-label">Sort by Rarity:</label>
+            <select id="rarityFilter" onChange={handleRarityChange} value={selectedRarity}>
+              <option value="">All Rarity</option>
+              <option value="legendary">Legendary</option>
+              <option value="epic">Epic</option>
+              <option value="elite">Elite</option>
+              <option value="common">Common</option>
+            </select>
+          </div>
           <div className="filter-item">
             <button className="reset-button" onClick={handleResetFilter}>Reset Filter</button>
           </div>
         </div>
 
-        {/* Pet Cards */}
         <div className="card-container">
           {filteredPets.map((pet, index) => {
             const isEquipped = equippedPetName === pet.name;
-
             return (
               <div className={`misc-pet-card ${isEquipped ? 'equipped-glow' : ''}`} key={index}>
                 <div className="role-icon">
@@ -161,39 +201,49 @@ const MiscPets = () => {
                     support: '❤'
                   }[pet.role.toLowerCase()] || '❓'}
                 </div>
-
+                <div className={`rarity-text rarity-${pet.rarity.toLowerCase()}`}>{pet.rarity}</div>
                 <div className="pet-name">{pet.name}</div>
                 <img src={pet.image} alt={pet.name} className="pet-image" />
-
                 <div className="pet-info">
                   <div>Level: {pet.level}</div>
                   <div>Role: {pet.role}</div>
                 </div>
-
                 <div className="pet-stats">
                   {Object.entries(pet.stats).map(([key, value]) => {
                     const percent = getStatPercent(value);
                     return (
                       <div key={key} className="stat-line">
-                        <div className="stat-label">
-                          {key.replace('_', ' ')}: {value}
+                        <div className="stat-label">{key.replace('_', ' ')}: {value}</div>
+                        <div className="stat-bar-background">
+                          <div className="stat-bar-fill" style={{ width: `${percent}%` }} />
                         </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="real-time-status">
+                  {['happiness', 'hunger', 'health'].map((statusKey) => {
+                    const value = petStatuses[pet.name]?.[statusKey] ?? 0;
+                    return (
+                      <div key={statusKey} className="stat-line">
+                        <div className="stat-label">{statusKey.charAt(0).toUpperCase() + statusKey.slice(1)}: {value}%</div>
                         <div className="stat-bar-background">
                           <div
                             className="stat-bar-fill"
-                            style={{ width: `${percent}%` }}
+                            style={{ width: `${value}%`, backgroundColor: statusKey === 'hunger' ? '#f39c12' : statusKey === 'health' ? '#e74c3c' : '#3498db' }}
                           />
                         </div>
                       </div>
                     );
                   })}
                 </div>
-
+                <div className="pet-actions">
+                  <button className="action-button" onClick={() => feedPet(pet.name)}>🍖 Feed</button>
+                  <button className="action-button" onClick={() => playWithPet(pet.name)}>🎾 Play</button>
+                  <button className="action-button" onClick={() => healPet(pet.name)}>💊 Heal</button>
+                </div>
                 <div className="select-button-container">
-                  <button
-                    className={`select-button ${isEquipped ? 'equipped' : ''}`}
-                    onClick={() => handleEquipClick(pet.name)}
-                  >
+                  <button className={`select-button ${isEquipped ? 'equipped' : ''}`} onClick={() => handleEquipClick(pet.name)}>
                     {isEquipped ? 'Equipped ✅' : 'Equip'}
                   </button>
                 </div>
