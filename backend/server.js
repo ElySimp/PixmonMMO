@@ -14,8 +14,9 @@ const authController = require('./controllers/authController');
 const achievementController = require('./controllers/achievementController');
 const questController = require('./controllers/questController');
 const userProfileController = require('./controllers/userProfileController');
+const petsController = require('./controllers/petsController');
 const { protect } = require('./middleware/auth');
-const checkAndFixDuplicateStats = require('./scripts/check-and-fix-stats');
+const checkAndFixDuplicateStats = require('./scripts/maintenance/check-and-fix-stats');
 
 const app = express();
 
@@ -84,6 +85,15 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
     }
 })();
 
+(async () => {
+    try {
+        await petsController.createPetsTables();
+        console.log('Pets tables initialized');
+    } catch (err) {
+        console.error('Pets table error:', err);
+    }
+})();
+
 // Initialize Quest tables
 (async () => {
     try {
@@ -131,6 +141,8 @@ app.get('/api/users/:userId/inventoryCount', inventoryController.getInventoryCou
 // Quest Routes
 app.get('/api/quests', questController.getAllQuests);
 app.post('/api/user/:userId/quest/:questId/complete', questController.completeQuest);
+
+app.get('/api/users/:userId/userPetGet', petsController.PetsDataObtain);
 
 app.get('/api/user/:userId/quests', async (req, res) => {
     try {

@@ -2,13 +2,17 @@ import React, { useState } from 'react';
 import './MiscPets.css';
 import Topbar from '../../components/Topbar';
 import Sidebar from '../../components/Sidebar';
+import dummy from '../../assets/mix pets/dummy.jpg';
+import dummy1 from '../../assets/mix pets/dummy1.jpg';
+import dummy2 from '../../assets/mix pets/dummy2.jpg';
+import dummy3 from '../../assets/mix pets/dummy3.jpg';
 
 const pets = [
   {
     name: "Cyndaquil",
     level: 350,
     role: "Assassin",
-    image: "/assets/20a8f537-08df-45ac-815b-6e4f7be0d1aa.png",
+    image: dummy,
     stats: {
       ATK: "5000/5000",
       HP: "1500/1500",
@@ -22,7 +26,7 @@ const pets = [
     name: "Oshawott",
     level: 280,
     role: "Mage",
-    image: "/assets/4b591ae1-3185-408d-a2b9-28946629d942.png",
+    image: dummy1,
     stats: {
       ATK: "3000/3000",
       HP: "2000/2000",
@@ -36,7 +40,7 @@ const pets = [
     name: "Snivy",
     level: 250,
     role: "Tank",
-    image: "/assets/4b591ae1-3185-408d-a2b9-28946629d942.png",
+    image: dummy2,
     stats: {
       ATK: "3000/3000",
       HP: "2000/2000",
@@ -50,7 +54,7 @@ const pets = [
     name: "Chikorita",
     level: 230,
     role: "Support",
-    image: "/assets/4b591ae1-3185-408d-a2b9-28946629d942.png",
+    image: dummy3,
     stats: {
       ATK: "3000/3000",
       HP: "2000/2000",
@@ -84,6 +88,11 @@ const MiscPets = () => {
     setEquippedPetName((prev) => (prev === petName ? '' : petName));
   };
 
+  const getStatPercent = (statString) => {
+    const [current, max] = statString.split('/').map(Number);
+    return Math.round((current / max) * 100);
+  };
+
   let filteredPets = pets;
 
   if (selectedRole) {
@@ -103,10 +112,10 @@ const MiscPets = () => {
   return (
     <div className="main-container">
       <Sidebar profilePic="/dummy.jpg" />
-
       <div className="main-content">
         <Topbar />
 
+        {/* Filter Section */}
         <div className="filter-container">
           <div className="filter-item">
             <label htmlFor="roleFilter" className="role-label">Sort by Role:</label>
@@ -137,27 +146,20 @@ const MiscPets = () => {
           </div>
         </div>
 
+        {/* Pet Cards */}
         <div className="card-container">
           {filteredPets.map((pet, index) => {
-            const getStatPercent = (statString) => {
-              const [current, max] = statString.split('/').map(Number);
-              return Math.round((current / max) * 100);
-            };
-
             const isEquipped = equippedPetName === pet.name;
 
             return (
               <div className={`misc-pet-card ${isEquipped ? 'equipped-glow' : ''}`} key={index}>
                 <div className="role-icon">
-                  {(() => {
-                    switch (pet.role.toLowerCase()) {
-                      case 'assassin': return '🗡️';
-                      case 'tank': return '🛡️';
-                      case 'mage': return '🔮';
-                      case 'support': return '❤️';
-                      default: return '❓';
-                    }
-                  })()}
+                  {{
+                    assassin: '🗡',
+                    tank: '🛡',
+                    mage: '🔮',
+                    support: '❤'
+                  }[pet.role.toLowerCase()] || '❓'}
                 </div>
 
                 <div className="pet-name">{pet.name}</div>
@@ -177,7 +179,10 @@ const MiscPets = () => {
                           {key.replace('_', ' ')}: {value}
                         </div>
                         <div className="stat-bar-background">
-                          <div className="stat-bar-fill" style={{ width: `${percent}%` }} />
+                          <div
+                            className="stat-bar-fill"
+                            style={{ width: `${percent}%` }}
+                          />
                         </div>
                       </div>
                     );

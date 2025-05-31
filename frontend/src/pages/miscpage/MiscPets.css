@@ -80,6 +80,14 @@
   margin-bottom: 10px;
 }
 
+.pet-image {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  margin: 10px 0;
+}
+
+
 /* === Stat Bars === */
 .stat-line {
   margin: 4px 0;
