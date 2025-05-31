@@ -26,6 +26,7 @@ function Sidebar({ profilePic, username }) {
     { path: '/battle', icon: battleIcon, label: 'Battle' },
     { path: '/quest', icon: questIcon, label: 'Quest' },
     { path: '/shop', icon: shopIcon, label: 'Shop' },
+    { path: '/gacha', icon : shopIcon, label: 'Gacha'}
   ];
 
   const isActive = (path) => location.pathname === path;
