@@ -193,6 +193,34 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', message: 'Server is running' });
 });
 
+app.get('/api/user/overlay-profile', protect, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    // Memanggil method dari class User
+    const overlayData = await User.getOverlayProfileData(userId);
+    
+    if (!overlayData) {
+      return res.status(404).json({ error: 'User data not found' });
+    }
+    
+    res.json({
+      username: overlayData.username,
+      level: overlayData.level,
+      xp: overlayData.xp,
+      gold: overlayData.gold,
+      diamonds: overlayData.diamonds,
+      questPoints: overlayData.quest_points,
+      energyPoints: overlayData.energy_points || 2, // default value
+      energyTimer: overlayData.energy_timer || '4h 09:40',
+      questCompleted: overlayData.quest_completed,
+      questClaimed: overlayData.quest_claimed
+    });
+  } catch (error) {
+    console.error('Error fetching overlay profile:', error);
+    res.status(500).json({ error: 'Failed to fetch overlay profile data' });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
