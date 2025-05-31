@@ -87,7 +87,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 (async () => {
     try {
-        await petsController.createPetsTables();
+        await petsController.createPetsTables(); 
         console.log('Pets tables initialized');
     } catch (err) {
         console.error('Pets table error:', err);
