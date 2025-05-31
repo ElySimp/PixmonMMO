@@ -3,6 +3,14 @@ import axios from 'axios';
 
 const API_URL = "http://localhost:5000";
 
+function getDailyKeyDate() {
+  const now = new Date();
+  if (now.getHours() < 7) {
+    now.setDate(now.getDate() - 1);
+  }
+  return now.toISOString().slice(0,10).replace(/-/g,'');
+}
+
 function DailyQuest() {
     const [userQuests, setUserQuests] = useState([]);
     const [mainRewardClaimed, setMainRewardClaimed] = useState(false);
@@ -16,13 +24,40 @@ function DailyQuest() {
         try {
             const userId = localStorage.getItem('userId'); // Ambil userId yang sedang login
             const response = await axios.get(`${API_URL}/api/user/${userId}/quests`);
-            // response.data bisa array atau object tergantung backend, cek dulu
             const quests = Array.isArray(response.data) ? response.data : (response.data.data || []);
             setUserQuests(quests);
         } catch (error) {
             console.error("🚨 Error refreshing quest status:", error);
         }
     };
+    const [playerStats, setPlayerStats] = useState({ level: 1, gold: 0, xp: 0, diamonds: 0, quest_points: 0 });
+
+    const [steps, setSteps] = useState(0);
+
+    useEffect(() => {
+        const userId = localStorage.getItem('userId');
+        const dailyKey = `steps_${userId}_${getDailyKeyDate()}`;
+        const storedSteps = parseInt(localStorage.getItem(dailyKey) || '0');
+        setSteps(storedSteps);
+
+        // Polling agar update realtime
+        const interval = setInterval(() => {
+            const newSteps = parseInt(localStorage.getItem(dailyKey) || '0');
+            setSteps(newSteps);
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        const userId = localStorage.getItem('userId');
+        fetch(`${API_URL}/api/users/${userId}/stats`)
+            .then(res => res.json())
+            .then(data => {
+                console.log('Stats API response:', data); // Tambahkan ini
+                setPlayerStats(data.data || data)
+            });
+    }, []);
 
     const handleClaimQuest = async (id) => {
         try {
@@ -30,20 +65,18 @@ function DailyQuest() {
             const response = await axios.post(`${API_URL}/api/user/${userId}/quest/${id}/claim`);
             if (response.data.success) {
                 await refreshQuestStatus();
-                alert('✅ Quest Claimed!');
+                if (onClaimReward) onClaimReward('✅ Quest Claimed!');
             }
         } catch (error) {
             console.error("🚨 Error claiming quest:", error);
         }
     };
 
-    const handleClaimMainReward = () => {
-        if (userQuests.filter(q => q.claimed).length === userQuests.length && !mainRewardClaimed) {
-            alert('Reward diklaim!');
-            setMainRewardClaimed(true);
-        } else {
-            alert('Selesaikan semua quest dulu!');
-        }
+    const handleClaimMainReward = async () => {
+        const userId = localStorage.getItem('userId');
+        await axios.post(`${API_URL}/api/user/${userId}/claim-daily-main-reward`);
+        setMainRewardClaimed(true);
+        if (onClaimReward) onClaimReward('🎉 5 Diamonds & 1 Key Claimed!');
     };
 
     const handleGoQuest = (id) => {
@@ -80,6 +113,11 @@ function DailyQuest() {
                     <div key={quest.id} className="quest-box">
                         <div>
                             <div>{quest.name}</div>
+                            <div className="quest-description">
+                                {quest.name === "Take 5 Steps"
+                                ? `${steps}/5 steps`
+                                : quest.description}
+                            </div>
                             <div className="quest-reward">{quest.gold_reward} Gold &nbsp; {quest.xp_reward} XP</div>
                         </div>
                         {quest.claimed ? (
@@ -98,7 +136,21 @@ function DailyQuest() {
                     </div>
                 ))}
             </div>
+
+            <div className="player-stats-bar">
+                <span>Level: {playerStats.level}</span>
+                <span>Gold: {playerStats.gold}</span>
+                <span>XP: {playerStats.xp}</span>
+                <span>💎: {playerStats.diamonds}</span>
+                <span>QP: {playerStats.quest_points}</span>
+            </div>
+
+            
+            <div className="steps-progress-bar">
+                <span>Steps today: {steps} / 5</span>
+            </div>
         </div>
+        
     );
 }
 

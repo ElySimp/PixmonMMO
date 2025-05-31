@@ -58,10 +58,10 @@ class UserQuest {
                 continue;
             }
 
-            const isLoginQuest = quest.name.toLowerCase().includes("login");
+            // const isLoginQuest = quest.name.toLowerCase().includes("login");
             await db.query(
-                'INSERT INTO UserQuest (user_id, quest_id, completed, claimed) VALUES (?, ?, ?, ?)',
-                [userId, quest.id, isLoginQuest, false]
+                'INSERT INTO UserQuest (user_id, quest_id, completed, claimed) VALUES (?, ?, FALSE, FALSE)',
+                [userId, quest.id]
             );
 
             if (isLoginQuest) {

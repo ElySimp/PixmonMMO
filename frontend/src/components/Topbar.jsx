@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './Topbar.css';
 import chatIcon from '../assets/MAIN/chat.png';
 import notificationIcon from '../assets/MAIN/notification.png';
@@ -8,13 +8,14 @@ const profileImage = '/dummy1.jpg';
 function Topbar({ 
   onMenuClick, 
   onSupportClick, 
-  onFriendsClick, 
   onSearch, 
   onChatClick, 
   onNotificationClick 
 }) {
   const [showProfileCard, setShowProfileCard] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const isActive = (path) => location.pathname === path;
   const profileCardRef = useRef(null);
   const profileButtonRef = useRef(null);
 
@@ -67,22 +68,50 @@ function Topbar({
     // Navigasi ke halaman settings
   };
 
-  const handleLogoutClick = () => {
-    console.log('Logout clicked');
-    // Logika untuk logout
-  };
 
   const handleMyProfileClick = () => {
     navigate('/profile');
     setShowProfileCard(false);
   };
+  
+   // Perbaikan untuk fungsi handleLogoutClick
+  const handleLogoutClick = () => {
+  console.log('Logout clicked');
+  
+  try {
+    // Hapus semua data pengguna dari localStorage
+    localStorage.removeItem('token'); // atau sesuaikan dengan nama key token Anda
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userProfile');
+    
+    // Atau hapus semua localStorage (opsional)
+    // localStorage.clear();
+    
+    // Tutup profile card
+    setShowProfileCard(false);
+    
+    // Redirect ke halaman utama
+    navigate('/');
+    
+    // Refresh halaman untuk memastikan state ter-reset (opsional)
+    // window.location.reload();
+    
+  } catch (error) {
+    console.error('Error during logout:', error);
+    // Tetap redirect meskipun ada error
+    navigate('/');
+   }
+ };
 
   return (
     <nav className="topbar">
       <div className="topbar-left">
         <button className="topbar-menu" onClick={onMenuClick}>☰</button>
         <button onClick={onSupportClick}>Support Service</button>
-        <button onClick={onFriendsClick}>Friends</button>
+        <button 
+          className={`topbar-item ${isActive('/friends') ? 'active' : ''}`}
+          onClick={() => navigate('/friends')}>Friends</button>
       </div>
 
       <div className="topbar-right">
@@ -194,7 +223,7 @@ function Topbar({
                   <span>Membership</span>
                 </button>
                 <button className="action-button settings" onClick={handleSettingsClick}>
-                  <span className="action-icon">⚙️</span>
+                  <span className="action-icon">⚙</span>
                   <span>Settings</span>
                 </button>
                 <button className="action-button logout" onClick={handleLogoutClick}>

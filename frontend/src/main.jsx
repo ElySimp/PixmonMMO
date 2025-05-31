@@ -14,6 +14,8 @@ import MiscProfile from './pages/miscpage/MiscProfile.jsx'
 import MiscPets from "./pages/miscpage/MiscPets.jsx"
 import Adventure from './pages/mainpage/advpage/Adventure.jsx';
 import MiscGacha from './pages/miscpage/MiscGacha.jsx'
+import Friends from './components/Topbar/Friends.jsx'
+import MiscShop from './pages/miscpage/MiscShop.jsx'
 
 import './index.css'
 
@@ -31,7 +33,9 @@ createRoot(document.getElementById('root')).render(
           <Route path="/quest" element={<MiscQuest />} />
           <Route path="/profile" element={<MiscProfile />} />
           <Route path="/pets" element={<MiscPets />} />
+          <Route path="/shop" element={<MiscShop />} />
           <Route path="/adventure" element={<Adventure />} />
+          <Route path="/friends" element={<Friends />} />
           <Route path="/gacha" element={<MiscGacha/>}/>
         </Routes>
       </AuthProvider>

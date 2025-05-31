@@ -154,6 +154,8 @@ app.post('/api/user/:userId/quest/:questId/claim', async (req, res) => {
     }
 });
 
+app.post('/api/user/:userId/claim-daily-main-reward', questController.claimDailyMainReward);
+app.post('/api/user/:userId/restore-quest-point', questController.restoreQuestPoint);
 // app.post('/api/user/:userId/regenerate-quest-points', async (req, res) => {
 //     try {
 //         await QuestSystem.regenerateQuestPoints(req.params.userId);

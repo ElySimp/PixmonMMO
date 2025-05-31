@@ -27,6 +27,12 @@ function BountyQuest() {
     return () => clearInterval(interval); 
   }, [nextPointIn, questPoints]);
 
+  const handleRestoreQuestPoint = async () => {
+    const userId = localStorage.getItem('userId');
+    await axios.post(`${API_URL}/api/user/${userId}/restore-quest-point`);
+    // Refresh questPoints from backend
+  };
+
   const handleTakeQuest = (questId) => {
     if (questPoints > 0) {
       setQuestPoints(prev => prev - 1);
@@ -61,10 +67,7 @@ function BountyQuest() {
         <div className='bounty-progress-bar-bottom'>
           <span>{questPoints}/10</span>
           {questPoints < 10 && (
-            <span className='quest-point-timer'>
-              +1 in {String(Math.floor(nextPointIn / 60)).padStart(2, '0')}:
-              {String(nextPointIn % 60).padStart(2, '0')}
-            </span>
+            <button onClick={handleRestoreQuestPoint}>Restore with 1 Diamond (Testing)</button>
           )}
         </div>
       </div>
