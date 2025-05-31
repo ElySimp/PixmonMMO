@@ -75,7 +75,7 @@ class UserQuest {
         console.log(`Fetching quests for user ${userId}`); // 🔍 Debugging log
         
         const [quests] = await db.query(
-            `SELECT q.id, q.name, q.description, q.xp_reward, q.gold_reward, uq.completed, uq.claimed, uq.last_completed
+            `SELECT q.id, q.name, q.description, q.xp_reward, q.gold_reward, q.repeat_type, uq.completed, uq.claimed, uq.last_completed
              FROM UserQuest uq 
              JOIN Quest q ON uq.quest_id = q.id 
              WHERE uq.user_id = ?`,
@@ -89,38 +89,11 @@ class UserQuest {
 
 class QuestSystem {
     static async startBountyQuest(userId, questId) {
-        const [questData] = await db.query(
-            'SELECT quest_points_required FROM Quest WHERE id = ? AND repeat_type = "bounty"',
-            [questId]
-        );
-
-        if (!questData.length) throw new Error('Quest not found or not a bounty quest');
-
-        const { quest_points_required } = questData[0];
-
-        const [userData] = await db.query(
-            'SELECT quest_points, quest_point_cooldown FROM UserStats WHERE user_id = ?', 
-            [userId]
-        );
-
-        if (!userData.length || userData[0].quest_points < quest_points_required) {
-            throw new Error('Not enough quest points to start this bounty quest');
+        // Cek apakah sudah ada UserQuest, kalau belum insert
+        const [rows] = await db.query('SELECT * FROM UserQuest WHERE user_id = ? AND quest_id = ?', [userId, questId]);
+        if (rows.length === 0) {
+            await db.query('INSERT INTO UserQuest (user_id, quest_id, completed, claimed) VALUES (?, ?, 0, 0)', [userId, questId]);
         }
-
-        const nextCooldown = new Date();
-        nextCooldown.setMinutes(nextCooldown.getMinutes() + 30);
-
-        await db.query(
-            'UPDATE UserStats SET quest_points = quest_points - ?, quest_point_cooldown = ? WHERE user_id = ?',
-            [quest_points_required, nextCooldown, userId]
-        );
-
-        await db.query(
-            'INSERT INTO UserQuest (user_id, quest_id, completed, claimed) VALUES (?, ?, FALSE, FALSE)',
-            [userId, questId]
-        );
-
-        console.log(`User ${userId} started bounty quest ${questId}`);
     }
 
     static async completeQuest(userId, questId) {

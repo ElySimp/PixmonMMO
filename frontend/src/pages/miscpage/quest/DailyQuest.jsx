@@ -25,7 +25,9 @@ function DailyQuest() {
             const userId = localStorage.getItem('userId'); // Ambil userId yang sedang login
             const response = await axios.get(`${API_URL}/api/user/${userId}/quests`);
             const quests = Array.isArray(response.data) ? response.data : (response.data.data || []);
-            setUserQuests(quests);
+            // console.log("API QUESTS:", quests); buat cek apakah data sudah benar
+            const dailyQuests = quests.filter(q => q.repeat_type === "daily");
+            setUserQuests(dailyQuests);
         } catch (error) {
             console.error("🚨 Error refreshing quest status:", error);
         }

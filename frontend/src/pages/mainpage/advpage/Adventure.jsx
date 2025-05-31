@@ -247,7 +247,7 @@ const Adventure = () => {
 
     // Jika sudah 5 langkah, mark quest completed
     const questId = 2;
-    if (steps >= 5) {
+    if (steps === 5) {
       try {
         const res = await axios.post(`${API_URL}/user/${userId}/quest/${questId}/complete`);
         console.log('Complete quest response:', res.data);
@@ -257,6 +257,42 @@ const Adventure = () => {
         toast.error('Failed to complete quest!');
       }
     }
+
+    // uji coba 
+    if (steps === 10) {
+      try {
+        const res = await axios.post(`${API_URL}/user/${userId}/quest/3/complete`);
+        console.log('Complete quest response:', res.data);
+        toast.success("Dummy Quest completed!");
+      } catch (err) {
+        console.error('Error completing quest:', err.response?.data || err.message);
+        toast.error('Failed to complete quest!');
+      }
+    }
+
+    if (steps === 10) {
+      try {
+        const res = await axios.post(`${API_URL}/user/${userId}/quest/4/complete`);
+        console.log('Complete quest response:', res.data);
+        toast.success("Dummy Quest completed!");
+      } catch (err) {
+        console.error('Error completing quest:', err.response?.data || err.message);
+        toast.error('Failed to complete quest!');
+      }
+    }
+
+
+    if (steps === 10) {
+      try {
+        const res = await axios.post(`${API_URL}/user/${userId}/quest/5/complete`);
+        console.log('Complete quest response:', res.data);
+        toast.success("Dummy Quest completed!");
+      } catch (err) {
+        console.error('Error completing quest:', err.response?.data || err.message);
+        toast.error('Failed to complete quest!');
+      }
+    }
+
     
     // Track total steps for achievements
     const totalSteps = localStorage.getItem(`steps_${user.id}`) ? 

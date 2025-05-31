@@ -37,6 +37,11 @@
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
+  overflow-y: auto;
+}
+
+.shop-items::-webkit-scrollbar {
+  display: none;
 }
 
 .shop-item {
@@ -111,4 +116,9 @@
   text-align: center;
   font-size: 1.1rem;
   margin-top: 2rem;
+}
+
+.shop-tab-btn.active {
+  background: linear-gradient(45deg, #0275D8, #0056b3) !important;
+  color: #fff !important;
 }
