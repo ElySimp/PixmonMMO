@@ -485,6 +485,40 @@ class User {
         }
     }
 
+    static async getOverlayProfileData(userId) {
+        try {
+            const query = `
+                SELECT 
+                    ul.username,
+                    us.level,
+                    us.xp,
+                    us.gold,
+                    us.diamonds,
+                    us.quest_points,
+                    COALESCE(quest_stats.completed_count, 0) as quest_completed,
+                    COALESCE(quest_stats.claimed_count, 0) as quest_claimed
+                FROM UserLogin ul
+                JOIN UserStats us ON ul.id = us.user_id
+                LEFT JOIN (
+                    SELECT 
+                        user_id,
+                        COUNT(CASE WHEN completed = 1 THEN 1 END) as completed_count,
+                        COUNT(CASE WHEN claimed = 1 THEN 1 END) as claimed_count
+                    FROM UserQuest 
+                    WHERE user_id = ?
+                    GROUP BY user_id
+                ) quest_stats ON ul.id = quest_stats.user_id
+                WHERE ul.id = ?
+            `;
+            
+            const [rows] = await db.query(query, [userId, userId]);
+            return rows[0];
+        } catch (error) {
+            console.error('Error getting overlay profile data:', error);
+            throw error;
+        }
+    }
+
     // Ensure user has only one stats record
     static async ensureSingleStatsRecord(userId) {
         try {

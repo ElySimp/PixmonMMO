@@ -14,6 +14,7 @@ const authController = require('./controllers/authController');
 const achievementController = require('./controllers/achievementController');
 const questController = require('./controllers/questController');
 const userProfileController = require('./controllers/userProfileController');
+const petsController = require('./controllers/petsController');
 const { protect } = require('./middleware/auth');
 const checkAndFixDuplicateStats = require('./scripts/maintenance/check-and-fix-stats');
 
@@ -84,6 +85,15 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
     }
 })();
 
+(async () => {
+    try {
+        await petsController.createPetsTables(); 
+        console.log('Pets tables initialized');
+    } catch (err) {
+        console.error('Pets table error:', err);
+    }
+})();
+
 // Initialize Quest tables
 (async () => {
     try {
@@ -135,6 +145,8 @@ app.get('/api/inventoryIndex', inventoryController.getInventoryIndex);
 app.get('/api/quests', questController.getAllQuests);
 app.post('/api/user/:userId/quest/:questId/complete', questController.completeQuest);
 
+app.get('/api/users/:userId/userPetGet', petsController.PetsDataObtain);
+
 app.get('/api/user/:userId/quests', async (req, res) => {
     try {
         const quests = await UserQuest.getUserQuests(req.params.userId);
@@ -181,6 +193,34 @@ app.post('/api/user/:userId/quest/:questId/start', questController.startBountyQu
 // Health check route
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', message: 'Server is running' });
+});
+
+app.get('/api/user/overlay-profile', protect, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    // Memanggil method dari class User
+    const overlayData = await User.getOverlayProfileData(userId);
+    
+    if (!overlayData) {
+      return res.status(404).json({ error: 'User data not found' });
+    }
+    
+    res.json({
+      username: overlayData.username,
+      level: overlayData.level,
+      xp: overlayData.xp,
+      gold: overlayData.gold,
+      diamonds: overlayData.diamonds,
+      questPoints: overlayData.quest_points,
+      energyPoints: overlayData.energy_points || 2, // default value
+      energyTimer: overlayData.energy_timer || '4h 09:40',
+      questCompleted: overlayData.quest_completed,
+      questClaimed: overlayData.quest_claimed
+    });
+  } catch (error) {
+    console.error('Error fetching overlay profile:', error);
+    res.status(500).json({ error: 'Failed to fetch overlay profile data' });
+  }
 });
 
 // Error handling middleware
