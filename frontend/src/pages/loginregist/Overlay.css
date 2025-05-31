@@ -38,7 +38,7 @@
   height: 100%;
   position: relative;
   border-radius: 16px;
-  animation: modalFadeIn 1.5s ease;
+  animation: modalFadeIn 1s ease;
   overflow: hidden;
 }
 

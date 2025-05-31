@@ -135,8 +135,11 @@ app.post('/api/upload-wallpaper', upload.single('wallpaper'), userProfileControl
 app.post('/api/init-userprofile', userProfileController.initUserProfileTables);
 
 // Inventory Route
-app.get('/api/inventory', inventoryController.getAllInventory);
-app.get('/api/users/:userId/inventoryCount', inventoryController.getInventoryCount);
+app.get('/api/users/:userId/inventoryGet', inventoryController.getAllInventory); // user data
+app.get('/api/users/:userId/inventoryCount', inventoryController.getInventoryCount); // user data count
+app.get('/api/inventoryIndex', inventoryController.getInventoryIndex);
+
+
 
 // Quest Routes
 app.get('/api/quests', questController.getAllQuests);
@@ -163,6 +166,8 @@ app.post('/api/user/:userId/quest/:questId/claim', async (req, res) => {
     }
 });
 
+app.post('/api/user/:userId/claim-daily-main-reward', questController.claimDailyMainReward);
+app.post('/api/user/:userId/restore-quest-point', questController.restoreQuestPoint);
 // app.post('/api/user/:userId/regenerate-quest-points', async (req, res) => {
 //     try {
 //         await QuestSystem.regenerateQuestPoints(req.params.userId);

@@ -6,13 +6,26 @@ import WeeklyQuest from './quest/WeeklyQuest'
 import MonthlyQuest from './quest/MonthlyQuest'
 import BountyQuest from './quest/BountyQuest'
 import './MiscQuest.css'
-
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+// const API_URL = "http://localhost:5000";
 // Main MiscQuest Component
 const MiscQuest = () => {
-    const [activeLayer, setActiveLayer] = useState('daily'); // Default: Daily Quest
+    // const [playerStats, setPlayerStats] = useState({ gold: 0, xp: 0, diamonds: 0, quest_points: 0 });
+    const [activeLayer, setActiveLayer] = useState('daily');
+    const [isLoading, setIsLoading] = useState(true);
+    const [isLoaded, setIsLoaded] = useState(false);
     const tabs = ['daily', 'weekly', 'monthly', 'bounty'];
     const tabRefs = useRef({});
     const underlineRef = useRef(null);
+
+    // useEffect(() => {
+    //     const userId = localStorage.getItem('userId');
+    //     fetch(`${API_URL}/api/users/${userId}/stats`)
+    //         .then(res => res.json())
+    //         .then(data => setPlayerStats(data.data));
+    // }, []);
+
 
     const underlineColors = {
       daily: '#2A73A6',
@@ -20,6 +33,14 @@ const MiscQuest = () => {
       monthly: '#E4C21C',
       bounty: '#6EC207',
     };
+
+    useEffect(() => {
+        setIsLoading(true);
+        setTimeout(() => {
+            setIsLoading(false);
+            setTimeout(() => setIsLoaded(true), 100);
+        }, 700);
+    }, []);
 
     useEffect(() => {
         const activeTab = tabRefs.current[activeLayer];
@@ -32,52 +53,39 @@ const MiscQuest = () => {
         }
     }, [activeLayer]);
 
-    const handleMenuClick = () => {
-        console.log('Menu clicked');
+    // Handler notifikasi claim reward
+    const handleClaimReward = (msg = "Reward claimed!") => {
+        toast.success(msg, {
+            position: "top-center",
+            autoClose: 2200,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+        });
     };
-    
-    const handleSupportClick = () => {
-        console.log('Support clicked');
-    };
-    
-    const handleFriendsClick = () => {
-        console.log('Friends clicked');
-    };
-    
-    const handleSearch = (value) => {
-        console.log('Search:', value);
-    };
-    
-    const handleChatClick = () => {
-        console.log('Chat clicked');
-    };
-    
-    const handleNotificationClick = () => {
-        console.log('Notifications clicked');
-    };
-    
-    const handleEggClick = () => {
-        console.log('Egg clicked');
-    };
+
+    if (isLoading && !isLoaded) {
+        return (
+            <div className="main-container">
+                <Sidebar profilePic="/dummy.jpg" />
+                <div className="main-content">
+                    <Topbar />
+                    <div className="miscquest-loading-container">
+                        <div className="miscquest-loading-spinner"></div>
+                        <p>Loading quests...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="main-container">
-            <Sidebar 
-                profilePic="/dummy.jpg"
-            />
-          
-            <div className="main-content">
-                <Topbar 
-                    onMenuClick={handleMenuClick}
-                    onSupportClick={handleSupportClick}
-                    onFriendsClick={handleFriendsClick}
-                    onSearch={handleSearch}
-                    onChatClick={handleChatClick}
-                    onNotificationClick={handleNotificationClick}
-                    onEggClick={handleEggClick}
-                />
-                
-                {/* Tab Navigation */}
+            <Sidebar profilePic="/dummy.jpg" />
+            <div className={`main-content miscquest-animate-in ${isLoaded ? 'show' : ''}`}>
+                <ToastContainer />
+                <Topbar />
                 <div className="quest-tabs">
                     {tabs.map((layer) => (
                         <button
@@ -85,8 +93,10 @@ const MiscQuest = () => {
                         ref={(el) => (tabRefs.current[layer] = el)}
                         onClick={() => setActiveLayer(layer)}
                         className={activeLayer === layer ? 'active-tab' : 'non-active-tab'}
+                        disabled={layer === 'weekly' || layer === 'monthly'}
                       >
                         {layer.charAt(0).toUpperCase() + layer.slice(1)} Quest
+                        {(layer === 'weekly' || layer === 'monthly') && <span> (Coming Soon)</span>}
                       </button>
                     ))}
 

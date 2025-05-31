@@ -1,0 +1,114 @@
+.shop-container {
+  background: #101011;
+  border: 1.5px solid #232323;
+  border-radius: 12px;
+  max-width: 520px;
+  width: 100%;
+  margin: 2rem auto 0 auto;
+  padding: 2rem 2rem 1.5rem 2rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.shop-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  letter-spacing: 2px;
+}
+
+.shop-search {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #232323;
+  background: #18191a;
+  color: #fff;
+  margin-bottom: 1.2rem;
+  font-size: 1rem;
+  outline: none;
+}
+
+.shop-items {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,0.02);
+  border-radius: 8px;
+  padding: 1rem;
+  gap: 1.2rem;
+  transition: background 0.2s;
+  border: 1px solid #232323;
+}
+
+.shop-item:hover {
+  background: rgba(2,117,216,0.08);
+}
+
+.shop-item-img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #232323;
+  border: 1px solid #232323;
+}
+
+.shop-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.shop-item-name {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #fff;
+}
+
+.shop-item-price {
+  color: #ffd700;
+  font-size: 1rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.shop-currency {
+  font-size: 1.1rem;
+}
+
+.shop-buy-btn {
+  background: linear-gradient(45deg, #0275D8, #0056b3);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.shop-buy-btn:hover {
+  background: linear-gradient(45deg, #0056b3, #0275D8);
+  transform: translateY(-2px);
+}
+
+.shop-empty {
+  color: #aaa;
+  text-align: center;
+  font-size: 1.1rem;
+  margin-top: 2rem;
+}

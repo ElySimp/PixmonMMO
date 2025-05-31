@@ -33,17 +33,34 @@ exports.getUserQuests = async (req, res) => {
 
 
 exports.completeQuest = async (req, res) => {
-    const { userId, questId } = req.params;
-    console.log(`Completing quest for user ${userId}, quest ${questId}`); // 🔍 Debugging log
-
     try {
-        await QuestSystem.completeQuest(userId, questId);
-        console.log("Quest successfully marked as completed!"); // ✅ Sukses log
-        
-        res.json({ success: true, message: 'Quest completed successfully!' });
+        await QuestSystem.completeQuest(req.params.userId, req.params.questId);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+exports.claimDailyMainReward = async (req, res) => {
+    const { userId } = req.params;
+    try {
+        await db.query('UPDATE UserStats SET diamonds = diamonds + 5 WHERE user_id = ?', [userId]);
+        await db.query('INSERT INTO UserInventory (item_name, user_id) VALUES (?, ?)', ['Normal Key', userId]);
+        res.json({ success: true, message: 'Claimed 5 diamonds & 1 key!' });
     } catch (error) {
-        console.error("Error completing quest:", error); // 🔍 Error log
-        
         res.status(500).json({ success: false, message: error.message });
     }
+};
+
+exports.restoreQuestPoint = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const [userStats] = await db.query('SELECT diamonds, quest_points FROM UserStats WHERE user_id = ?', [userId]);
+    if (userStats[0].diamonds < 1) throw new Error('Not enough diamonds');
+    if (userStats[0].quest_points >= 10) throw new Error('Quest points already max');
+    await db.query('UPDATE UserStats SET diamonds = diamonds - 1, quest_points = quest_points + 1 WHERE user_id = ?', [userId]);
+    res.json({ success: true, message: 'Quest point restored!' });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
 };

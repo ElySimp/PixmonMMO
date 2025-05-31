@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import axios from 'axios';
 import './Login.css'
+
+const API_URL = "http://localhost:5000";
 
 const Login = ({ openRegister }) => {
   const navigate = useNavigate();
@@ -40,6 +43,14 @@ const Login = ({ openRegister }) => {
       const result = await login(formData.username, formData.password);
       if (!result.success) {
         setError(result.error);
+      } else {
+        const userId = result.user?.id || localStorage.getItem('userId');
+        try {
+          await axios.post(`${API_URL}/api/user/${userId}/quest/1/complete`);
+          console.log('Daily login quest completed!');
+        } catch (err) {
+          console.error('Failed to complete daily login quest:', err.response?.data || err.message);
+        }
       }
     } catch (err) {
       setError('Login failed. Please try again.');

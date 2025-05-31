@@ -11,7 +11,7 @@ async function fixUserProfileTable() {
             FROM INFORMATION_SCHEMA.COLUMNS 
             WHERE TABLE_NAME = 'UserProfile' 
             AND TABLE_SCHEMA = DATABASE()
-            AND COLUMN_NAME IN ('username', 'level')
+            AND COLUMN_NAME IN ('id','username', 'level')
         `);
 
         // Drop columns if they exist

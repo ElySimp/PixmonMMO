@@ -80,7 +80,9 @@ const Auth = ({ setIsAuthenticated }) => {
             
             if (data.success) {
                 if (isLogin) {
+                    localStorage.removeItem(TOKEN_KEY);
                     localStorage.setItem(TOKEN_KEY, data.data.token); // gunakan TOKEN_KEY
+                    await fetchUserProfile();
                     setIsAuthenticated(true);
                 } else {
                     showSuccessOverlay('Registration successful! Please login.');

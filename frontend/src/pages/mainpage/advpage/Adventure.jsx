@@ -9,9 +9,15 @@ import { useAuth } from '../../../context/AuthContext';
 import { API_URL } from '../../../utils/config';
 import adventureStories from '../../../assets/adventure_stories';
 import educationalStories from '../../../assets/educational_stories';
-
 import avatarExample from '../../../assets/MAIN/avatar_exaple.gif';
 
+function getDailyKeyDate() {
+  const now = new Date();
+  if (now.getHours() < 7) {
+    now.setDate(now.getDate() - 1);
+  }
+  return now.toISOString().slice(0,10).replace(/-/g,'');
+}
 const Adventure = () => {
   const [xp, setXp] = useState(0);
   const [gold, setGold] = useState(0);
@@ -230,6 +236,26 @@ const Adventure = () => {
     // Don't allow steps if on cooldown
     if (cooldown > 0) {
       return;
+    }
+
+    const userId = localStorage.getItem('userId');
+    const dailyKey = `steps_${userId}_${getDailyKeyDate()}`;
+    const steps = parseInt(localStorage.getItem(dailyKey) || '0') + 1;
+    localStorage.setItem(dailyKey, steps);
+    
+    console.log('Steps after step:', steps);
+
+    // Jika sudah 5 langkah, mark quest completed
+    const questId = 2;
+    if (steps >= 5) {
+      try {
+        const res = await axios.post(`${API_URL}/user/${userId}/quest/${questId}/complete`);
+        console.log('Complete quest response:', res.data);
+        toast.success("Quest 'Take 5 Steps' completed!");
+      } catch (err) {
+        console.error('Error completing quest:', err.response?.data || err.message);
+        toast.error('Failed to complete quest!');
+      }
     }
     
     // Track total steps for achievements

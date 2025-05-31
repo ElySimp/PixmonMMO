@@ -69,6 +69,11 @@
     opacity: 1;
   } 
 
+  .topbar-item.active {
+    color: white;
+  background-color: #161716;
+  }
+
   /* Profile hover specific styles - separated and renamed */
   .profile-hover {
     position: relative;
