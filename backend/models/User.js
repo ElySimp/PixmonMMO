@@ -160,7 +160,7 @@ class User {
             
             // Create initial stats
             await db.query(
-                'INSERT INTO UserStats (user_id, xp, gold, level, cooldownEnd, updated_at, quest_points, diamonds) VALUES (?, 0, 0, 1, NULL, ?, 10, o)',
+                'INSERT INTO UserStats (user_id, xp, gold, level, cooldownEnd, updated_at, quest_points, diamonds) VALUES (?, 0, 0, 1, NULL, ?, 10, 0)',
                 [userId, now]
             );
 
