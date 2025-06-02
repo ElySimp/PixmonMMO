@@ -4,6 +4,23 @@ const fs = require('fs');
 const UserProfile = require('../models/UserProfile');
 const User = require('../models/User');
 const { v4: uuidv4 } = require('uuid');
+const multer = require('multer');
+
+// Configure multer for file upload
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    },
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only JPG, PNG, and GIF files are allowed.'));
+        }
+    }
+});
 
 // Get user profile
 exports.getUserProfile = async (req, res) => {
@@ -12,49 +29,36 @@ exports.getUserProfile = async (req, res) => {
         if (!userId) {
             return res.status(400).json({ success: false, message: 'User ID is required' });
         }
+
+        // Ensure profile exists first
+        await UserProfile.ensureProfileExists(userId);
+        
         let userProfile;
         try {
             userProfile = await UserProfile.getByUserId(userId);
         } catch (profileError) {
             console.error('Error fetching user profile:', profileError);
-            // Coba buat default profile jika tidak ada
-            try {
-                userProfile = await UserProfile.createDefaultProfile(userId);
-            } catch (e) {
-                return res.status(404).json({ success: false, message: 'User profile not found and failed to create default.' });
-            }
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Failed to fetch user profile',
+                error: profileError.message 
+            });
         }
+
         if (!userProfile) {
             return res.status(404).json({ success: false, message: 'User profile not found.' });
         }
-        // Get user stats with failsafe defaults
-        let stats;
-        try {
-            stats = await User.getStats(userId);
-        } catch (statsError) {
-            console.error('Error fetching user stats:', statsError);
-            stats = { level: 1, xp: 0, gold: 0 };
-        }
+
         // Calculate max XP for current level
-        const maxXp = Math.floor(50 * Math.pow(stats.level || 1, 1.4));
-        // Ensure level sync between profile and stats
-        if (userProfile.level !== stats.level) {
-            try {
-                await UserProfile.update(userId, { level: stats.level });
-                userProfile.level = stats.level;
-            } catch (syncError) {
-                console.error('Error syncing profile level:', syncError);
-            }
-        }
-        // Combine profile data with stats
+        const maxXp = Math.floor(50 * Math.pow(userProfile.level || 1, 1.4));
+
+        // Combine profile data with stats (already included in getByUserId)
         const combinedData = {
             success: true,
             ...userProfile,
-            xp: stats.xp || 0,
-            level: stats.level || 1,
-            gold: stats.gold || 0,
             maxXp: maxXp
         };
+
         res.json(combinedData);
     } catch (error) {
         console.error('Error getting user profile:', error);
@@ -76,26 +80,26 @@ exports.updateUserProfile = async (req, res) => {
         console.log('Update data:', updates);
         
         // Validate input
-        if (!updates) {
+        if (!updates || Object.keys(updates).length === 0) {
             return res.status(400).json({
                 success: false,
                 message: 'No updates provided'
             });
         }
 
-        // Ensure profile exists
-        await UserProfile.ensureProfileExists(userId);
-        
-        // Filter updates to only include valid fields
-        const validUpdates = {};
-        if (updates.status_message !== undefined) validUpdates.status_message = updates.status_message;
-        if (updates.custom_wallpaper_url !== undefined) validUpdates.custom_wallpaper_url = updates.custom_wallpaper_url;
-        if (updates.hp_points !== undefined) validUpdates.hp_points = updates.hp_points;
-        if (updates.damage_points !== undefined) validUpdates.damage_points = updates.damage_points;
-        if (updates.agility_points !== undefined) validUpdates.agility_points = updates.agility_points;
-        
-        // Update the profile with filtered updates
-        const updatedProfile = await UserProfile.update(userId, validUpdates);
+        // Validate wallpaper_id if provided
+        if (updates.wallpaper_id !== undefined && updates.wallpaper_id !== null) {
+            const isValidWallpaper = await UserProfile.validateWallpaper(updates.wallpaper_id);
+            if (!isValidWallpaper) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid wallpaper ID'
+                });
+            }
+        }
+
+        // Update the profile
+        const updatedProfile = await UserProfile.update(userId, updates);
         
         if (!updatedProfile) {
             return res.status(404).json({
@@ -104,20 +108,14 @@ exports.updateUserProfile = async (req, res) => {
             });
         }
 
-        // Get the latest stats
-        const stats = await User.getStats(userId);
-        
         // Calculate max XP based on current level
-        const maxXp = Math.floor(50 * Math.pow(stats.level || 1, 1.4));
+        const maxXp = Math.floor(50 * Math.pow(updatedProfile.level || 1, 1.4));
         
         // Prepare response data
         const responseData = {
             success: true,
             ...updatedProfile,
-            level: stats.level || 1,
-            xp: stats.xp || 0,
-            maxXp,
-            gold: stats.gold || 0
+            maxXp
         };
 
         console.log('Sending response:', responseData);
@@ -127,6 +125,49 @@ exports.updateUserProfile = async (req, res) => {
         res.status(500).json({
             success: false,
             message: error.message || 'Error updating user profile'
+        });
+    }
+};
+
+// Update skill points
+exports.updateSkillPoints = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const { hp_points, damage_points, agility_points } = req.body;
+        
+        console.log('Updating skill points for user:', userId);
+        console.log('Skill points:', { hp_points, damage_points, agility_points });
+        
+        // Validate input
+        if (hp_points === undefined || damage_points === undefined || agility_points === undefined) {
+            return res.status(400).json({
+                success: false,
+                message: 'All skill points (hp_points, damage_points, agility_points) are required'
+            });
+        }
+
+        const updates = {
+            hp_points: parseInt(hp_points) || 0,
+            damage_points: parseInt(damage_points) || 0,
+            agility_points: parseInt(agility_points) || 0
+        };
+
+        // Update skill points using the model method
+        const updatedProfile = await UserProfile.updateSkillPoints(userId, updates);
+        
+        // Calculate max XP
+        const maxXp = Math.floor(50 * Math.pow(updatedProfile.level || 1, 1.4));
+        
+        res.json({
+            success: true,
+            ...updatedProfile,
+            maxXp
+        });
+    } catch (error) {
+        console.error('Error updating skill points:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || 'Error updating skill points'
         });
     }
 };
@@ -144,35 +185,112 @@ exports.resetSkillPoints = async (req, res) => {
             });
         }
         
-        // Get the user's profile to check diamond balance
-        const userProfile = await UserProfile.getByUserId(userId);
-        
-        if (!userProfile) {
-            return res.status(404).json({
-                success: false,
-                message: 'Profile not found'
-            });
-        }
-        
-        if (userProfile.diamonds < diamonds_cost) {
-            return res.status(400).json({
-                success: false,
-                message: 'Not enough diamonds to reset skill points'
-            });
-        }
-        
-        // Reset skill points
-        const updatedProfile = await UserProfile.resetSkillPoints(userId, diamonds_cost);
+        // Reset skill points using the model method
+        const result = await UserProfile.resetSkillPoints(userId, diamonds_cost);
         
         res.json({
             success: true,
-            ...updatedProfile
+            ...result
         });
     } catch (error) {
         console.error('Error resetting skill points:', error);
         res.status(500).json({ 
             success: false, 
             message: error.message || 'Error resetting skill points'
+        });
+    }
+};
+
+// Upload custom wallpaper
+exports.uploadCustomWallpaper = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        
+        // Check if file exists
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No file uploaded'
+            });
+        }
+        
+        // Upload wallpaper using UserProfile model
+        const updatedProfile = await UserProfile.uploadCustomWallpaper(
+            userId, 
+            req.file.buffer, 
+            req.file.originalname
+        );
+        
+        // Calculate max XP
+        const maxXp = Math.floor(50 * Math.pow(updatedProfile.level || 1, 1.4));
+        
+        res.json({
+            success: true,
+            message: 'Custom wallpaper uploaded successfully',
+            ...updatedProfile,
+            maxXp
+        });
+    } catch (error) {
+        console.error('Error uploading custom wallpaper:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || 'Error uploading wallpaper' 
+        });
+    }
+};
+
+// Upload avatar
+exports.uploadAvatar = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        
+        // Check if file exists
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No file uploaded'
+            });
+        }
+        
+        // Upload avatar using UserProfile model
+        const updatedProfile = await UserProfile.uploadAvatar(
+            userId, 
+            req.file.buffer, 
+            req.file.originalname
+        );
+        
+        // Calculate max XP
+        const maxXp = Math.floor(50 * Math.pow(updatedProfile.level || 1, 1.4));
+        
+        res.json({
+            success: true,
+            message: 'Avatar uploaded successfully',
+            ...updatedProfile,
+            maxXp
+        });
+    } catch (error) {
+        console.error('Error uploading avatar:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || 'Error uploading avatar' 
+        });
+    }
+};
+
+// Get all wallpapers
+exports.getAllWallpapers = async (req, res) => {
+    try {
+        const wallpapers = await UserProfile.getAllWallpapers();
+        
+        res.json({
+            success: true,
+            wallpapers
+        });
+    } catch (error) {
+        console.error('Error getting all wallpapers:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching wallpapers' 
         });
     }
 };
@@ -190,7 +308,10 @@ exports.getWallpaper = async (req, res) => {
             });
         }
         
-        res.json(wallpaper);
+        res.json({
+            success: true,
+            wallpaper
+        });
     } catch (error) {
         console.error('Error getting wallpaper:', error);
         res.status(500).json({ 
@@ -213,7 +334,10 @@ exports.getPet = async (req, res) => {
             });
         }
         
-        res.json(pet);
+        res.json({
+            success: true,
+            pet
+        });
     } catch (error) {
         console.error('Error getting pet:', error);
         res.status(500).json({ 
@@ -223,53 +347,12 @@ exports.getPet = async (req, res) => {
     }
 };
 
-// Upload wallpaper
-exports.uploadWallpaper = async (req, res) => {
-    try {
-        // Check if file exists
-        if (!req.file) {
-            return res.status(400).json({
-                success: false,
-                message: 'No file uploaded'
-            });
-        }
-        
-        // Create uploads directory if it doesn't exist
-        const uploadsDir = path.join(__dirname, '../uploads/wallpapers');
-        if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true });
-        }
-        
-        // Generate unique filename
-        const fileExtension = path.extname(req.file.originalname);
-        const fileName = `${uuidv4()}${fileExtension}`;
-        const filePath = path.join(uploadsDir, fileName);
-        
-        // Write file to disk
-        fs.writeFileSync(filePath, req.file.buffer);
-        
-        // Return the URL path to access the file
-        const fileUrl = `/uploads/wallpapers/${fileName}`;
-        
-        res.json({
-            success: true,
-            url: fileUrl
-        });
-    } catch (error) {
-        console.error('Error uploading wallpaper:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Error uploading wallpaper' 
-        });
-    }
-};
-
 // Initialize UserProfile tables
 exports.initUserProfileTables = async (req, res) => {
     try {
         await UserProfile.createTable();
-        await UserProfile.addLevelColumn();
         await UserProfile.createWallpapersTable();
+        
         res.json({
             success: true,
             message: 'UserProfile tables initialized successfully'
@@ -278,64 +361,16 @@ exports.initUserProfileTables = async (req, res) => {
         console.error('Error initializing UserProfile tables:', error);
         res.status(500).json({ 
             success: false, 
-            message: 'Error initializing UserProfile tables' 
-        });
-    }
-};
-
-// Update skill points
-exports.updateSkillPoints = async (req, res) => {
-    try {
-        const userId = req.params.userId;
-        const { hp_points, damage_points, agility_points } = req.body;
-        
-        // Validate input
-        if (typeof hp_points !== 'number' || 
-            typeof damage_points !== 'number' || 
-            typeof agility_points !== 'number') {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid skill points values'
-            });
-        }
-        
-        // Get current profile
-        const currentProfile = await UserProfile.getByUserId(userId);
-        if (!currentProfile) {
-            return res.status(404).json({
-                success: false,
-                message: 'Profile not found'
-            });
-        }
-        
-        // Validate total points don't exceed available points
-        const totalPoints = hp_points + damage_points + agility_points;
-        if (totalPoints > currentProfile.skill_points) {
-            return res.status(400).json({
-                success: false,
-                message: 'Not enough skill points available'
-            });
-        }
-        
-        // Update skill points
-        const updates = {
-            hp_points,
-            damage_points,
-            agility_points
-        };
-        
-        const updatedProfile = await UserProfile.updateSkillPoints(userId, updates);
-        
-        res.json({
-            success: true,
-            ...updatedProfile
-        });
-    } catch (error) {
-        console.error('Error updating skill points:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Error updating skill points',
+            message: 'Error initializing UserProfile tables',
             error: error.message 
         });
     }
 };
+
+// Middleware untuk upload file
+exports.uploadSingle = (fieldName) => {
+    return upload.single(fieldName);
+};
+
+// Export multer upload untuk digunakan di routes
+exports.upload = upload;

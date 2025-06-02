@@ -1,12 +1,14 @@
 // models/UserProfile.js
 const db = require('../config/database');
 const path = require('path');
+const fs = require('fs').promises;
+const crypto = require('crypto');
 
 // Import User model for skill points synchronization
 const User = require('./User');
 
 class UserProfile {
-    // Create UserProfile table
+    // Create UserProfile table 
     static async createTable() {
         try {
             // Create the table
@@ -15,13 +17,13 @@ class UserProfile {
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     user_id INT NOT NULL,
                     status_message TEXT,
-                    diamonds INT DEFAULT 0,
                     skill_points INT DEFAULT 0,
                     hp_points INT DEFAULT 0,
                     damage_points INT DEFAULT 0,
                     agility_points INT DEFAULT 0,
                     wallpaper_id INT,
-                    custom_wallpaper_url VARCHAR(255),                    
+                    custom_wallpaper_url VARCHAR(255),
+                    avatar_url VARCHAR(255),
                     favorite_pet_id INT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at DATETIME DEFAULT NULL,
@@ -37,7 +39,6 @@ class UserProfile {
         }
     }
 
-    // Create Wallpapers table (if needed)
     static async createWallpapersTable() {
         try {
             const result = await db.query(`
@@ -54,7 +55,9 @@ class UserProfile {
             console.error('Error creating Wallpapers table:', error);
             throw error;
         }
-    }    // Get user profile by user ID
+    }
+
+    // Get user profile by user ID
     static async getByUserId(userId) {
         try {
             const [profiles] = await db.query(
@@ -63,7 +66,8 @@ class UserProfile {
                     u.username,
                     COALESCE(s.level, 1) as level,
                     COALESCE(s.xp, 0) as xp,
-                    COALESCE(s.gold, 0) as gold
+                    COALESCE(s.gold, 0) as gold,
+                    COALESCE(s.diamonds, 0) as diamonds
                 FROM UserProfile p
                 JOIN UserLogin u ON p.user_id = u.id
                 LEFT JOIN UserStats s ON p.user_id = s.user_id
@@ -80,7 +84,9 @@ class UserProfile {
             console.error('Error getting user profile:', error);
             throw error;
         }
-    }    // Create a default profile for new users
+    }
+
+    // Create a default profile for new users 
     static async createDefaultProfile(userId) {
         try {
             // Get username from UserLogin
@@ -101,32 +107,26 @@ class UserProfile {
 
             const level = statsResult?.[0]?.level || 1;
             const initialSkillPoints = level * 1; 
-            const initialDiamonds = 100;
-            const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
             
             // Insert default profile
             await db.query(
                 `INSERT INTO UserProfile (
                     user_id,
                     status_message,
-                    diamonds,
                     skill_points,
                     hp_points,
                     damage_points,
                     agility_points,
                     created_at,
                     updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                ) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
                 [
                     userId,
                     'Ready for adventure!',
-                    initialDiamonds,
                     initialSkillPoints,
                     0, // Initial hp points
                     0, // Initial damage points
-                    0, // Initial agility points
-                    now,
-                    now
+                    0  // Initial agility points
                 ]
             );
             
@@ -154,33 +154,257 @@ class UserProfile {
             console.error('Error ensuring profile exists:', error);
             throw error;
         }
-    }    // Update basic user profile info (non-skill related)
+    }
+
+    // File Upload Helper Methods
+    static async createUploadDirectories() {
+        try {
+            const uploadsDir = path.join(__dirname, '../uploads');
+            const wallpapersDir = path.join(uploadsDir, 'wallpapers');
+            const avatarsDir = path.join(uploadsDir, 'avatars');
+            
+            // Create directories if they don't exist
+            await fs.mkdir(uploadsDir, { recursive: true });
+            await fs.mkdir(wallpapersDir, { recursive: true });
+            await fs.mkdir(avatarsDir, { recursive: true });
+            
+            console.log('Upload directories created');
+        } catch (error) {
+            console.error('Error creating upload directories:', error);
+            throw error;
+        }
+    }
+
+    // Validate file type
+    static validateFileType(filename, allowedTypes = ['jpg', 'jpeg', 'png', 'gif']) {
+        const ext = path.extname(filename).toLowerCase().substring(1);
+        return allowedTypes.includes(ext);
+    }
+
+    // Generate unique filename
+    static generateUniqueFilename(originalFilename) {
+        const ext = path.extname(originalFilename);
+        const timestamp = Date.now();
+        const randomString = crypto.randomBytes(8).toString('hex');
+        return `${timestamp}_${randomString}${ext}`;
+    }
+
+    // Save uploaded wallpaper file
+    static async saveWallpaperFile(userId, fileBuffer, originalFilename) {
+        try {
+            // Validate file type
+            if (!this.validateFileType(originalFilename)) {
+                throw new Error('Invalid file type. Only JPG, PNG, and GIF files are allowed.');
+            }
+
+            // Create upload directories if they don't exist
+            await this.createUploadDirectories();
+
+            // Generate unique filename
+            const uniqueFilename = this.generateUniqueFilename(originalFilename);
+            const wallpaperPath = path.join(__dirname, '../uploads/wallpapers', uniqueFilename);
+
+            // Save file to disk
+            await fs.writeFile(wallpaperPath, fileBuffer);
+
+            // Generate URL (adjust based on your server setup)
+            const wallpaperUrl = `/uploads/wallpapers/${uniqueFilename}`;
+
+            console.log(`Wallpaper saved: ${wallpaperUrl}`);
+            return wallpaperUrl;
+        } catch (error) {
+            console.error('Error saving wallpaper file:', error);
+            throw error;
+        }
+    }
+
+    // Save uploaded avatar file
+    static async saveAvatarFile(userId, fileBuffer, originalFilename) {
+        try {
+            // Validate file type
+            if (!this.validateFileType(originalFilename)) {
+                throw new Error('Invalid file type. Only JPG, PNG, and GIF files are allowed.');
+            }
+
+            // Create upload directories if they don't exist
+            await this.createUploadDirectories();
+
+            // Generate unique filename
+            const uniqueFilename = this.generateUniqueFilename(originalFilename);
+            const avatarPath = path.join(__dirname, '../uploads/avatars', uniqueFilename);
+
+            // Save file to disk
+            await fs.writeFile(avatarPath, fileBuffer);
+
+            // Generate URL (adjust based on your server setup)
+            const avatarUrl = `/uploads/avatars/${uniqueFilename}`;
+
+            console.log(`Avatar saved: ${avatarUrl}`);
+            return avatarUrl;
+        } catch (error) {
+            console.error('Error saving avatar file:', error);
+            throw error;
+        }
+    }
+
+    // Delete old file when updating
+    static async deleteOldFile(fileUrl) {
+        try {
+            if (!fileUrl || fileUrl.startsWith('http')) {
+                return; // Skip deletion for external URLs
+            }
+
+            const filePath = path.join(__dirname, '..', fileUrl);
+            await fs.unlink(filePath);
+            console.log(`Old file deleted: ${filePath}`);
+        } catch (error) {
+            console.log(`Could not delete old file: ${error.message}`);
+            // Don't throw error, just log it
+        }
+    }
+
+    // Upload and save custom wallpaper
+    static async uploadCustomWallpaper(userId, fileBuffer, originalFilename) {
+        try {
+            await this.ensureProfileExists(userId);
+
+            // Get current wallpaper URL to delete old file
+            const currentProfile = await this.getByUserId(userId);
+            const oldWallpaperUrl = currentProfile?.custom_wallpaper_url;
+
+            // Save new wallpaper file
+            const wallpaperUrl = await this.saveWallpaperFile(userId, fileBuffer, originalFilename);
+
+            // Update database
+            const [result] = await db.query(
+                `UPDATE UserProfile 
+                SET custom_wallpaper_url = ?, wallpaper_id = NULL, updated_at = NOW()
+                WHERE user_id = ?`,
+                [wallpaperUrl, userId]
+            );
+
+            if (result.affectedRows === 0) {
+                throw new Error('Failed to save custom wallpaper to database');
+            }
+
+            // Delete old file
+            if (oldWallpaperUrl) {
+                await this.deleteOldFile(oldWallpaperUrl);
+            }
+
+            return await this.getByUserId(userId);
+        } catch (error) {
+            console.error('Error uploading custom wallpaper:', error);
+            throw error;
+        }
+    }
+
+    // Upload and save avatar
+    static async uploadAvatar(userId, fileBuffer, originalFilename) {
+        try {
+            await this.ensureProfileExists(userId);
+
+            // Get current avatar URL to delete old file
+            const currentProfile = await this.getByUserId(userId);
+            const oldAvatarUrl = currentProfile?.avatar_url;
+
+            // Save new avatar file
+            const avatarUrl = await this.saveAvatarFile(userId, fileBuffer, originalFilename);
+
+            // Update database
+            const [result] = await db.query(
+                `UPDATE UserProfile 
+                SET avatar_url = ?, updated_at = NOW()
+                WHERE user_id = ?`,
+                [avatarUrl, userId]
+            );
+
+            if (result.affectedRows === 0) {
+                throw new Error('Failed to save avatar to database');
+            }
+
+            // Delete old file
+            if (oldAvatarUrl) {
+                await this.deleteOldFile(oldAvatarUrl);
+            }
+
+            return await this.getByUserId(userId);
+        } catch (error) {
+            console.error('Error uploading avatar:', error);
+            throw error;
+        }
+    }
+
+    // Sync skill points when user levels up
+    static async syncSkillPointsOnLevelUp(userId, newLevel) {
+        try {
+            console.log(`Syncing skill points for user ${userId} to level ${newLevel}`);
+            
+            const totalSkillPoints = newLevel * 1;
+            
+            const [currentProfile] = await db.query(
+                'SELECT hp_points, damage_points, agility_points FROM UserProfile WHERE user_id = ?',
+                [userId]
+            );
+            
+            let availableSkillPoints = totalSkillPoints;
+            
+            if (currentProfile && currentProfile.length > 0) {
+                const allocatedPoints = (currentProfile[0].hp_points || 0) + 
+                                      (currentProfile[0].damage_points || 0) + 
+                                      (currentProfile[0].agility_points || 0);
+                availableSkillPoints = totalSkillPoints - allocatedPoints;
+            }
+            
+            await db.query(
+                `UPDATE UserProfile 
+                SET skill_points = ?, updated_at = NOW()
+                WHERE user_id = ?`,
+                [Math.max(0, availableSkillPoints), userId]
+            );
+            
+            console.log(`Updated skill points for user ${userId}: ${availableSkillPoints} available`);
+            return availableSkillPoints;
+        } catch (error) {
+            console.error('Error syncing skill points on level up:', error);
+            throw error;
+        }
+    }
+
+    // Update basic user profile info
     static async update(userId, updates) {
         try {
             console.log('Updating user profile:', userId);
             console.log('Update data:', updates);
 
+            await this.ensureProfileExists(userId);
+
             const updateFields = [];
             const updateValues = [];
             
-            // Handle each updatable field from the UserProfile table
+            // Handle status message
             if (updates.status_message !== undefined) {
                 updateFields.push('status_message = ?');
                 updateValues.push(updates.status_message);
                 console.log('Adding status_message update:', updates.status_message);
             }
-            if (updates.custom_wallpaper_url !== undefined) {
-                updateFields.push('custom_wallpaper_url = ?');
-                updateValues.push(updates.custom_wallpaper_url);
+            
+            // Handle preset wallpaper
+            if (updates.wallpaper_id !== undefined) {
+                updateFields.push('wallpaper_id = ?');
+                updateValues.push(updates.wallpaper_id);
+                updateFields.push('custom_wallpaper_url = NULL');
+                console.log('Adding wallpaper_id update:', updates.wallpaper_id);
             }
-            if (updates.diamonds !== undefined) {
-                updateFields.push('diamonds = ?');
-                updateValues.push(updates.diamonds);
+            
+            // Handle pet updates
+            if (updates.favorite_pet_id !== undefined) {
+                updateFields.push('favorite_pet_id = ?');
+                updateValues.push(updates.favorite_pet_id);
+                console.log('Adding favorite_pet_id update:', updates.favorite_pet_id);
             }
-            if (updates.skill_points !== undefined) {
-                updateFields.push('skill_points = ?');
-                updateValues.push(updates.skill_points);
-            }
+            
+            // Handle skill points updates
             if (updates.hp_points !== undefined) {
                 updateFields.push('hp_points = ?');
                 updateValues.push(updates.hp_points);
@@ -194,19 +418,14 @@ class UserProfile {
                 updateValues.push(updates.agility_points);
             }
             
-            // Add updated_at timestamp
-            updateFields.push('updated_at = CURRENT_TIMESTAMP');
-            
-            // If no fields to update, return current profile
             if (updateFields.length === 0) {
                 console.log('No fields to update');
                 return await this.getByUserId(userId);
             }
             
-            // Add userId to values array
             updateValues.push(userId);
+            updateFields.push('updated_at = NOW()');
             
-            // Construct and execute update query
             const query = `
                 UPDATE UserProfile 
                 SET ${updateFields.join(', ')}
@@ -216,24 +435,17 @@ class UserProfile {
             console.log('Executing query:', query);
             console.log('With values:', updateValues);
             
-            await db.query(query, updateValues);
+            const [result] = await db.query(query, updateValues);
             
-            // Get updated profile by joining with UserLogin and UserStats
-            const [profiles] = await db.query(
-                `SELECT 
-                    p.*,
-                    u.username,
-                    COALESCE(s.level, 1) as level,
-                    COALESCE(s.xp, 0) as xp
-                FROM UserProfile p
-                JOIN UserLogin u ON p.user_id = u.id
-                LEFT JOIN UserStats s ON p.user_id = s.user_id
-                WHERE p.user_id = ?`,
-                [userId]
-            );
+            if (result.affectedRows === 0) {
+                console.log('No rows affected - creating default profile');
+                await this.createDefaultProfile(userId);
+                await db.query(query, updateValues);
+            }
             
-            console.log('Updated profile:', profiles[0]);
-            return profiles[0];
+            const updatedProfile = await this.getByUserId(userId);
+            console.log('Updated profile:', updatedProfile);
+            return updatedProfile;
         } catch (error) {
             console.error('Error updating user profile:', error);
             throw error;
@@ -243,39 +455,63 @@ class UserProfile {
     // Update skill points
     static async updateSkillPoints(userId, updates) {
         try {
-            // Start transaction
+            console.log('Updating skill points for user:', userId);
+            console.log('Skill point updates:', updates);
+            
+            const hpPoints = parseInt(updates.hp_points) || 0;
+            const damagePoints = parseInt(updates.damage_points) || 0;
+            const agilityPoints = parseInt(updates.agility_points) || 0;
+            
+            if (hpPoints < 0 || damagePoints < 0 || agilityPoints < 0) {
+                throw new Error('Skill points cannot be negative');
+            }
+            
             await db.query('START TRANSACTION');
 
-            // Update skill points
+            const currentProfile = await this.getByUserId(userId);
+            if (!currentProfile) {
+                throw new Error('User profile not found');
+            }
+            
+            const currentLevel = currentProfile.level || 1;
+            const totalSkillPoints = currentLevel * 1;
+            const newAllocatedPoints = hpPoints + damagePoints + agilityPoints;
+            
+            if (newAllocatedPoints > totalSkillPoints) {
+                throw new Error(`Not enough skill points. You have ${totalSkillPoints} points available, but trying to allocate ${newAllocatedPoints} points.`);
+            }
+            
+            const remainingSkillPoints = totalSkillPoints - newAllocatedPoints;
+            
             const updateQuery = `
                 UPDATE UserProfile 
                 SET 
                     hp_points = ?,
                     damage_points = ?,
                     agility_points = ?,
+                    skill_points = ?,
                     updated_at = NOW()
                 WHERE user_id = ?
             `;
 
-            await db.query(updateQuery, [
-                updates.hp_points,
-                updates.damage_points,
-                updates.agility_points,
+            const [result] = await db.query(updateQuery, [
+                hpPoints,
+                damagePoints,
+                agilityPoints,
+                remainingSkillPoints,
                 userId
             ]);
+            
+            if (result.affectedRows === 0) {
+                throw new Error('Failed to update skill points - user profile not found');
+            }
 
-            // Get updated profile
-            const [rows] = await db.query(
-                'SELECT * FROM UserProfile WHERE user_id = ?',
-                [userId]
-            );
-
-            // Commit transaction
+            const updatedProfile = await this.getByUserId(userId);
             await db.query('COMMIT');
-
-            return rows[0];
+            
+            console.log('Skill points updated successfully:', updatedProfile);
+            return updatedProfile;
         } catch (error) {
-            // Rollback on error
             await db.query('ROLLBACK');
             console.error('Error updating skill points:', error);
             throw error;
@@ -285,58 +521,62 @@ class UserProfile {
     // Reset skill points
     static async resetSkillPoints(userId, diamondsCost) {
         try {
-            // Start a transaction
             await db.query('START TRANSACTION');
             
-            // Get current profile
-            const [rows] = await db.query(
-                'SELECT * FROM UserProfile WHERE user_id = ?',
+            const [statsRows] = await db.query(
+                'SELECT diamonds FROM UserStats WHERE user_id = ?',
                 [userId]
             );
             
-            if (rows.length === 0) {
-                throw new Error('Profile not found');
+            if (statsRows.length === 0) {
+                throw new Error('User stats not found');
             }
             
-            const profile = rows[0];
+            const currentDiamonds = statsRows[0].diamonds || 0;
             
-            // Check if user has enough diamonds
-            if (profile.diamonds < diamondsCost) {
+            if (currentDiamonds < diamondsCost) {
                 throw new Error('Not enough diamonds');
             }
             
-            // Update profile: reset points and deduct diamonds
+            const currentProfile = await this.getByUserId(userId);
+            const currentLevel = currentProfile?.level || 1;
+            const totalSkillPoints = currentLevel * 1;
+            
             await db.query(
-                `UPDATE UserProfile 
-                SET 
-                    diamonds = diamonds - ?,
-                    hp_points = 0,
-                    damage_points = 0,
-                    agility_points = 0,
-                    updated_at = NOW()
+                `UPDATE UserStats 
+                SET diamonds = diamonds - ?
                 WHERE user_id = ?`,
                 [diamondsCost, userId]
             );
             
-            // Get updated profile
-            const [updatedRows] = await db.query(
-                'SELECT * FROM UserProfile WHERE user_id = ?',
+            await db.query(
+                `UPDATE UserProfile 
+                SET 
+                    hp_points = 0,
+                    damage_points = 0,
+                    agility_points = 0,
+                    skill_points = ?,
+                    updated_at = NOW()
+                WHERE user_id = ?`,
+                [totalSkillPoints, userId]
+            );
+            
+            const [updatedStatsRows] = await db.query(
+                'SELECT * FROM UserStats WHERE user_id = ?',
                 [userId]
             );
             
-            // Commit transaction
             await db.query('COMMIT');
             
             return {
                 success: true,
-                diamonds: updatedRows[0].diamonds,
-                skill_points: updatedRows[0].skill_points,
+                diamonds: updatedStatsRows[0].diamonds,
+                skill_points: totalSkillPoints,
                 hp_points: 0,
                 damage_points: 0,
                 agility_points: 0
             };
         } catch (error) {
-            // Rollback on error
             await db.query('ROLLBACK');
             console.error('Error resetting skill points:', error);
             throw error;
@@ -373,37 +613,28 @@ class UserProfile {
         }
     }
 
-    // Add level column to UserProfile table (MySQL compatible)
-    static async addLevelColumn() {
+    // Get all wallpapers
+    static async getAllWallpapers() {
         try {
-            const [rows] = await db.query(`
-                SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.COLUMNS 
-                WHERE TABLE_NAME = 'UserProfile' AND COLUMN_NAME = 'level' AND TABLE_SCHEMA = DATABASE()
-            `);
-            if (rows[0].count === 0) {
-                await db.query(`ALTER TABLE UserProfile ADD COLUMN level INT DEFAULT 1`);
-                console.log('Level column added to UserProfile table');
-            } else {
-                console.log('Level column already exists in UserProfile table');
-            }
+            const [rows] = await db.query('SELECT * FROM Wallpapers ORDER BY id');
+            return rows;
         } catch (error) {
-            console.error('Error adding level column:', error);
+            console.error('Error getting all wallpapers:', error);
             throw error;
         }
     }
-
-    // Update username in UserProfile when it changes in UserLogin
-    static async syncUsername(userId, newUsername) {
+    
+    // Validate wallpaper exists
+    static async validateWallpaper(wallpaperId) {
         try {
-            const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
-            await db.query(
-                'UPDATE UserProfile SET username = ?, updated_at = ? WHERE user_id = ?',
-                [newUsername, now, userId]
+            const [rows] = await db.query(
+                'SELECT id FROM Wallpapers WHERE id = ?',
+                [wallpaperId]
             );
-            return true;
+            return rows.length > 0;
         } catch (error) {
-            console.error('Error syncing username:', error);
-            throw error;
+            console.error('Error validating wallpaper:', error);
+            return false;
         }
     }
 }

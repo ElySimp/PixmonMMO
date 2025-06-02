@@ -25,7 +25,9 @@ function DailyQuest() {
             const userId = localStorage.getItem('userId'); // Ambil userId yang sedang login
             const response = await axios.get(`${API_URL}/api/user/${userId}/quests`);
             const quests = Array.isArray(response.data) ? response.data : (response.data.data || []);
-            setUserQuests(quests);
+            // console.log("API QUESTS:", quests); buat cek apakah data sudah benar
+            const dailyQuests = quests.filter(q => q.repeat_type === "daily");
+            setUserQuests(dailyQuests);
         } catch (error) {
             console.error("🚨 Error refreshing quest status:", error);
         }
@@ -65,18 +67,26 @@ function DailyQuest() {
             const response = await axios.post(`${API_URL}/api/user/${userId}/quest/${id}/claim`);
             if (response.data.success) {
                 await refreshQuestStatus();
-                if (onClaimReward) onClaimReward('✅ Quest Claimed!');
+                await refreshPlayerStats();
+                toast.success('✅ Quest Claimed!');
             }
         } catch (error) {
-            console.error("🚨 Error claiming quest:", error);
-        }
+            toast.error(error.response?.data?.message || "🚨 Error claiming quest");        }
+    };
+
+    const refreshPlayerStats = async () => {
+        const userId = localStorage.getItem('userId');
+        const res = await fetch(`${API_URL}/api/users/${userId}/stats`);
+        const data = await res.json();
+        setPlayerStats(data.data || data);
     };
 
     const handleClaimMainReward = async () => {
         const userId = localStorage.getItem('userId');
-        await axios.post(`${API_URL}/api/user/${userId}/claim-daily-main-reward`);
+        const res = await axios.post(`${API_URL}/api/user/${userId}/claim-daily-main-reward`);
         setMainRewardClaimed(true);
-        if (onClaimReward) onClaimReward('🎉 5 Diamonds & 1 Key Claimed!');
+        await refreshPlayerStats(); // Tambahkan ini!
+        toast.success(res.data.message || '🎉 5 Diamonds & 1 Key Claimed!');
     };
 
     const handleGoQuest = (id) => {
@@ -107,6 +117,24 @@ function DailyQuest() {
                 >
                     {mainRewardClaimed ? 'CLAIMED' : 'CLAIM'} 💎
                 </button>
+
+                <div className="player-stats-bar">
+                    <div className='player-stats-bar-left'>
+                        <span>Level</span>
+                        <span>Gold</span>
+                        <span>XP</span>
+                        <span>Diamonds</span>
+                        <span>QP</span>
+                    </div>
+
+                    <div className='player-stats-bar-right'>
+                        <span>{playerStats.level}</span>
+                        <span>{playerStats.gold}</span>
+                        <span>{playerStats.xp}</span>
+                        <span>{playerStats.diamonds}</span>
+                        <span>{playerStats.quest_points}</span>
+                    </div> 
+                </div>
             </div>
             <div className="quest-title">
                 {userQuests.map((quest) => (
@@ -137,18 +165,7 @@ function DailyQuest() {
                 ))}
             </div>
 
-            <div className="player-stats-bar">
-                <span>Level: {playerStats.level}</span>
-                <span>Gold: {playerStats.gold}</span>
-                <span>XP: {playerStats.xp}</span>
-                <span>💎: {playerStats.diamonds}</span>
-                <span>QP: {playerStats.quest_points}</span>
-            </div>
-
             
-            <div className="steps-progress-bar">
-                <span>Steps today: {steps} / 5</span>
-            </div>
         </div>
         
     );

@@ -43,6 +43,11 @@ class User {
                 'INSERT INTO UserLogin (username, email, password, updated_at) VALUES (?, ?, ?, ?)',
                 [username, email, hashedPassword, now]
             );
+
+            const newUserId = result.insertId;
+            
+            await UserProfile.ensureProfileExists(newUserId);
+
             
             console.log('User registered successfully:', result.insertId);
             return result.insertId;
@@ -371,7 +376,7 @@ class User {
     static async createDefaultStats(userId) {
         try {
             const [result] = await db.query(
-                `INSERT INTO UserStats (user_id, level, xp, gold, updated_at)
+                `INSERT INTO UserStats (user_id, diamonds,  level, xp, gold, updated_at)
                 VALUES (?, 1, 0, 0, NOW())`,
                 [userId]
             );
@@ -379,7 +384,8 @@ class User {
             return {
                 level: 1,
                 xp: 0,
-                gold: 0
+                gold: 0,
+                diamonds: 0
             };
         } catch (error) {
             console.error('Error creating default stats:', error);
@@ -431,7 +437,7 @@ class User {
                 [newLevel, now, userId]
             );
             // Update UserProfile level and add skill points
-            const skillPointsToAdd = 3; // 3 points per level
+            const skillPointsToAdd = 1;
             await db.query(
                 'UPDATE UserProfile SET level = ?, skill_points = skill_points + ?, updated_at = ? WHERE user_id = ?',
                 [newLevel, skillPointsToAdd, now, userId]
@@ -475,6 +481,40 @@ class User {
             return false;
         } catch (error) {
             console.error('Error checking level up:', error);
+            throw error;
+        }
+    }
+
+    static async getOverlayProfileData(userId) {
+        try {
+            const query = `
+                SELECT 
+                    ul.username,
+                    us.level,
+                    us.xp,
+                    us.gold,
+                    us.diamonds,
+                    us.quest_points,
+                    COALESCE(quest_stats.completed_count, 0) as quest_completed,
+                    COALESCE(quest_stats.claimed_count, 0) as quest_claimed
+                FROM UserLogin ul
+                JOIN UserStats us ON ul.id = us.user_id
+                LEFT JOIN (
+                    SELECT 
+                        user_id,
+                        COUNT(CASE WHEN completed = 1 THEN 1 END) as completed_count,
+                        COUNT(CASE WHEN claimed = 1 THEN 1 END) as claimed_count
+                    FROM UserQuest 
+                    WHERE user_id = ?
+                    GROUP BY user_id
+                ) quest_stats ON ul.id = quest_stats.user_id
+                WHERE ul.id = ?
+            `;
+            
+            const [rows] = await db.query(query, [userId, userId]);
+            return rows[0];
+        } catch (error) {
+            console.error('Error getting overlay profile data:', error);
             throw error;
         }
     }

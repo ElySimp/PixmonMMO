@@ -1,10 +1,13 @@
 /* === Filter Section === */
 .filter-container {
   display: flex;
-  gap: 60px; /* jarak antara Role dan Status */
+  justify-content: center;
   align-items: center;
+  gap: 12rem; /* jarak antar elemen */
+  padding: 1rem;
+  flex-wrap: wrap;
   margin-top: 12px;
-  margin-left: 120px; /* Menyesuaikan dengan posisi bawah "Support Service" */
+  margin-left: 120px;
 }
 
 .filter-item {
@@ -26,12 +29,26 @@
   color: white;
 }
 
+.filter-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
 /* === Card Container === */
 .card-container {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   padding-top: 30px;
+}
+
+.pet-card-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 40px;
+  justify-items: center;
 }
 
 /* === Pet Card === */
@@ -78,6 +95,13 @@
   font-size: 17px;
   text-align: center;
   margin-bottom: 10px;
+}
+
+.pet-image {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  margin: 10px 0;
 }
 
 /* === Stat Bars === */
@@ -176,25 +200,119 @@
   display: none;
 }
 
+/* === Black Button === */
+.black-button {
+  background-color: #000;
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 100%;
+  margin: 4px 0;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.black-button:hover {
+  background-color: #222;
+}
+
+.pet-actions {
+  z-index: 10;
+  position: relative;
+}
+
+/* === Rarity Label === */
+.rarity-label {
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  animation: glow 2s infinite alternate;
+}
+
+/* Warna per rarity */
+.rarity-legendary {
+  color: #f39c12;
+  text-shadow: 0 0 5px #f1c40f, 0 0 10px #f39c12;
+}
+
+.rarity-epic {
+  color: #9b59b6;
+  text-shadow: 0 0 5px #8e44ad, 0 0 10px #9b59b6;
+}
+
+.rarity-elite {
+  color: #2ecc71;
+  text-shadow: 0 0 5px #27ae60, 0 0 10px #2ecc71;
+}
+
+.rarity-common {
+  color: #bdc3c7;
+  text-shadow: 0 0 5px #95a5a6, 0 0 10px #bdc3c7;
+}
+
+/* Animasi glowing */
+@keyframes glow {
+  from {
+    text-shadow: 0 0 5px transparent;
+  }
+  to {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+  }
+}
+
 .filter-container {
   display: flex;
-  justify-content: center; /* ini yang membuat elemen di tengah */
-  align-items: center;
-  gap: 12rem; /* jarak antar elemen */
-  padding: 1rem;
+  justify-content: space-between;
   flex-wrap: wrap;
+  gap: 20px;
+  padding: 20px;
 }
 
-.filter-wrapper {
+.filter-item {
+  flex: 1;
+  min-width: 200px;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh; /* penuh tinggi layar */
+  flex-direction: column;
+  align-items: flex-start;
 }
 
-.pet-card-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 40px;
-  justify-items: center;
+.filter-item label {
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #fff;
+  filter: none;             /* Hapus efek filter jika ada */
+  text-shadow: none !important;  /* Ini yang benar-benar hapus glow */
 }
+
+
+.filter-item select {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: #111;
+  color: #fff;
+  font-size: 14px;
+}
+
+.reset-button {
+  align-self: center;
+  padding: 10px 20px;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.filter-item {
+  align-items: center;
+  text-align: center;
+}
+

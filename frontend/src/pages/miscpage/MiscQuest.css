@@ -50,6 +50,7 @@
 }
 
 .quest-progress-container {
+  width: 20%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -137,8 +138,13 @@
 }
 
 .quest-title {
-  width: 35rem;
+  width: 75%;
+  overflow-y: auto;
 }
+
+.quest-title::-webkit-scrollbar {
+  display: none;
+} 
 
 .quest-box {
   display: flex;
@@ -172,7 +178,8 @@
 .bounty-progress {
   background-color: #232323;
   width: 15rem;
-  height: 6.75rem;
+  margin-left: -2rem;
+  height: 8rem;
   border-radius: 10px;
   border: 1px solid #F8F8F8;
 }
@@ -195,6 +202,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0.5rem;
+}
+
+.bounty-progress-bar-bottom button {
   padding: 0.5rem;
 }
 
@@ -226,8 +237,6 @@
   width: 100%;
   transition: all 0.5s ease;
 }
-
-/* ...existing code... */
 
 .miscquest-loading-container {
   display: flex;
@@ -262,4 +271,21 @@
   opacity: 1;
   transform: translateY(0);
 }
-/* ...existing code... */
+
+.player-stats-bar {
+  margin-top: 2.5rem;
+  height: 12rem;
+  width: 10rem;
+  padding: 0.8rem;
+  font-size: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+}
+
+.player-stats-bar-left, .player-stats-bar-right {
+  display: grid;
+}

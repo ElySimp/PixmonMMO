@@ -4,6 +4,7 @@ import './Topbar.css';
 import chatIcon from '../assets/MAIN/chat.png';
 import notificationIcon from '../assets/MAIN/notification.png';
 const profileImage = '/dummy1.jpg'; 
+const API_URL = "http://localhost:5000";
 
 function Topbar({ 
   onMenuClick, 
@@ -13,11 +14,220 @@ function Topbar({
   onNotificationClick 
 }) {
   const [showProfileCard, setShowProfileCard] = useState(false);
+  const [overlayProfile, setOverlayProfile] = useState({
+    username: 'Loading...', 
+    level: 1,
+    xp: 0,
+    maxXp: 50,
+    gold: 0,
+    diamonds: 0,
+    questPoints: 8,
+    maxQuestPoints: 10,
+    energyPoints: 2,
+    maxEnergyPoints: 5,
+    energyTimer: '4h 09:40',
+    questCompleted: 0,
+    questClaimed: 0
+  });
+
   const navigate = useNavigate();
   const location = useLocation();
   const isActive = (path) => location.pathname === path;
   const profileCardRef = useRef(null);
   const profileButtonRef = useRef(null);
+
+  // Fetch overlay profile data dengan perbaikan untuk username
+  useEffect(() => {
+    const fetchOverlayProfile = async () => {
+      try {
+        const userId = localStorage.getItem('userId');
+        
+        if (!userId) {
+          console.error('No userId found in localStorage');
+          return;
+        }
+
+        console.log('Fetching profile for userId:', userId);
+        
+        // SOLUSI 1: Fetch stats data
+        const statsResponse = await fetch(`${API_URL}/api/users/${userId}/stats`);
+        
+        if (!statsResponse.ok) {
+          console.error('Failed to fetch stats:', statsResponse.status, statsResponse.statusText);
+          return;
+        }
+
+        const statsData = await statsResponse.json();
+        console.log('Stats API response:', statsData);
+        
+        const stats = statsData.data || statsData;
+        const maxXp = Math.floor(50 * Math.pow(stats.level || 1, 1.4));
+
+        // SOLUSI 2: Fetch username dari tabel userlogin
+        let username = 'Unknown User';
+        
+        try {
+          // Option A: Jika ada endpoint khusus untuk get user profile
+          const userResponse = await fetch(`${API_URL}/api/users/${userId}/profile`);
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            username = userData.username || userData.data?.username || 'Unknown User';
+            console.log('User profile response:', userData);
+          } else {
+            // Option B: Jika menggunakan endpoint userlogin
+            const loginResponse = await fetch(`${API_URL}/api/userlogin/${userId}`);
+            if (loginResponse.ok) {
+              const loginData = await loginResponse.json();
+              username = loginData.username || loginData.data?.username || 'Unknown User';
+              console.log('UserLogin response:', loginData);
+            }
+          }
+        } catch (userError) {
+          console.log('Error fetching username from API, trying localStorage:', userError);
+          
+          // SOLUSI 3: Fallback ke localStorage
+          const storedUserProfile = localStorage.getItem('userProfile');
+          const storedUsername = localStorage.getItem('username');
+          
+          if (storedUsername) {
+            username = storedUsername;
+          } else if (storedUserProfile) {
+            try {
+              const userProfile = JSON.parse(storedUserProfile);
+              username = userProfile.username || userProfile.name || 'Unknown User';
+            } catch (parseError) {
+              console.error('Error parsing userProfile from localStorage:', parseError);
+            }
+          }
+        }
+
+        // SOLUSI 4: Jika username masih kosong, coba dari stats response
+        if (username === 'Unknown User' && stats.username) {
+          username = stats.username;
+        }
+        
+        setOverlayProfile({
+          username: username,
+          level: stats.level || 1,
+          xp: stats.xp || 0,
+          maxXp: maxXp,
+          gold: stats.gold || 0,
+          diamonds: stats.diamonds || 0,
+          questPoints: stats.quest_points || 0,
+          maxQuestPoints: 10,
+          energyPoints: stats.energy_points || 2,
+          maxEnergyPoints: 5,
+          energyTimer: stats.energy_timer || '4h 09:40',
+          questCompleted: stats.quest_completed || 0,
+          questClaimed: stats.quest_claimed || 0
+        });
+
+        console.log('Final profile data:', {
+          username,
+          level: stats.level,
+          gold: stats.gold,
+          diamonds: stats.diamonds
+        });
+
+      } catch (error) {
+        console.error('Error fetching overlay profile:', error);
+      }
+    };
+
+    fetchOverlayProfile();
+  }, []);
+
+  // TAMBAHAN: Re-fetch ketika ada perubahan user
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'userId' || e.key === 'userProfile' || e.key === 'username') {
+        console.log('Storage changed, refetching profile...');
+        // Re-fetch profile data
+        const fetchOverlayProfile = async () => {
+          try {
+            const userId = localStorage.getItem('userId');
+            
+            if (!userId) {
+              console.error('No userId found in localStorage');
+              return;
+            }
+
+            const statsResponse = await fetch(`${API_URL}/api/users/${userId}/stats`);
+            
+            if (!statsResponse.ok) {
+              console.error('Failed to fetch stats:', statsResponse.status);
+              return;
+            }
+
+            const statsData = await statsResponse.json();
+            const stats = statsData.data || statsData;
+            const maxXp = Math.floor(50 * Math.pow(stats.level || 1, 1.4));
+
+            let username = 'Unknown User';
+            
+            try {
+              const userResponse = await fetch(`${API_URL}/api/users/${userId}/profile`);
+              if (userResponse.ok) {
+                const userData = await userResponse.json();
+                username = userData.username || userData.data?.username || 'Unknown User';
+              } else {
+                const loginResponse = await fetch(`${API_URL}/api/userlogin/${userId}`);
+                if (loginResponse.ok) {
+                  const loginData = await loginResponse.json();
+                  username = loginData.username || loginData.data?.username || 'Unknown User';
+                }
+              }
+            } catch (userError) {
+              const storedUsername = localStorage.getItem('username');
+              const storedUserProfile = localStorage.getItem('userProfile');
+              
+              if (storedUsername) {
+                username = storedUsername;
+              } else if (storedUserProfile) {
+                try {
+                  const userProfile = JSON.parse(storedUserProfile);
+                  username = userProfile.username || userProfile.name || 'Unknown User';
+                } catch (parseError) {
+                  console.error('Error parsing userProfile:', parseError);
+                }
+              }
+            }
+
+            if (username === 'Unknown User' && stats.username) {
+              username = stats.username;
+            }
+            
+            setOverlayProfile({
+              username: username,
+              level: stats.level || 1,
+              xp: stats.xp || 0,
+              maxXp: maxXp,
+              gold: stats.gold || 0,
+              diamonds: stats.diamonds || 0,
+              questPoints: stats.quest_points || 0,
+              maxQuestPoints: 10,
+              energyPoints: stats.energy_points || 2,
+              maxEnergyPoints: 5,
+              energyTimer: stats.energy_timer || '4h 09:40',
+              questCompleted: stats.quest_completed || 0,
+              questClaimed: stats.quest_claimed || 0
+            });
+
+          } catch (error) {
+            console.error('Error refetching overlay profile:', error);
+          }
+        };
+
+        fetchOverlayProfile();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   // Close profile card when clicking outside
   useEffect(() => {
@@ -45,64 +255,53 @@ function Topbar({
 
   const handleTopUpClick = () => {
     console.log('Top Up clicked');
-    // Tambahkan navigasi ke halaman top up atau buka modal top up
+    navigate('/Shop', { state: { selectedSection: 'topup' } });
+    setShowProfileCard(false);
   };
 
   const handleCurrencyAdd = (currencyType) => {
     console.log(`Add ${currencyType} clicked`);
-    // Logika untuk menambahkan mata uang
+    navigate('/Shop', { state: { selectedCurrency: currencyType } });
+    setShowProfileCard(false);
   };
 
   const handleRefill = () => {
     console.log('Refill energy clicked');
-    // Logika untuk mengisi ulang energi
+    navigate('/Shop', { state: { selectedCurrency: 'energy' } });
+    setShowProfileCard(false);
   };
 
   const handleMembershipClick = () => {
     console.log('Membership clicked');
-    // Navigasi ke halaman membership
   };
 
   const handleSettingsClick = () => {
     console.log('Settings clicked');
-    // Navigasi ke halaman settings
   };
-
 
   const handleMyProfileClick = () => {
     navigate('/profile');
     setShowProfileCard(false);
   };
   
-   // Perbaikan untuk fungsi handleLogoutClick
   const handleLogoutClick = () => {
-  console.log('Logout clicked');
-  
-  try {
-    // Hapus semua data pengguna dari localStorage
-    localStorage.removeItem('token'); // atau sesuaikan dengan nama key token Anda
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userProfile');
+    console.log('Logout clicked');
     
-    // Atau hapus semua localStorage (opsional)
-    // localStorage.clear();
-    
-    // Tutup profile card
-    setShowProfileCard(false);
-    
-    // Redirect ke halaman utama
-    navigate('/');
-    
-    // Refresh halaman untuk memastikan state ter-reset (opsional)
-    // window.location.reload();
-    
-  } catch (error) {
-    console.error('Error during logout:', error);
-    // Tetap redirect meskipun ada error
-    navigate('/');
-   }
- };
+    try {
+      localStorage.removeItem('token');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userProfile');
+      localStorage.removeItem('username'); // Tambahan: hapus username juga
+      
+      setShowProfileCard(false);
+      navigate('/');
+      
+    } catch (error) {
+      console.error('Error during logout:', error);
+      navigate('/');
+    }
+  };
 
   return (
     <nav className="topbar">
@@ -128,7 +327,6 @@ function Topbar({
           <img src={notificationIcon} alt="Notifications" className="topbar-icon" />
         </button>
 
-        {/* Profile Button and Dropdown */}
         <div className="topbar-button profile-dropdown-container">
           <button 
             ref={profileButtonRef}
@@ -149,11 +347,14 @@ function Topbar({
                   <img src={profileImage} alt="Profile" />
                 </div>
                 <div className="profile-info">
-                  <div className="profile-username">Username</div>
-                  <div className="profile-level">Lvl 99999</div>
+                  <div className="profile-username">{overlayProfile.username}</div>
+                  <div className="profile-level">Lvl {overlayProfile.level}</div>
                   <div className="profile-xp-bar">
                     <div className="xp-bar">
-                      <div className="xp-progress"></div>
+                      <div 
+                        className="xp-progress"  
+                        style={{ width: `${(overlayProfile.xp / overlayProfile.maxXp) * 100}%` }}
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -163,7 +364,7 @@ function Topbar({
                 <div className="currency-item">
                   <span className="currency-icon">🪙</span>
                   <span className="currency-label">Gold</span>
-                  <span className="currency-amount">123.456.789</span>
+                  <span className="currency-amount">{overlayProfile.gold.toLocaleString()}</span>
                   <button 
                     className="currency-add" 
                     onClick={() => handleCurrencyAdd('gold')}
@@ -172,10 +373,10 @@ function Topbar({
                 <div className="currency-item">
                   <span className="currency-icon">💎</span>
                   <span className="currency-label">Diamond</span>
-                  <span className="currency-amount">123.456.789</span>
+                  <span className="currency-amount">{overlayProfile.diamonds.toLocaleString()}</span>
                   <button 
                     className="currency-add"
-                    onClick={() => handleCurrencyAdd('diamond')}
+                    onClick={() => handleCurrencyAdd('diamonds')}
                   >+</button>
                 </div>
               </div>
@@ -184,11 +385,14 @@ function Topbar({
                 <div className="stat-item">
                   <div className="stat-label">
                     <span>Quest Point <span className="stat-icon">📜</span></span>
-                    <span className="stat-value">8/10</span>
+                    <span className="stat-value">{overlayProfile.questPoints}/{overlayProfile.maxQuestPoints}</span>
                   </div>
                   <div className="stat-bar-container">
                     <div className="stat-bar quest-bar">
-                      <div className="stat-progress" style={{ width: '80%' }}></div>
+                      <div 
+                        className="stat-progress" 
+                        style={{ width: `${(overlayProfile.questPoints / overlayProfile.maxQuestPoints) * 100}%` }}
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -197,17 +401,20 @@ function Topbar({
                   <div className="stat-label">
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                       <span>Energy Point <span className="stat-icon">⚡</span></span>
-                      <span className="energy-timer">4h 09:40</span>
+                      <span className="energy-timer">{overlayProfile.energyTimer}</span>
                       <button 
                         className="refill-btn"
                         onClick={handleRefill}
                       >Refill?</button>
                     </div>
-                    <span className="stat-value">2/5</span>
+                    <span className="stat-value">{overlayProfile.energyPoints}/{overlayProfile.maxEnergyPoints}</span>
                   </div>
                   <div className="energy-row">
                     <div className="energy-bar">
-                      <div className="stat-progress" style={{ width: '40%' }}></div>
+                      <div 
+                        className="stat-progress" 
+                        style={{ width: `${(overlayProfile.energyPoints / overlayProfile.maxEnergyPoints) * 100}%` }}
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -223,7 +430,7 @@ function Topbar({
                   <span>Membership</span>
                 </button>
                 <button className="action-button settings" onClick={handleSettingsClick}>
-                  <span className="action-icon">⚙</span>
+                  <span className="action-icon">⚙️</span>
                   <span>Settings</span>
                 </button>
                 <button className="action-button logout" onClick={handleLogoutClick}>
