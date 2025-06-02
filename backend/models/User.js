@@ -18,24 +18,18 @@ class User {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME NULL
             )
-        `;
-        try {
+        `;        try {
             await db.query(dropSql);
             await db.query(sql);
-            console.log('UserLogin table created or already exists');
+            // Table creation logged by database initialization system
         } catch (error) {
             console.error('Error creating UserLogin table:', error);
             throw error;
         }
-    }
-
-    static async register(username, email, password) {
+    }    static async register(username, email, password) {
         try {
-            console.log('Attempting to register user:', { username, email });
-            
             // Hash password
             const hashedPassword = await bcrypt.hash(password, 10);
-            console.log('Password hashed successfully');
             
             // Insert user with current date for updated_at
             const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
@@ -48,8 +42,6 @@ class User {
             
             await UserProfile.ensureProfileExists(newUserId);
 
-            
-            console.log('User registered successfully:', result.insertId);
             return result.insertId;
         } catch (error) {
             console.error('Registration error:', error);
@@ -113,8 +105,7 @@ class User {
     
     // Create UserStats table
     static async createStatsTable() {
-        try {
-            await db.query(`
+        try {            await db.query(`
                 CREATE TABLE IF NOT EXISTS UserStats (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     user_id INT NOT NULL,
@@ -124,19 +115,21 @@ class User {
                     diamonds INT DEFAULT 0,
                     quest_points INT DEFAULT 10,
                     quest_point_cooldown DATETIME DEFAULT NULL,
+                    cooldownEnd DATETIME DEFAULT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at DATETIME DEFAULT NULL,
                     FOREIGN KEY (user_id) REFERENCES UserLogin(id) ON DELETE CASCADE,
                     INDEX idx_userstats_user_id (user_id)
                 ) ENGINE=InnoDB;
             `);
-            
-            console.log('UserStats table created or already exists');
+            // Table creation logged by database initialization system
         } catch (error) {
             console.error('Error creating UserStats table:', error);
             throw error;
         }
-    }    static async createUserStats(userId) {
+    }
+    
+    static async createUserStats(userId) {
         try {
             // First check if user exists in UserLogin
             const [userExists] = await db.query(
@@ -152,13 +145,10 @@ class User {
             const [existingStats] = await db.query(
                 'SELECT COUNT(*) as count FROM UserStats WHERE user_id = ?',
                 [userId]
-            );
-
-            // If user already has stats, delete all existing records first to prevent duplicates
+            );            // If user already has stats, delete all existing records first to prevent duplicates
             if (existingStats[0].count > 0) {
-                console.log(`User ${userId} already has ${existingStats[0].count} stats records. Cleaning up duplicates...`);
                 await db.query('DELETE FROM UserStats WHERE user_id = ?', [userId]);
-                console.log(`Cleaned up old stats records for user ${userId}`);
+                // Cleaned up duplicate stats records
             }
 
             const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
@@ -169,8 +159,6 @@ class User {
                 [userId, now]
             );
 
-            console.log(`Created new stats record for user ${userId}`);
-
             // Return default stats object
             return {
                 level: 1,
@@ -179,27 +167,28 @@ class User {
                 diamonds: 0,
                 quest_points: 10,
                 cooldownEnd: null
-            };
-        } catch (error) {
+            };        } catch (error) {
             if (error.code === 'ER_DUP_ENTRY') {
-                console.log(`Duplicate entry prevented for user ${userId}. Getting existing stats instead.`);
                 // If stats already exist due to unique constraint, just return them
                 return await this.getStats(userId);
             }
             console.error('Error creating user stats:', error);
             throw error;
         }
-    }// Update XP and Gold for a user
+    }
+    
+    // Update XP and Gold for a user
     static async updateStats(userId, xpDelta, goldDelta) {
         const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
         await db.query(
             'UPDATE UserStats SET xp = xp + ?, gold = gold + ?, updated_at = ? WHERE user_id = ?',
             [xpDelta, goldDelta, now, userId]
         );
-        
-        // Check for level up after XP update
+          // Check for level up after XP update
         await this.checkLevelUp(userId);
-    }    // Update all stats including level for a user
+    }
+    
+    // Update all stats including level for a user
     static async updateAllStats(userId, xpDelta, goldDelta, newLevel) {
         const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
         
@@ -240,10 +229,11 @@ class User {
                 level: safeLevel
             };
         } catch (error) {
-            console.error('Error updating all stats:', error);
-            throw error;
+            console.error('Error updating all stats:', error);            throw error;
         }
-    }// Set absolute values for XP, Gold and Level (useful for XP reset on level up)
+    }
+    
+    // Set absolute values for XP, Gold and Level (useful for XP reset on level up)
     static async updateAllStatsAbsolute(userId, newXp, newGold, newLevel, cooldownEnd = null) {
         const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
         
@@ -267,16 +257,13 @@ class User {
                 AND TABLE_NAME = 'UserStats' 
                 AND COLUMN_NAME = 'cooldownEnd'
             `);
-            
-            const cooldownColumnExists = cooldownColumn[0].count > 0;
-            console.log(`LEVEL DEBUG [Model] - cooldownEnd column exists: ${cooldownColumnExists}`);
+              const cooldownColumnExists = cooldownColumn[0].count > 0;
             
             // Format the cooldown date for MySQL or use NULL
             const cooldownSql = cooldownEnd ? cooldownEnd.slice(0, 19).replace('T', ' ') : null;
             
             // Ensure level is a valid number
             const safeLevel = Number(newLevel) || 1;
-            console.log(`About to update stats with level=${safeLevel} (original value: ${newLevel})`);
             
             // Set absolute values for stats
             if (cooldownSql && cooldownColumnExists) {
@@ -288,27 +275,23 @@ class User {
                 await db.query(
                     'UPDATE UserStats SET xp = ?, gold = ?, level = ?, updated_at = ? WHERE user_id = ?',
                     [newXp, newGold, safeLevel, now, userId]
-                );
-            }
+                );            }
             
-            console.log(`Set absolute stats for user ${userId}: XP=${newXp}, Gold=${newGold}, Level=${safeLevel}, CooldownEnd=${cooldownEnd}`);
+            // Log only for verbose mode - removed verbose console output
         } catch (error) {
-            console.error('Error setting absolute stats:', error);
-            throw error;
+            console.error('Error setting absolute stats:', error);throw error;
         }
-    }    // Get stats for a user
+    }
+    
+    // Get stats for a user
     static async getStats(userId) {
         try {
             // Check if multiple stats records exist for this user
             const [statCount] = await db.query(
                 'SELECT COUNT(*) as count FROM UserStats WHERE user_id = ?',
                 [userId]
-            );
-
-            // If multiple records exist, clean them up
+            );            // If multiple records exist, clean them up
             if (statCount[0].count > 1) {
-                console.log(`Found ${statCount[0].count} stat records for user ${userId}. Keeping only the most recent.`);
-                
                 // Get the ID of the most recent record
                 const [latestRecord] = await db.query(
                     'SELECT id FROM UserStats WHERE user_id = ? ORDER BY updated_at DESC LIMIT 1',
@@ -323,8 +306,7 @@ class User {
                         'DELETE FROM UserStats WHERE user_id = ? AND id != ?',
                         [userId, latestId]
                     );
-                    
-                    console.log(`Cleaned up duplicate stat records for user ${userId}`);
+                    // Cleaned up duplicate stat records
                 }
             }
             
@@ -532,11 +514,8 @@ class User {
             if (statCount[0].count === 0) {
                 return await this.createUserStats(userId);
             }
-            
-            // If multiple records exist, keep only the most recent
+              // If multiple records exist, keep only the most recent
             if (statCount[0].count > 1) {
-                console.log(`Found ${statCount[0].count} stat records for user ${userId}. Cleaning up...`);
-                
                 // Get the ID of the most recent record
                 const [latestRecord] = await db.query(
                     'SELECT id FROM UserStats WHERE user_id = ? ORDER BY updated_at DESC LIMIT 1',
@@ -551,8 +530,7 @@ class User {
                         'DELETE FROM UserStats WHERE user_id = ? AND id != ?',
                         [userId, latestId]
                     );
-                    
-                    console.log(`Cleaned up duplicate stat records for user ${userId}`);
+                    // Cleaned up duplicate stat records
                 }
             }
             
@@ -577,6 +555,28 @@ class User {
                 gold: 0,
                 cooldownEnd: null
             };
+        }
+    }
+
+    // Update diamonds for a user
+    static async updateDiamonds(userId, diamondsDelta) {
+        const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+        try {
+            await db.query(
+                'UPDATE UserStats SET diamonds = diamonds + ?, updated_at = ? WHERE user_id = ?',
+                [diamondsDelta, now, userId]
+            );
+            
+            // Get updated diamonds count
+            const [result] = await db.query(
+                'SELECT diamonds FROM UserStats WHERE user_id = ?', 
+                [userId]
+            );
+            
+            return result.length > 0 ? result[0].diamonds : 0;
+        } catch (error) {
+            console.error('Error updating diamonds:', error);
+            throw error;
         }
     }
 }

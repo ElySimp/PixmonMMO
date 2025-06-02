@@ -72,12 +72,10 @@ exports.getUserProfile = async (req, res) => {
 
 // Update user profile
 exports.updateUserProfile = async (req, res) => {
-    try {
-        const userId = req.params.userId;
+    try {        const userId = req.params.userId;
         const updates = req.body;
         
-        console.log('Received update request for user:', userId);
-        console.log('Update data:', updates);
+        // Logging removed - update request processed silently
         
         // Validate input
         if (!updates || Object.keys(updates).length === 0) {
@@ -131,12 +129,10 @@ exports.updateUserProfile = async (req, res) => {
 
 // Update skill points
 exports.updateSkillPoints = async (req, res) => {
-    try {
-        const userId = req.params.userId;
+    try {        const userId = req.params.userId;
         const { hp_points, damage_points, agility_points } = req.body;
         
-        console.log('Updating skill points for user:', userId);
-        console.log('Skill points:', { hp_points, damage_points, agility_points });
+        // Logging removed - skill point update processed silently
         
         // Validate input
         if (hp_points === undefined || damage_points === undefined || agility_points === undefined) {

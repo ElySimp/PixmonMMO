@@ -63,10 +63,8 @@ class UserQuest {
             await db.query(
                 'INSERT INTO UserQuest (user_id, quest_id, completed, claimed) VALUES (?, ?, FALSE, FALSE)',
                 [userId, quest.id]
-            );
-
-            if (isLoginQuest) {
-                console.log(`✅ Daily Login Quest auto-completed for user ${userId}`);
+            );            if (isLoginQuest) {
+                // Daily Login Quest auto-completed
             }
         }
     }
@@ -204,7 +202,7 @@ QuestSystem.startDailyQuestResetSchedule();
 async function initializeTables() {
     await Quest.createTable();
     await UserQuest.createTable();
-    console.log('All tables initialized!');
+    // Quest tables initialized
 }
 
 module.exports = { QuestSystem, UserQuest, initializeTables };

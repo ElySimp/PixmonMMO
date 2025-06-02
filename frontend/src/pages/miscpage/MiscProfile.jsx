@@ -259,19 +259,18 @@ const MiscProfile = () => {
   const handleChatClick = () => {};
   const handleNotificationClick = () => {};
   const handleEggClick = () => {};
-  
-  // State variables
+    // State variables
   const [wallpaper, setWallpaper] = useState(defaultWallpaper);
   const [avatarUrl, setAvatarUrl] = useState('/dummy1.jpg');
   const [favoritePet, setFavoritePet] = useState('');
   const [favoritePetData, setFavoritePetData] = useState(null);
-  const [characterName, setCharacterName] = useState('');
+  const [characterName, setCharacterName] = useState('Character name');
   const [statusMessage, setStatusMessage] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingStatus, setIsEditingStatus] = useState(false);
   const [customWallpaperUrl, setCustomWallpaperUrl] = useState('');
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoaded, setIsLoaded] = useState(true); // Start as loaded
+  const [isLoading, setIsLoading] = useState(false); // Start as not loading
   const [error, setError] = useState(null);
   const [xpValue, setXpValue] = useState(0);
   const [maxXp, setMaxXp] = useState();
@@ -327,16 +326,14 @@ const MiscProfile = () => {
   };
   
   const getStatBonus = (statType) => (allocatedPoints[statType] * 0.5).toFixed(1);
-  
-  // Single fetchUserProfile function (removed duplication)
+    // Single fetchUserProfile function (removed duplication)
   const fetchUserProfile = async () => {
-    setIsLoading(true);
+    // We don't set isLoading to true here anymore to prevent the loading screen
     setError(null);
     
     const credentials = getUserCredentials();
     if (!credentials) {
       setError('Authentication error');
-      setIsLoading(false);
       return;
     }
     
@@ -405,13 +402,12 @@ const MiscProfile = () => {
       } catch (achievementError) {
         console.error('Error fetching selected achievements:', achievementError);
       }
-      setError(null);
-    } catch (apiError) {
+      setError(null);    } catch (apiError) {
       console.error('API Error:', apiError);
       setError('Failed to load profile data. Please try again later.');
     } finally {
+      // We don't need the timeout anymore as we've set isLoaded to true by default
       setIsLoading(false);
-      setTimeout(() => setIsLoaded(true), 300);
     }
   };
   
@@ -695,30 +691,7 @@ const MiscProfile = () => {
     setFavoritePet(pet.name);
     setFavoritePetData(pet);
   };
-  
-  // Loading state
-  if (isLoading && !isLoaded) {
-    return (
-      <div className="main-container">
-        <Sidebar />
-        <div className="main-content profile-main-content">
-          <Topbar
-            onMenuClick={handleMenuClick}
-            onSupportClick={handleSupportClick}
-            onFriendsClick={handleFriendsClick}
-            onSearch={handleSearch}
-            onChatClick={handleChatClick}
-            onNotificationClick={handleNotificationClick}
-            onEggClick={handleEggClick}
-          />
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <p>Loading profile...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+    // We've removed the loading state check to immediately render the profile
   
   // Error state
   if (error) {

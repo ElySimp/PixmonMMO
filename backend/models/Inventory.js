@@ -14,10 +14,9 @@ class Inventory {
                 effect_base INT(11) DEFAULT NULL
              )
         `;
-        
-        try {
+          try {
             await db.query(sql);
-            console.log('IndexInventory table created or already exists');
+            // Table creation logged by database initialization system
             
             // Populate with initial achievements if table is empty
             const [count] = await db.query('SELECT COUNT(*) as count FROM IndexInventory');
@@ -46,10 +45,9 @@ class Inventory {
             );
 
         `;
-        
-        try {
+          try {
             await db.query(sql);
-            console.log('UserInventory table created or already exists');
+            // Table creation logged by database initialization system
         } catch (error) {
             console.error('Error creating UserAchievements table:', error);
             throw error;
@@ -201,8 +199,7 @@ class Inventory {
             }
         ]
 
-        try {
-            await db.query(`
+        try {            await db.query(`
                     INSERT INTO UserInventory 
                     (item_name, atk_value, effect_value, def_value, index_id, user_id) 
                     VALUES (? , ? , ? , ? , ? , ?)
@@ -214,7 +211,7 @@ class Inventory {
                     test_items.index_id,
                     test_items.user_id
                 ]);
-            console.log('Insert successful: item added to UserInventory');
+            // Test item force sent to UserInventory
         } catch (error){
             console.error('Error sending data to UserInventory table:', error);
             throw error;
@@ -287,16 +284,14 @@ class Inventory {
                     throw new Error(`Item with index_id ${index_id} not found in IndexInventory`);
                 }
 
-                const { item_name, item_type } = itemRows[0];
-
-                await db.query(
+                const { item_name, item_type } = itemRows[0];                await db.query(
                     `INSERT INTO UserInventory 
                     (item_name, atk_value, effect_value, def_value, index_id, user_id, item_type, amount)
                     VALUES (?, 0, 0, 0, ?, ?, ?, 1)`,
                     [item_name, index_id, userId, item_type]
                 );
 
-                console.log(`Added new item ${item_name} (index ${index_id}) for user ${userId}`);
+                // Item added to user inventory
             }
         } catch (error) {
             console.error(`Error updating or inserting item ${index_id} for user ${userId}:`, error);

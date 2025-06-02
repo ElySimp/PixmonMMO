@@ -31,11 +31,10 @@ exports.getAllInventory = async (req, res) => {
             inventory = await Inventory.UserDataObtain(userId);
         } else {
             // Optionally handle the case if no userId is provided
-            return res.status(400).json({ success: false, message: 'User ID required' });
-        }
+            return res.status(400).json({ success: false, message: 'User ID required' });        }
         
         res.json({ success: true, inventory });
-        console.log('success getting user inventory data');
+        // Successfully retrieved user inventory data
     } catch (error) {
         console.error('Error in getAllInventory:', error);
         res.status(500).json({ success: false, message: 'Failed to retrieve inventory' });
@@ -68,10 +67,8 @@ exports.getInventoryCount = async (req, res) => {
             count = await Inventory.countUserInventory(userId);
         } else {
             count = await Inventory.countAllInventory();
-        }
-
-        res.json({ success: true, count });
-        console.log("Success getting inventory count");
+        }        res.json({ success: true, count });
+        // Successfully retrieved inventory count
     } catch (error) {
         console.error('Error getting inventory count:', error);
         res.status(500).json({
@@ -82,10 +79,8 @@ exports.getInventoryCount = async (req, res) => {
     }
 };
 
-exports.getInventoryIndex = async (req, res) => {
-    try {
-        const indexInventory = await Inventory.indexItemObtain();
-        console.log("index received");
+exports.getInventoryIndex = async (req, res) => {    try {        const indexInventory = await Inventory.indexItemObtain();
+        // Successfully retrieved inventory index
         return res.status(200).json({ success: true, inventoryIndex: indexInventory });
     } catch (error) {
         console.error('Error pulling data', error);

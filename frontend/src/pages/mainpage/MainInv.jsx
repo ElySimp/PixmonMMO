@@ -6,6 +6,14 @@ import potion from '../../assets/inv_asset/potion.png';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../utils/config';
 
+// Add CSS for empty inventory message
+const emptyInventoryStyle = {
+  textAlign: 'center',
+  padding: '20px',
+  color: '#777',
+  fontSize: '16px'
+};
+
 async function getInventoryCount(userId) {
   try {
     const res = await fetch(`${API_URL}/users/${userId}/inventoryCount`);
@@ -45,7 +53,7 @@ async function getIndexInventory() {
 
 const MainInv = () => {
   const { user, loading: authLoading } = useAuth();
-  const [count, setCount] = useState(null);
+  const [count, setCount] = useState(0); // Initialize with 0 instead of null
   const [inventory, setInventory] = useState([]);
   const [inventoryIndex, setInventoryIndex] = useState([]);
   const [selectedOption, setSelectedOption] = useState("all");
@@ -125,9 +133,12 @@ const MainInv = () => {
               <div className="overlay-name">{item.item_name}</div>
               <div className="maininv-items">
                 <img src={potion} alt="potion" />
+              </div>              <div className="maininv-item-stats">effect : {item.effect_value || 0}%</div>
+              <div className="maininv-description">
+                {inventoryIndex && item.index_id && inventoryIndex[item.index_id - 1] 
+                  ? inventoryIndex[item.index_id - 1].description 
+                  : "No description available"}
               </div>
-              <div className="maininv-item-stats">effect : {item.effect_value || 0}%</div>
-              <div className="maininv-description">{inventoryIndex[item.index_id - 1].description}</div>
             </div>
           </div>
         )}
@@ -141,9 +152,6 @@ const MainInv = () => {
   ));
 }
 
-
-
-  if (count === null) return <div>Loading inventory...</div>;
 
   return (
     <div className="maininv-invCont">
@@ -180,16 +188,15 @@ const MainInv = () => {
 
           <div className="maininv-right-side-inv">
             <div className="maininv-inventory-Info">
-              <label className="maininv-inv-word">Inventory</label>
-              <div className="maininv-inventory-capacity">
-                capacity : {count} / 100 (User ID: {user?.id}) {inventoryIndex[0].description} {selectedOption}
+              <label className="maininv-inv-word">Inventory</label>              <div className="maininv-inventory-capacity">
+                capacity : {count} / 100 (User ID: {user?.id})
               </div>
-            </div>
-            <div className="maininv-actual-inventory">
-              {showInventory ? (
-                <MainInvCreation inventory={inventory} filter={selectedOption} />
-              ) : (
-                <></> // Empty content during "cleared" state
+            </div>            <div className="maininv-actual-inventory">              {showInventory && (
+                inventory.length > 0 ? (
+                  <MainInvCreation inventory={inventory} filter={selectedOption} />
+                ) : (
+                  <div style={emptyInventoryStyle}>Your inventory is empty</div>
+                )
               )}
             </div>
           </div>

@@ -3,10 +3,10 @@ const { QuestSystem } = require('../models/QuestSystem');
 
 exports.getAllQuests = async (req, res) => {
     try {
-        console.log("Fetching all quests...");
+        // Fetching all quests - verbose logging removed
         const [quests] = await db.query('SELECT * FROM Quest');
 
-        console.log("Quests fetched:", quests);
+        // Quest data retrieved successfully
         res.json(quests);
     } catch (error) {
         console.error("Error fetching quests:", error);

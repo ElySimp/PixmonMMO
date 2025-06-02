@@ -4,6 +4,9 @@ const path = require('path');
 const multer = require('multer');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
+// Import logger
+const logger = require('./utils/logger');
+
 const User = require('./models/User');
 const Achievement = require('./models/Achievement');
 const Inventory = require('./models/Inventory');
@@ -24,81 +27,98 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Request logging middleware (development only)
+if (process.env.NODE_ENV === 'development') {
+    app.use((req, res, next) => {
+        logger.request(req);
+        next();
+    });
+}
+
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Initialize database
-(async () => {
+// Database initialization function
+async function initializeDatabaseTables() {
+    const initSteps = [
+        'UserLogin Table',
+        'UserStats Table', 
+        'Achievement Tables',
+        'UserProfile Tables',
+        'Inventory Tables',
+        'Pets Tables',
+        'Quest Tables',
+        'Final Check & Cleanup'
+    ];
+
+    logger.dbInitStart(initSteps);
+
     try {
+        // Initialize UserLogin table
+        logger.dbStep('UserLogin Table', 'running');
         await User.createTable();
-        console.log('Database initialized');
-    } catch (error) {
-        console.error('Database initialization error:', error);
-    }
-})();
+        logger.dbStep('UserLogin Table', 'success');
 
-// Initialize UserStats table
-(async () => {
-    try {
+        // Initialize UserStats table
+        logger.dbStep('UserStats Table', 'running');
         await User.createStatsTable();
-        console.log('UserStats table initialized');
-    } catch (error) {
-        console.error('UserStats table initialization error:', error);
-    }
-})();
+        logger.dbStep('UserStats Table', 'success');
 
-// Initialize Achievement tables
-(async () => {
-    try {
+        // Initialize Achievement tables
+        logger.dbStep('Achievement Tables', 'running');
         await Achievement.createTable();
         await Achievement.createUserAchievementsTable();
-        console.log('Achievement tables initialized');
-    } catch (error) {
-        console.error('Achievement tables initialization error:', error);
-    }
-})();
+        logger.dbStep('Achievement Tables', 'success');
 
-// Initialize UserProfile tables
-(async () => {
-    try {
+        // Initialize UserProfile tables
+        logger.dbStep('UserProfile Tables', 'running');
         await UserProfile.createTable();
         await UserProfile.createWallpapersTable();
-        console.log('UserProfile tables initialized');
-    } catch (error) {
-        console.error('UserProfile tables initialization error:', error);
-    }
-})();
+        logger.dbStep('UserProfile Tables', 'success');
 
-// Initialize Inventory tables
-(async () => {
-    try {
+        // Initialize Inventory tables
+        logger.dbStep('Inventory Tables', 'running');
         await Inventory.createIndexInvtable();
         await Inventory.createUserInventory();
-        console.log('Inventory tables initialized');
-    } catch (error) {
-        console.error('Inventory tables initialization error:', error);
-    }
-})();
+        logger.dbStep('Inventory Tables', 'success');
 
-// Initialize Pets tables
-(async () => {
-    try {
-        await petsController.createPetsTables(); 
-        console.log('Pets tables initialized');
-    } catch (err) {
-        console.error('Pets table error:', err);
-    }
-})();
+        // Initialize Pets tables
+        logger.dbStep('Pets Tables', 'running');
+        await petsController.createPetsTables();
+        logger.dbStep('Pets Tables', 'success');
 
-// Initialize Quest tables
-(async () => {
-    try {
+        // Initialize Quest tables
+        logger.dbStep('Quest Tables', 'running');
         await initializeTables();
-        console.log('Quest tables initialized');
+        logger.dbStep('Quest Tables', 'success');        // Final check
+        logger.dbStep('Final Check & Cleanup', 'running');
+        
+        // Check for and fix any duplicate stats records
+        try {
+            await checkAndFixDuplicateStats();
+            logger.debug('Duplicate stats check completed', 'MAINTENANCE');
+        } catch (statsError) {
+            logger.warning('Could not fix duplicate stats', 'MAINTENANCE');
+        }
+        
+        // Schedule periodic monitoring of UserStats table
+        try {
+            const scheduleMonitoring = require('./scripts/monitoring/schedule-monitoring');
+            scheduleMonitoring();
+            logger.debug('UserStats monitoring scheduled', 'MAINTENANCE');
+        } catch (monitorError) {
+            logger.warning('Could not schedule UserStats monitoring', 'MAINTENANCE');
+        }
+        
+        logger.dbStep('Final Check & Cleanup', 'success');
+
+        logger.dbInitComplete();
+        
     } catch (error) {
-        console.error('Quest tables initialization error:', error);
+        logger.error('Database initialization failed', 'DATABASE', error);
+        throw error;
     }
-})();
+}
 
 // Auth Routes
 app.post('/api/auth/register', authController.register);
@@ -218,9 +238,21 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', message: 'Server is running' });
 });
 
+// Log route registration summary
+logger.separator('API Routes Registered');
+logger.info('✅ Authentication routes: /api/auth/*', 'ROUTES');
+logger.info('✅ User stats routes: /api/user/stats, /api/users/:userId/stats', 'ROUTES');
+logger.info('✅ Achievement routes: /api/achievements, /api/users/:userId/achievements', 'ROUTES');
+logger.info('✅ Profile routes: /api/userprofile/:userId/*', 'ROUTES');
+logger.info('✅ Inventory routes: /api/users/:userId/inventory*', 'ROUTES');
+logger.info('✅ Quest routes: /api/quests, /api/user/:userId/quest*', 'ROUTES');
+logger.info('✅ Pets routes: /api/users/:userId/userPetGet', 'ROUTES');
+logger.info('✅ Health check: /api/health', 'ROUTES');
+logger.separator();
+
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    logger.error(`Server error: ${err.message}`, 'MIDDLEWARE', err);
     
     // Handle multer errors
     if (err instanceof multer.MulterError) {
@@ -246,54 +278,19 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Initialize database tables
-async function initializeDatabaseTables() {
-    try {
-        // Create tables in the correct order
-        await User.createTable();
-        await User.createStatsTable();
-        await UserProfile.createTable();
-        await UserProfile.createWallpapersTable();
-        await Achievement.createTable();
-        await Achievement.createUserAchievementsTable();
-        await Inventory.createIndexInvtable();
-        await Inventory.createUserInventory();
-        await initializeTables(); // Quest tables
-        await petsController.createPetsTables();
-        
-        console.log('All database tables initialized successfully');
-        
-        // Check for and fix any duplicate stats records
-        try {
-            await checkAndFixDuplicateStats();
-        } catch (statsError) {
-            console.error('Warning: Could not fix duplicate stats:', statsError);
-        }
-        
-        // Schedule periodic monitoring of UserStats table
-        try {
-            const scheduleMonitoring = require('./scripts/monitoring/schedule-monitoring');
-            scheduleMonitoring();
-        } catch (monitorError) {
-            console.error('Warning: Could not schedule UserStats monitoring:', monitorError);
-        }
-    } catch (error) {
-        console.error('Error initializing database tables:', error);
-        throw error;
-    }
-}
-
 // Initialize database on server start
 const PORT = process.env.PORT || 5000;
 
+// Start server
 app.listen(PORT, async () => {
-    console.log(`Server running on port ${PORT}`);
+    logger.serverStart(PORT);
     
     try {
         await initializeDatabaseTables();
-        console.log('Database initialized successfully');
+        logger.serverReady(PORT);
     } catch (error) {
-        console.error('Failed to initialize database:', error);
+        logger.error('Failed to initialize database', 'STARTUP', error);
+        logger.warning('Server is running but database initialization failed', 'STARTUP');
         // Don't exit process, let server continue to run
     }
 });

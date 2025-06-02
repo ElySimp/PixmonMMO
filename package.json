@@ -1,11 +1,11 @@
 {
   "name": "pixmonmmo",
   "private": true,
-  "version": "0.0.0",
-  "scripts": {
+  "version": "0.0.0",  "scripts": {
     "frontend": "cd frontend && npm run dev",
     "backend": "node backend/server.js",
-    "dev": "concurrently \"npm run frontend\" \"npm run backend\"",
+    "dev": "node scripts/start-clean.js",
+    "dev-verbose": "concurrently --kill-others --names \"BACKEND,FRONTEND\" --prefix-colors \"magenta,cyan\" --raw \"npm run backend\" \"npm run frontend\"",
     "build": "cd frontend && npm run build",
     "lint": "cd frontend && npm run lint",
     "preview": "cd frontend && npm run preview",
@@ -14,6 +14,7 @@
   "dependencies": {
     "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
+    "colors": "^1.4.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
@@ -21,6 +22,8 @@
     "moment-timezone": "^0.5.48",
     "multer": "^2.0.0",
     "mysql2": "^3.14.1",
+    "node-cron": "^4.1.0",
+    "node-fetch": "^3.3.2",
     "react-toastify": "^11.0.5",
     "uuid": "^11.1.0"
   },

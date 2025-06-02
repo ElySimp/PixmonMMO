@@ -16,13 +16,6 @@ if (!MYSQL_HOST || !MYSQL_USER || !MYSQL_PASSWORD || !MYSQL_DATABASE) {
     throw new Error('Missing required database configuration. Please check your .env file.');
 }
 
-console.log('Attempting database connection with:', {
-    host: MYSQL_HOST,
-    user: MYSQL_USER,
-    database: MYSQL_DATABASE,
-    port: MYSQL_PORT
-});
-
 const pool = mysql.createPool({
     host: process.env.MYSQL_HOST,
     user: process.env.MYSQL_USER,
@@ -40,7 +33,7 @@ pool.getConnection((err, connection) => {
         console.error('Database connection error:', err);
         return;
     }
-    console.log('Successfully connected to database!');
+    // Connection successful - no need to log, server logger will handle this
     connection.release();
 });
 
