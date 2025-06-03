@@ -13,11 +13,11 @@ const upload = multer({
         fileSize: 5 * 1024 * 1024 // 5MB limit
     },
     fileFilter: (req, file, cb) => {
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
         if (allowedTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
-            cb(new Error('Invalid file type. Only JPG, PNG, and GIF files are allowed.'));
+            cb(new Error('Invalid file type. Only JPG, PNG, GIF, and WebP files are allowed.'));
         }
     }
 });
@@ -72,10 +72,9 @@ exports.getUserProfile = async (req, res) => {
 
 // Update user profile
 exports.updateUserProfile = async (req, res) => {
-    try {        const userId = req.params.userId;
+    try {
+        const userId = req.params.userId;
         const updates = req.body;
-        
-        // Logging removed - update request processed silently
         
         // Validate input
         if (!updates || Object.keys(updates).length === 0) {
@@ -116,7 +115,6 @@ exports.updateUserProfile = async (req, res) => {
             maxXp
         };
 
-        console.log('Sending response:', responseData);
         res.json(responseData);
     } catch (error) {
         console.error('Error updating user profile:', error);
@@ -129,10 +127,9 @@ exports.updateUserProfile = async (req, res) => {
 
 // Update skill points
 exports.updateSkillPoints = async (req, res) => {
-    try {        const userId = req.params.userId;
+    try {
+        const userId = req.params.userId;
         const { hp_points, damage_points, agility_points } = req.body;
-        
-        // Logging removed - skill point update processed silently
         
         // Validate input
         if (hp_points === undefined || damage_points === undefined || agility_points === undefined) {
@@ -202,11 +199,37 @@ exports.uploadCustomWallpaper = async (req, res) => {
     try {
         const userId = req.params.userId;
         
+        console.log('Upload wallpaper request:', {
+            userId,
+            file: req.file ? {
+                originalname: req.file.originalname,
+                mimetype: req.file.mimetype,
+                size: req.file.size
+            } : 'No file'
+        });
+        
         // Check if file exists
         if (!req.file) {
             return res.status(400).json({
                 success: false,
                 message: 'No file uploaded'
+            });
+        }
+        
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+        if (!allowedTypes.includes(req.file.mimetype)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.'
+            });
+        }
+        
+        // Check file size (max 5MB)
+        if (req.file.size > 5 * 1024 * 1024) {
+            return res.status(400).json({
+                success: false,
+                message: 'File too large. Maximum size is 5MB.'
             });
         }
         
@@ -217,13 +240,14 @@ exports.uploadCustomWallpaper = async (req, res) => {
             req.file.originalname
         );
         
-        // Calculate max XP
         const maxXp = Math.floor(50 * Math.pow(updatedProfile.level || 1, 1.4));
         
         res.json({
             success: true,
             message: 'Custom wallpaper uploaded successfully',
-            ...updatedProfile,
+            custom_wallpaper_url: updatedProfile.custom_wallpaper_url,
+            userId: updatedProfile.id,
+            level: updatedProfile.level,
             maxXp
         });
     } catch (error) {
@@ -240,11 +264,37 @@ exports.uploadAvatar = async (req, res) => {
     try {
         const userId = req.params.userId;
         
+        console.log('Upload avatar request:', {
+            userId,
+            file: req.file ? {
+                originalname: req.file.originalname,
+                mimetype: req.file.mimetype,
+                size: req.file.size
+            } : 'No file'
+        });
+        
         // Check if file exists
         if (!req.file) {
             return res.status(400).json({
                 success: false,
                 message: 'No file uploaded'
+            });
+        }
+        
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+        if (!allowedTypes.includes(req.file.mimetype)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.'
+            });
+        }
+        
+        // Check file size (max 5MB)
+        if (req.file.size > 5 * 1024 * 1024) {
+            return res.status(400).json({
+                success: false,
+                message: 'File too large. Maximum size is 5MB.'
             });
         }
         
@@ -261,7 +311,9 @@ exports.uploadAvatar = async (req, res) => {
         res.json({
             success: true,
             message: 'Avatar uploaded successfully',
-            ...updatedProfile,
+            avatar_url: updatedProfile.avatar_url,
+            userId: updatedProfile.user_id,
+            level: updatedProfile.level,
             maxXp
         });
     } catch (error) {
@@ -272,7 +324,6 @@ exports.uploadAvatar = async (req, res) => {
         });
     }
 };
-
 // Get all wallpapers
 exports.getAllWallpapers = async (req, res) => {
     try {
@@ -287,6 +338,48 @@ exports.getAllWallpapers = async (req, res) => {
         res.status(500).json({ 
             success: false, 
             message: 'Error fetching wallpapers' 
+        });
+    }
+};
+
+exports.updateStatusMessage = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const { status_message } = req.body;
+        
+        console.log('Update status message request:', {
+            userId,
+            status_message
+        });
+        
+        if (status_message === undefined) {
+            return res.status(400).json({
+                success: false,
+                message: 'Status message is required'
+            });
+        }
+        
+        const updates = { status_message };
+        const updatedProfile = await UserProfile.update(userId, updates);
+        
+        if (!updatedProfile) {
+            return res.status(404).json({
+                success: false,
+                message: 'Profile not found'
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Status message updated successfully',
+            status_message: updatedProfile.status_message,
+            userId: updatedProfile.user_id
+        });
+    } catch (error) {
+        console.error('Error updating status message:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Error updating status message'
         });
     }
 };
