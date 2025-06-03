@@ -80,6 +80,7 @@ async function initializeDatabaseTables() {
         logger.dbStep('Inventory Tables', 'running');
         await Inventory.createIndexInvtable();
         await Inventory.createUserInventory();
+        await Inventory.createGachaResult();
         logger.dbStep('Inventory Tables', 'success');
 
         // Initialize Pets tables
@@ -171,6 +172,7 @@ app.post('/api/init-userprofile', userProfileController.initUserProfileTables);
 app.get('/api/users/:userId/inventoryGet', inventoryController.getAllInventory);
 app.get('/api/users/:userId/inventoryCount', inventoryController.getInventoryCount);
 app.get('/api/inventoryIndex', inventoryController.getInventoryIndex);
+app.get('/api/users/:userId/tenPull', inventoryController.gachaResult);
 
 // Quest Routes
 app.get('/api/quests', questController.getAllQuests);

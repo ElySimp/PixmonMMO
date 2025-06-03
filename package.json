@@ -1,7 +1,8 @@
 {
   "name": "pixmonmmo",
   "private": true,
-  "version": "0.0.0",  "scripts": {
+  "version": "0.0.0",
+  "scripts": {
     "frontend": "cd frontend && npm run dev",
     "backend": "node backend/server.js",
     "dev": "node scripts/start-clean.js",

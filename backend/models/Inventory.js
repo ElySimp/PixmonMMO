@@ -54,6 +54,27 @@ class Inventory {
         }
     }
 
+    static async createGachaResult () {
+        const sql = `
+            CREATE TABLE IF NOT EXISTS gachaResult (
+                item_name varchar(100),
+                atk_value int(11), 
+                effect_value int(11),
+                def_value int(11),
+                index_id int(11), 
+                user_id int(11), 
+                item_type varchar(100), 
+                gacha_date TIME,
+                FOREIGN KEY (user_id) REFERENCES UserLogin(id) ON DELETE CASCADE
+            )
+        `;
+        try {
+            await db.query(sql);
+        } catch(error) {
+            console.error('Error creating gacha result');
+        }
+    }
+
 
     static async seedInitialinventoryIndex() {
         const items = [
@@ -247,60 +268,66 @@ class Inventory {
         }
     }
 
-    static async obtainedKey (userId) {
-        try {
-            
-        } catch {
-
+    static async gachaResultMultiStore(userId) {
+        function chooseRarity() {
+            const random = Math.random() * 100;
+            if (random < 60) return 1;
+            else if (random < 80) return 2;
+            else return 3;
         }
-    }
-    static async obtainedKey(userId, index_id) {
+
         try {
-            // Check if the user already has this item
-            const [rows] = await db.query(
-                'SELECT amount FROM UserInventory WHERE user_id = ? AND index_id = ?',
-                [userId, index_id]
-            );
+            let stored = 0;
 
-            if (rows.length > 0) {
-                // Item exists, increment the amount by 1
-                const newAmount = rows[0].amount + 1;
-                await db.query(
-                    'UPDATE UserInventory SET amount = ? WHERE user_id = ? AND index_id = ?',
-                    [newAmount, userId, index_id]
-                );
-                console.log(`Incremented amount of item ${index_id} for user ${userId} to ${newAmount}`);
-            } else {
-                // Item does not exist, insert new row with amount = 1
-                // You might want to pull item_name and item_type from IndexInventory to insert here
-                // For simplicity, get item_name and item_type from IndexInventory
+            while (stored < 10) {
+                const chosenRarity = chooseRarity();
 
-                const [itemRows] = await db.query(
-                    'SELECT item_name, item_type FROM IndexInventory WHERE item_id = ?',
-                    [index_id]
+                const [items] = await db.query(
+                    `SELECT * FROM IndexInventory WHERE rarity = ?`,
+                    [chosenRarity]
                 );
 
-                if (itemRows.length === 0) {
-                    throw new Error(`Item with index_id ${index_id} not found in IndexInventory`);
+                if (!items || items.length === 0) {
+                    console.log(`No items found with rarity ${chosenRarity}`);
+                    continue;
                 }
 
-                const { item_name, item_type } = itemRows[0];                await db.query(
-                    `INSERT INTO UserInventory 
-                    (item_name, atk_value, effect_value, def_value, index_id, user_id, item_type, amount)
-                    VALUES (?, 0, 0, 0, ?, ?, ?, 1)`,
-                    [item_name, index_id, userId, item_type]
+                // Filter out index_id 9 and 10
+                const filteredItems = items.filter(item => item.index_id !== 9 && item.index_id !== 10);
+                if (filteredItems.length === 0) {
+                    console.log(`All items with rarity ${chosenRarity} are excluded`);
+                    continue;
+                }
+
+                const randomIndex = Math.floor(Math.random() * filteredItems.length);
+                const selectedItem = filteredItems[randomIndex];
+
+                await db.query(
+                    `INSERT INTO gachaResult 
+                        (item_name, atk_value, effect_value, def_value, index_id, user_id, item_type, gacha_date)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+                    [
+                        selectedItem.item_name,
+                        0, // atk_value placeholder
+                        selectedItem.effect_base || 0,
+                        0, // def_value placeholder
+                        selectedItem.index_id,
+                        userId,
+                        selectedItem.item_type
+                    ]
                 );
 
-                // Item added to user inventory
+                stored++;
             }
-        } catch (error) {
-            console.error(`Error updating or inserting item ${index_id} for user ${userId}:`, error);
-            throw error;
+        } catch (err) {
+            console.error('Error in gachaResultMultiStore:', err);
         }
-    }
-    
 }
 
+    static async gachaResultMultiGet (userId) {
+
+    }
+}
 
 
 module.exports = Inventory;

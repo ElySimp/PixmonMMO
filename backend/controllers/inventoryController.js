@@ -79,7 +79,9 @@ exports.getInventoryCount = async (req, res) => {
     }
 };
 
-exports.getInventoryIndex = async (req, res) => {    try {        const indexInventory = await Inventory.indexItemObtain();
+exports.getInventoryIndex = async (req, res) => {   
+    try {        
+        const indexInventory = await Inventory.indexItemObtain();
         // Successfully retrieved inventory index
         return res.status(200).json({ success: true, inventoryIndex: indexInventory });
     } catch (error) {
@@ -88,61 +90,24 @@ exports.getInventoryIndex = async (req, res) => {    try {        const indexInv
     }
 }
 
-exports.saveInventoryItem = async (req, res) => {
+exports.gachaResult = async (req, res) => {
     try {
-        const {
-            user_id,
-            atk,
-            effect,
-            def,
-            index_id,
-            item_type,
-            amount
-        } = req.body;
+        const userId = req.params.userId;
 
-        // Basic input validation
-        if (!user_id || !index_id || !item_type || amount == null) {
-            return res.status(400).json({
-                success: false,
-                message: 'Missing required fields (user_id, index_id, item_type, or amount)'
-            });
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
         }
 
-        if (typeof amount !== 'number' || amount <= 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Amount must be a positive number'
-            });
-        }
+        await Inventory.gachaResultMultiStore(userId);
 
-        // Validate user existence
-        const user = await User.findById(user_id);
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
+        return res.status(200).json({ message: 'Gacha pull successful' });
 
-        // Check if the item already exists in user's inventory
-        await Inventory.claimItem(user_id, atk, effect, def, index_id, item_type, amount);
-
-        return res.status(201).json({
-            success: true,
-            message: 'Inventory item saved successfully'
-        });
     } catch (error) {
-        console.error('Error saving inventory item:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Failed to save inventory item',
-            error: error.message
-        });
+        console.error('Error in gachaResult controller:', error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 };
 
-exports.obtainKey = async (req, res) => {
-    try {
-        
-    } catch (error) {
-        
-    }
-};
+
+
 
