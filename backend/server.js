@@ -173,6 +173,7 @@ app.get('/api/users/:userId/inventoryGet', inventoryController.getAllInventory);
 app.get('/api/users/:userId/inventoryCount', inventoryController.getInventoryCount);
 app.get('/api/inventoryIndex', inventoryController.getInventoryIndex);
 app.get('/api/users/:userId/tenPull', inventoryController.gachaResult);
+app.get('/api/users/:userId/onePull', inventoryController.gachaResultSingle);
 
 // Quest Routes
 app.get('/api/quests', questController.getAllQuests);
