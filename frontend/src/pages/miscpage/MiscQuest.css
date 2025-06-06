@@ -171,15 +171,11 @@
   cursor: pointer;
 }
 
-/* .daily-claim-btn {
-  cursor: not-allowed;
-} */
-
 .bounty-progress {
   background-color: #232323;
   width: 15rem;
   margin-left: -2rem;
-  height: 8rem;
+  height: 6.5rem;
   border-radius: 10px;
   border: 1px solid #F8F8F8;
 }
@@ -200,22 +196,31 @@
   margin-top: 0.2rem;
   font-size: 1rem;
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 0.5rem;
 }
 
-.bounty-progress-bar-bottom button {
+.restore-qp {
+  margin-top: 0.5rem;
+  display: grid;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: start;
+}
+
+.restore-qp button, .restore-qp span {
   padding: 0.5rem;
 }
 
 .quest-point-timer {
-  font-size: 0.7rem;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: bold;
   background-color: #D9D9D9;
   color: #000;
   text-align: center;
-  width: 3rem;
-  border-radius: 15px;
+  width: 5.5rem;
+  border-radius: 8px;
   padding: 0;
 }
 
