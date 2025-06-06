@@ -272,7 +272,7 @@ class Inventory {
         function chooseRarity() {
             const random = Math.random() * 100;
             if (random < 60) return 1;
-            else if (random < 80) return 2;
+            else if (random < 90) return 2;
             else return 3;
         }
 
