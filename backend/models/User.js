@@ -118,6 +118,8 @@ class User {
                     cooldownEnd DATETIME DEFAULT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at DATETIME DEFAULT NULL,
+                    max_hp INT,
+                    current_hp INT,
                     FOREIGN KEY (user_id) REFERENCES UserLogin(id) ON DELETE CASCADE,
                     INDEX idx_userstats_user_id (user_id)
                 ) ENGINE=InnoDB;

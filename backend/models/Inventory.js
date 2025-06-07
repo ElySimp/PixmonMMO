@@ -373,9 +373,119 @@ class Inventory {
         }
 }
 
-    static async gachaResultMultiGet (userId) {
+    static async normalKeyObtain (userId) {
+        const [rows] = ('SELECT COUNT(*) AS count FROM UserInventory WHERE user_id = ? AND index_id = ?', [userId, 9])
 
+        if (rows[0].count === 0) {
+            await db.query(`
+                INSERT INTO UserInventory (item_name, atk_value, effect_value, def_value, index_id, user_id, item_type, amount)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            
+                `, ['Steel Key', 0, 0, 0, 9, userId, 'key', 1]
+            )
+        }
+
+        else if (rows[0].count > 0) {
+            await db.query(`
+                UPDATE UserInventory
+                SET amount = amount + 1
+                WHERE user_id = ? AND index_id = ?
+                `, [userId, 9]
+            );
+        }
     }
+
+    static async MythicalKeyObtain (userId) {
+        const [rows] = ('SELECT COUNT(*) AS count FROM UserInventory WHERE user_id = ? AND index_id = ?', [userId, 9])
+
+        if (rows[0].count === 0) {
+            await db.query(`
+                INSERT INTO UserInventory (item_name, atk_value, effect_value, def_value, index_id, user_id, item_type, amount)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            
+                `, ['Mythical Key', 0, 0, 0, 10, userId, 'key', 1]
+            )
+        }
+
+        else if (rows[0].count > 0) {
+            await db.query(`
+                UPDATE UserInventory
+                SET amount = amount + 1
+                WHERE user_id = ? AND index_id = ?
+                `, [userId, 10]
+            );
+        }
+    }
+
+    static async itemUse (userId, index_id) {
+        // inget masukin ini ke controller buat index id
+        // const index_id = parseInt(req.params.index_id, 10); // base 10
+
+        try {
+            // health
+            if (index_id === 3) {
+                const [rows] = await db.query('SELECT max_hp, current_hp FROM UserStats WHERE user_id = ?', [userId]);
+                const HP = rows[0];
+                console.log('query run', `max_hp: ${HP.max_hp}`, `current_hp: ${HP.current_hp}`);
+                const heal = 30 * HP.max_hp / 100;
+
+                // heal = 0.3 * HP.max_hp;
+
+                if (heal + HP.current_hp > HP.max_hp) {
+                    console.log('hp potion used');
+                    await db.query(`
+                        UPDATE UserStats 
+                        SET current_hp = ?
+                        WHERE user_id = ?
+                        `, [HP.max_hp, userId]
+                    );
+
+                    await db.query(`
+                        UPDATE UserInventory 
+                        SET amount = amount - 1
+                        WHERE user_id = ? AND index_id = ?
+                        `, [userId, index_id]
+                    );
+                }
+
+                else if (heal + HP.current_hp <= HP.max_hp) {
+                    console.log('hp potion used')
+                    await db.query(`
+                        UPDATE UserStats 
+                        SET current_hp = current_hp + ?
+                        WHERE user_id = ?
+                        `, [heal, userId]
+                    );
+
+                    await db.query(`
+                        UPDATE UserInventory 
+                        SET amount = amount - 1
+                        WHERE user_id = ? AND index_id = ?
+                        `, [userId, index_id]
+                    );
+                }
+
+                console.log('usage complete');
+            }
+            // mana
+            else if (index_id === 2) {
+                
+            }
+            // food
+            else if (index_id > 0 && index_id < 9) {
+
+            }
+            // key
+            else if (index_id === 9 || index_id === 10) {
+
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    
+    
 }
 
 

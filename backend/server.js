@@ -174,6 +174,10 @@ app.get('/api/users/:userId/inventoryCount', inventoryController.getInventoryCou
 app.get('/api/inventoryIndex', inventoryController.getInventoryIndex);
 app.get('/api/users/:userId/tenPull', inventoryController.gachaResult);
 app.get('/api/users/:userId/onePull', inventoryController.gachaResultSingle);
+app.get('/api/users/:userId/NormalObtain', inventoryController.NormalKeyObtain);
+app.get('/api/users/:userId/MythicalObtain', inventoryController.MythicalKeyObtain);
+app.get('/api/users/:userId/:index_id/ItemUse', inventoryController.ItemUsage);
+
 
 // Quest Routes
 app.get('/api/quests', questController.getAllQuests);
@@ -206,7 +210,7 @@ app.post('/api/user/:userId/restore-quest-point', questController.restoreQuestPo
 app.post('/api/user/:userId/quest/:questId/start', questController.startBountyQuest);
 
 // Pets Routes
-app.get('/api/users/:userId/userPetGet', petsController.PetsDataObtain);
+
 
 // Overlay Profile Route
 app.get('/api/user/overlay-profile', protect, async (req, res) => {
