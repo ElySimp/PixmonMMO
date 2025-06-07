@@ -115,6 +115,7 @@ class User {
                     diamonds INT DEFAULT 0,
                     quest_points INT DEFAULT 10,
                     quest_point_cooldown DATETIME DEFAULT NULL,
+                    quest_point_last_update DATETIME DEFAULT CURRENT_TIMESTAMP,
                     cooldownEnd DATETIME DEFAULT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at DATETIME DEFAULT NULL,
@@ -157,7 +158,7 @@ class User {
             
             // Create initial stats
             await db.query(
-                'INSERT INTO UserStats (user_id, xp, gold, level, cooldownEnd, updated_at, quest_points, diamonds) VALUES (?, 0, 0, 1, NULL, ?, 10, 0)',
+                'INSERT INTO UserStats (user_id, xp, gold, level, cooldownEnd, updated_at, quest_points, diamonds, quest_point_last_update) VALUES (?, 0, 0, 1, NULL, ?, 10, 0, NOW())',
                 [userId, now]
             );
 
@@ -288,6 +289,7 @@ class User {
     // Get stats for a user
     static async getStats(userId) {
         try {
+            await this.regenQuestPoints(userId);
             // Check if multiple stats records exist for this user
             const [statCount] = await db.query(
                 'SELECT COUNT(*) as count FROM UserStats WHERE user_id = ?',
@@ -314,7 +316,7 @@ class User {
             
             // Get the user's stats (now there should be only one record or none)
             const [existingStats] = await db.query(
-                'SELECT level, xp, gold, diamonds, quest_points, quest_point_cooldown, cooldownEnd FROM UserStats WHERE user_id = ?',
+                'SELECT level, xp, gold, diamonds, quest_points, quest_point_cooldown, quest_point_last_update, cooldownEnd FROM UserStats WHERE user_id = ?',
                 [userId]
             );
             
@@ -328,6 +330,7 @@ class User {
                     diamonds: 0, 
                     quest_points: 10, 
                     quest_point_cooldown: null, 
+                    quest_point_last_update: null,
                     cooldownEnd: null 
                 };
             }
@@ -339,6 +342,7 @@ class User {
                 diamonds: existingStats[0].diamonds || 0,
                 quest_points: existingStats[0].quest_points || 0,
                 quest_point_cooldown: existingStats[0].quest_point_cooldown,
+                quest_point_last_update: existingStats[0].quest_point_last_update,
                 cooldownEnd: existingStats[0].cooldownEnd
             };
         } catch (error) {
@@ -579,6 +583,31 @@ class User {
         } catch (error) {
             console.error('Error updating diamonds:', error);
             throw error;
+        }
+    }
+
+    static async regenQuestPoints(userId) {
+        const [rows] = await db.query(
+            'SELECT quest_points, quest_point_last_update FROM UserStats WHERE user_id = ?',
+            [userId]
+        );
+        if (!rows.length) return;
+
+        let { quest_points, quest_point_last_update } = rows[0];
+        if (quest_points >= 10) return;
+
+        const lastUpdate = quest_point_last_update ? new Date(quest_point_last_update) : new Date();
+        const now = new Date();
+        const diffMs = now - lastUpdate;
+        const regenCount = Math.floor(diffMs / (10 * 60 * 1000)); // 10 menit per point
+
+        if (regenCount > 0) {
+            const newQuestPoints = Math.min(10, quest_points + regenCount);
+            const newLastUpdate = new Date(lastUpdate.getTime() + regenCount * 10 * 60 * 1000);
+            await db.query(
+                'UPDATE UserStats SET quest_points = ?, quest_point_last_update = ? WHERE user_id = ?',
+                [newQuestPoints, newLastUpdate, userId]
+            );
         }
     }
 }

@@ -19,6 +19,112 @@ class Quest {
         `;
         await db.query(sql);
         console.log('Quest table created or already exists');
+
+        // Seed initial quests if empty
+        const [count] = await db.query('SELECT COUNT(*) as count FROM Quest');
+        if (count[0].count === 0) {
+            await this.seedInitialQuests();
+        }
+    }
+
+    static async seedInitialQuests() {
+        const quests = [
+            // 5 Daily Quests
+            {
+                name: "Daily Login",
+                description: "Login to the game today.",
+                xp_reward: 50,
+                gold_reward: 25,
+                repeat_type: "daily",
+                level_required: 1,
+                quest_points_required: 0
+            },
+            {
+                name: "Take 5 Steps",
+                description: "Take 5 steps in the adventure.",
+                xp_reward: 100,
+                gold_reward: 50,
+                repeat_type: "daily",
+                level_required: 1,
+                quest_points_required: 0
+            },
+            {
+                name: "Take 20 Steps",
+                description: "Take 20 steps in the adventure.",
+                xp_reward: 200,
+                gold_reward: 100,
+                repeat_type: "daily",
+                level_required: 1,
+                quest_points_required: 0
+            },
+            {
+                name: "Win 1 Battle",
+                description: "Win 1 battle against a wild Pixmon.",
+                xp_reward: 120,
+                gold_reward: 60,
+                repeat_type: "daily",
+                level_required: 1,
+                quest_points_required: 0
+            },
+            {
+                name: "Collect 100 Gold",
+                description: "Collect a total of 100 gold today.",
+                xp_reward: 80,
+                gold_reward: 40,
+                repeat_type: "daily",
+                level_required: 1,
+                quest_points_required: 0
+            },
+            // 3 Bounty Quests
+            {
+                name: "Defeat 3 Wild Pixmon",
+                description: "Defeat 3 wild Pixmon in battle.",
+                xp_reward: 300,
+                gold_reward: 150,
+                repeat_type: "bounty",
+                level_required: 1,
+                quest_points_required: 1
+            },
+            {
+                name: "Earn 500 Gold",
+                description: "Earn a total of 500 gold from any source.",
+                xp_reward: 400,
+                gold_reward: 200,
+                repeat_type: "bounty",
+                level_required: 1,
+                quest_points_required: 1
+            },
+            {
+                name: "Catch 3 Unique Pixmon",
+                description: "Catch 3 different Pixmon species.",
+                xp_reward: 500,
+                gold_reward: 250,
+                repeat_type: "bounty",
+                level_required: 1,
+                quest_points_required: 1
+            }
+        ];
+
+        for (const quest of quests) {
+            try {
+                await db.query(`
+                    INSERT INTO Quest 
+                    (name, description, xp_reward, gold_reward, repeat_type, level_required, quest_points_required)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                `, [
+                    quest.name,
+                    quest.description,
+                    quest.xp_reward,
+                    quest.gold_reward,
+                    quest.repeat_type,
+                    quest.level_required,
+                    quest.quest_points_required
+                ]);
+            } catch (error) {
+                console.error(`Error seeding quest ${quest.name}:`, error);
+            }
+        }
+        console.log('Seeded initial quests');
     }
 }
 
@@ -63,9 +169,7 @@ class UserQuest {
             await db.query(
                 'INSERT INTO UserQuest (user_id, quest_id, completed, claimed) VALUES (?, ?, FALSE, FALSE)',
                 [userId, quest.id]
-            );            if (isLoginQuest) {
-                // Daily Login Quest auto-completed
-            }
+            ); 
         }
     }
 
