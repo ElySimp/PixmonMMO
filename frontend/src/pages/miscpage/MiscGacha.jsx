@@ -8,8 +8,17 @@ import { API_URL } from '../../utils/config';
 async function sendInventoryCountRequest(userId) {
   try {
     await fetch(`${API_URL}/users/${userId}/tenPull`);
+    
   } catch (e) {
     console.error('Fetch failed:', e);
+  }
+}
+
+async function singlePull(userId) {
+  try {
+    await fetch(`${API_URL}/users/${userId}/onePull`);
+  } catch (e) {
+    console.error(e);
   }
 }
 
@@ -24,6 +33,14 @@ const MiscGacha = () => {
       console.log('User not logged in yet');
     }
   };
+
+  const handleOnePull = () => {
+    if (user?.id) {
+      singlePull(user.id);
+    } else {
+      console.log("single fail");
+    }
+  }
 
   return (
     <div className="miscGacha-Container">
@@ -49,7 +66,16 @@ const MiscGacha = () => {
             <div className="miscgacha-rates">View Details</div>
 
             <div className="miscgacha-pull-container">
-              <div className="miscgacha-pull">1x Pull</div>
+              <div
+                className="miscgacha-pull"
+                onClick={handleOnePull}
+                style={{ cursor: 'pointer' }}
+                role="button"
+                tabIndex={0}
+                onKeyPress={(e) => { if(e.key === 'Enter') handleOnePull(); }}
+              >
+                1x Pull
+              </div>
 
               <div
                 className="miscgacha-pull"

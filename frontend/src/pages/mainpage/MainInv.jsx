@@ -6,13 +6,20 @@ import potion from '../../assets/inv_asset/potion.png';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../utils/config';
 
-// Add CSS for empty inventory message
 const emptyInventoryStyle = {
   textAlign: 'center',
   padding: '20px',
   color: '#777',
   fontSize: '16px'
 };
+
+async function itemUse(userId, index_id) {
+  try {
+    await fetch(`${API_URL}/users/${userId}/${index_id}/ItemUse`);
+  } catch (error) {
+    console.error(error);
+  }
+}
 
 async function getInventoryCount(userId) {
   try {
@@ -53,28 +60,29 @@ async function getIndexInventory() {
 
 const MainInv = () => {
   const { user, loading: authLoading } = useAuth();
-  const [count, setCount] = useState(0); // Initialize with 0 instead of null
+  const [count, setCount] = useState(0);
   const [inventory, setInventory] = useState([]);
   const [inventoryIndex, setInventoryIndex] = useState([]);
   const [selectedOption, setSelectedOption] = useState("all");
   const [showInventory, setShowInventory] = useState(true);
 
+  const reloadInventory = async () => {
+    if (user && user.id) {
+      const [newInventory, newCount] = await Promise.all([
+        getInventoryData(user.id),
+        getInventoryCount(user.id)
+      ]);
+      setInventory(newInventory);
+      setCount(newCount);
+    }
+  };
+
   const handleChange = (e) => {
-  const newValue = e.target.value;
-
-  // Hide inventory content immediately
-  setShowInventory(false);
-
-  // Update the filter option
-  setSelectedOption(newValue);
-
-  // Show the inventory again after state update
-  setTimeout(() => {
-    setShowInventory(true);
-  }, 0);
-};
-
-  
+    const newValue = e.target.value;
+    setShowInventory(false);
+    setSelectedOption(newValue);
+    setTimeout(() => setShowInventory(true), 0);
+  };
 
   useEffect(() => {
     if (authLoading) return;
@@ -90,7 +98,6 @@ const MainInv = () => {
         .then(setCount)
         .catch(() => setCount(0));
     } else {
-      console.log('No user found');
       setCount(0);
     }
   }, [user, authLoading]);
@@ -102,42 +109,56 @@ const MainInv = () => {
         .then(setInventory)
         .catch(() => setInventory([]));
     } else {
-      console.log('No user found');
       setInventory([]);
     }
   }, [user, authLoading]);
 
-  function InventoryItem({ item , filter}) {
+  function InventoryItem({ item, filter }) {
     const [isOpen, setIsOpen] = useState(false);
-    if ( filter === "all" ){
-      console.log("no filter");
-    }
-    else if (filter !== item.item_type) {
+    const { user } = useAuth();
+
+    if (filter !== "all" && filter !== item.item_type) {
       return null;
     }
-    
-    // Safely get description and image with fallbacks
+
+    const handleUse = async () => {
+      if (user && user.id && item.index_id) {
+        await itemUse(user.id, item.index_id);
+        setIsOpen(false);
+        await reloadInventory(); // ✅ Reload after using item
+      }
+    };
+
     return (
       <div className="maininv-item-container">
         <div className="maininv-inventory-items" onClick={() => setIsOpen(true)}>
           <div className="maininv-amt"> x{item.amount || 1} </div>
           <div className="maininv-items">
-            <img src={potion} alt="potion"/>
+            <img src={potion} alt="potion" />
           </div>
         </div>
 
         {isOpen && (
           <div className="maininv-centered-box" onClick={() => setIsOpen(false)}>
             <div className="maininv-box-content" onClick={e => e.stopPropagation()}>
-              <span className="maininv-close-btn" onClick={() => setIsOpen(false)}>&times;</span>
               <div className="overlay-name">{item.item_name}</div>
               <div className="maininv-items">
                 <img src={potion} alt="potion" />
-              </div>              <div className="maininv-item-stats">effect : {item.effect_value || 0}%</div>
+              </div>
+              <div className="maininv-item-stats">effect : {item.effect_value || 0}%</div>
               <div className="maininv-description">
-                {inventoryIndex && item.index_id && inventoryIndex[item.index_id - 1] 
-                  ? inventoryIndex[item.index_id - 1].description 
+                {inventoryIndex && item.index_id && inventoryIndex[item.index_id - 1]
+                  ? inventoryIndex[item.index_id - 1].description
                   : "No description available"}
+              </div>
+
+              <div className="maininv-buttons" style={{ display: "flex", gap: "1rem", marginTop: "1rem", justifyContent: "center" }}>
+                <button className="maininv-overlay-btns" onClick={handleUse}>
+                  Use
+                </button>
+                <button className="maininv-overlay-btns" onClick={() => setIsOpen(false)}>
+                  Close
+                </button>
               </div>
             </div>
           </div>
@@ -146,12 +167,11 @@ const MainInv = () => {
     );
   }
 
- function MainInvCreation({ inventory, filter }) {
-  return inventory.map((item, index) => (
-    <InventoryItem key={item.id || index} item={item} filter={filter}/>
-  ));
-}
-
+  function MainInvCreation({ inventory, filter }) {
+    return inventory.map((item, index) => (
+      <InventoryItem key={item.id || index} item={item} filter={filter} />
+    ));
+  }
 
   return (
     <div className="maininv-invCont">
@@ -173,31 +193,32 @@ const MainInv = () => {
             <label>Choose a type</label>
             <br />
             <select
-                id="Sort"
-                name="Choice"
-                className="maininv-inventory-sorting-content"
-                value={selectedOption}
-                onChange={handleChange}
-              >
-                <option value="all">All</option>
-                <option value="potion">Potion</option>
-                <option value="food">Food</option>
-                <option value="key">Key</option>
-              </select>
+              id="Sort"
+              name="Choice"
+              className="maininv-inventory-sorting-content"
+              value={selectedOption}
+              onChange={handleChange}
+            >
+              <option value="all">All</option>
+              <option value="potion">Potion</option>
+              <option value="food">Food</option>
+              <option value="key">Key</option>
+            </select>
           </div>
 
           <div className="maininv-right-side-inv">
             <div className="maininv-inventory-Info">
-              <label className="maininv-inv-word">Inventory</label>              <div className="maininv-inventory-capacity">
+              <label className="maininv-inv-word">Inventory</label>
+              <div className="maininv-inventory-capacity">
                 capacity : {count} / 100 (User ID: {user?.id})
               </div>
-            </div>            <div className="maininv-actual-inventory">              {showInventory && (
-                inventory.length > 0 ? (
-                  <MainInvCreation inventory={inventory} filter={selectedOption} />
-                ) : (
-                  <div style={emptyInventoryStyle}>Your inventory is empty</div>
-                )
-              )}
+            </div>
+            <div className="maininv-actual-inventory">
+              {showInventory && (inventory.length > 0 ? (
+                <MainInvCreation inventory={inventory} filter={selectedOption} />
+              ) : (
+                <div style={emptyInventoryStyle}>Your inventory is empty</div>
+              ))}
             </div>
           </div>
         </div>

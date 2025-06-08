@@ -21,6 +21,7 @@ exports.initInventoryTables = async (req, res) => {
 exports.getAllInventory = async (req, res) => {
     try {
         const userId = req.params.userId;
+        
         let inventory = [];
 
         if (userId) {
@@ -98,7 +99,7 @@ exports.gachaResult = async (req, res) => {
             return res.status(400).json({ error: 'User ID is required' });
         }
 
-        await Inventory.gachaResultMultiStore(userId);
+        await Inventory.gachaResultMultiStore(userId, 10);
 
         return res.status(200).json({ message: 'Gacha pull successful' });
 
@@ -107,6 +108,77 @@ exports.gachaResult = async (req, res) => {
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+exports.gachaResultSingle = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        await Inventory.gachaResultMultiStore(userId, 1);
+
+        return res.status(200).json({ message: 'Gacha pull successful' });
+
+    } catch (error) {
+        console.error('Error in gachaResult controller:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+exports.NormalKeyObtain = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        await Inventory.normalKeyObtain(userId)
+
+        return res.status(200).json({ message: 'obtainment succesful' });
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+exports.MythicalKeyObtain = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        await Inventory.MythicalKeyObtain(userId)
+
+        return res.status(200).json({ message: 'obtainment succesful' });
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+exports.ItemUsage = async (req, res) => {
+    console.log('ItemUsage controller triggered', req.params);
+    try {
+        const userId = req.params.userId;
+        // Parse index_id as integer for consistent type handling
+        const index_id = parseInt(req.params.index_id, 10);
+
+        if (isNaN(index_id)) {
+            return res.status(400).json({ error: 'Invalid index_id parameter' });
+        }
+
+        await Inventory.itemUse(userId, index_id);
+        return res.status(200).json({ message: 'usage successful' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+
 
 
 

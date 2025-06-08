@@ -64,7 +64,7 @@ class Inventory {
                 index_id int(11), 
                 user_id int(11), 
                 item_type varchar(100), 
-                gacha_date TIME,
+                created_at DATETIME,
                 FOREIGN KEY (user_id) REFERENCES UserLogin(id) ON DELETE CASCADE
             )
         `;
@@ -268,18 +268,19 @@ class Inventory {
         }
     }
 
-    static async gachaResultMultiStore(userId) {
+    static async gachaResultMultiStore(userId, limit) {
         function chooseRarity() {
             const random = Math.random() * 100;
             if (random < 60) return 1;
-            else if (random < 80) return 2;
+            else if (random < 90) return 2;
             else return 3;
         }
 
+    
         try {
             let stored = 0;
 
-            while (stored < 10) {
+            while (stored < limit) {
                 const chosenRarity = chooseRarity();
 
                 const [items] = await db.query(
@@ -302,10 +303,13 @@ class Inventory {
                 const randomIndex = Math.floor(Math.random() * filteredItems.length);
                 const selectedItem = filteredItems[randomIndex];
 
+                const now = new Date();
+
+                // gacha history
                 await db.query(
                     `INSERT INTO gachaResult 
-                        (item_name, atk_value, effect_value, def_value, index_id, user_id, item_type, gacha_date)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+                        (item_name, atk_value, effect_value, def_value, index_id, user_id, item_type, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                     [
                         selectedItem.item_name,
                         0, // atk_value placeholder
@@ -313,10 +317,55 @@ class Inventory {
                         0, // def_value placeholder
                         selectedItem.index_id,
                         userId,
-                        selectedItem.item_type
+                        selectedItem.item_type, 
+                        now
                     ]
                 );
-
+                
+                
+                const [rows] = await db.query('SELECT COUNT(*) AS count FROM UserInventory WHERE user_id = ? AND index_id = ?', [userId, selectedItem.index_id]);
+                // UserInventory pushing
+                // cek udh ada ato lom
+                rows[0].count;
+                if (rows[0].count === 0) {
+                    await db.query(`
+                        INSERT INTO UserInventory 
+                            (item_name, atk_value, effect_value, def_value, index_id, user_id, item_type, amount)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        `, 
+                        [
+                            selectedItem.item_name, 
+                            0, // atk
+                            selectedItem.effect_base,
+                            0, // def
+                            selectedItem.index_id,
+                            userId, 
+                            selectedItem.item_type, 
+                            1
+                        ]
+                    );
+                }
+                else if (rows[0].count > 0) {
+                    await db.query(`
+                        UPDATE UserInventory 
+                        SET amount = amount + 1
+                        WHERE user_id = ? AND index_id = ?
+                        `, [userId, selectedItem.index_id]
+                    );
+                }
+                
+                const [rows2] = await db.query('SELECT COUNT(*) AS count FROM gachaResult WHERE user_id = ?', [userId]);
+                
+                if (rows2[0].count > 21) {
+                    await db.query(`
+                        DELETE FROM gachaResult
+                        WHERE user_id = ?
+                        ORDER BY created_at ASC
+                        LIMIT 1 ;
+                        `, [userId]
+                    );
+                }
+                
                 stored++;
             }
         } catch (err) {
@@ -324,9 +373,119 @@ class Inventory {
         }
 }
 
-    static async gachaResultMultiGet (userId) {
+    static async normalKeyObtain (userId) {
+        const [rows] = ('SELECT COUNT(*) AS count FROM UserInventory WHERE user_id = ? AND index_id = ?', [userId, 9])
 
+        if (rows[0].count === 0) {
+            await db.query(`
+                INSERT INTO UserInventory (item_name, atk_value, effect_value, def_value, index_id, user_id, item_type, amount)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            
+                `, ['Steel Key', 0, 0, 0, 9, userId, 'key', 1]
+            )
+        }
+
+        else if (rows[0].count > 0) {
+            await db.query(`
+                UPDATE UserInventory
+                SET amount = amount + 1
+                WHERE user_id = ? AND index_id = ?
+                `, [userId, 9]
+            );
+        }
     }
+
+    static async MythicalKeyObtain (userId) {
+        const [rows] = ('SELECT COUNT(*) AS count FROM UserInventory WHERE user_id = ? AND index_id = ?', [userId, 9])
+
+        if (rows[0].count === 0) {
+            await db.query(`
+                INSERT INTO UserInventory (item_name, atk_value, effect_value, def_value, index_id, user_id, item_type, amount)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            
+                `, ['Mythical Key', 0, 0, 0, 10, userId, 'key', 1]
+            )
+        }
+
+        else if (rows[0].count > 0) {
+            await db.query(`
+                UPDATE UserInventory
+                SET amount = amount + 1
+                WHERE user_id = ? AND index_id = ?
+                `, [userId, 10]
+            );
+        }
+    }
+
+    static async itemUse (userId, index_id) {
+        // inget masukin ini ke controller buat index id
+        // const index_id = parseInt(req.params.index_id, 10); // base 10
+
+        try {
+            // health
+            if (index_id === 3) {
+                const [rows] = await db.query('SELECT max_hp, current_hp FROM UserStats WHERE user_id = ?', [userId]);
+                const HP = rows[0];
+                console.log('query run', `max_hp: ${HP.max_hp}`, `current_hp: ${HP.current_hp}`);
+                const heal = 30 * HP.max_hp / 100;
+
+                // heal = 0.3 * HP.max_hp;
+
+                if (heal + HP.current_hp > HP.max_hp) {
+                    console.log('hp potion used');
+                    await db.query(`
+                        UPDATE UserStats 
+                        SET current_hp = ?
+                        WHERE user_id = ?
+                        `, [HP.max_hp, userId]
+                    );
+
+                    await db.query(`
+                        UPDATE UserInventory 
+                        SET amount = amount - 1
+                        WHERE user_id = ? AND index_id = ?
+                        `, [userId, index_id]
+                    );
+                }
+
+                else if (heal + HP.current_hp <= HP.max_hp) {
+                    console.log('hp potion used')
+                    await db.query(`
+                        UPDATE UserStats 
+                        SET current_hp = current_hp + ?
+                        WHERE user_id = ?
+                        `, [heal, userId]
+                    );
+
+                    await db.query(`
+                        UPDATE UserInventory 
+                        SET amount = amount - 1
+                        WHERE user_id = ? AND index_id = ?
+                        `, [userId, index_id]
+                    );
+                }
+
+                console.log('usage complete');
+            }
+            // mana
+            else if (index_id === 2) {
+                
+            }
+            // food
+            else if (index_id > 0 && index_id < 9) {
+
+            }
+            // key
+            else if (index_id === 9 || index_id === 10) {
+
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    
+    
 }
 
 

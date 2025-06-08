@@ -9,6 +9,8 @@ const API_URL = "http://localhost:5000";
 function BountyQuest() {
   const [questPoints, setQuestPoints] = useState(10);
   const [bountyQuests, setBountyQuests] = useState([]);
+  const [nextRegen, setNextRegen] = useState(null); // waktu regen berikutnya (Date)
+  const [regenCountdown, setRegenCountdown] = useState(""); // string waktu mundur
   const [claimedQuests, setClaimedQuests] = useState({});
   const [loading, setLoading] = useState(true);
   const [playerStats, setPlayerStats] = useState({
@@ -26,6 +28,15 @@ function BountyQuest() {
         const statsData = statsRes.data.data || statsRes.data;
         setQuestPoints(statsData.quest_points || 0);
         setPlayerStats(statsData);
+
+        // Ambil waktu regen berikutnya
+        if (statsData.quest_point_last_update && statsData.quest_points < 10) {
+          const last = new Date(statsData.quest_point_last_update);
+          const next = new Date(last.getTime() + 10 * 60 * 1000);
+          setNextRegen(next);
+        } else {
+          setNextRegen(null);
+        }
 
         // Fetch all quests, filter bounty
         const questRes = await axios.get(`${API_URL}/api/quests`);
@@ -50,6 +61,26 @@ function BountyQuest() {
     };
     fetchData();
   }, []);
+
+  // Timer countdown effect
+  useEffect(() => {
+    if (!nextRegen) {
+      setRegenCountdown("");
+      return;
+    }
+    const interval = setInterval(() => {
+      const now = new Date();
+      const diff = nextRegen - now;
+      if (diff <= 0) {
+        setRegenCountdown("Soon!");
+      } else {
+        const min = Math.floor(diff / 60000);
+        const sec = Math.floor((diff % 60000) / 1000);
+        setRegenCountdown(`${min}:${sec.toString().padStart(2, '0')}`);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [nextRegen]);
 
   // Fungsi restore quest point
   const handleRestoreQuestPoint = async () => {
@@ -140,7 +171,14 @@ function BountyQuest() {
 
   const progressPercent = (questPoints / 10) * 100;
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div className="miscquest-loading-container">
+        <div className="miscquest-loading-spinner"></div>
+        <div>Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="quest-container">
@@ -157,10 +195,15 @@ function BountyQuest() {
             style={{ "--progress-percent": `${progressPercent}%` }}
           ></div>
         </div>
-        <div className='bounty-progress-bar-bottom'>
-          <span>{questPoints}/10</span>
+        <div className='bounty-progress-bar-bottom'> {questPoints}/10 </div>
+        <div className='restore-qp'>
           {questPoints < 10 && (
-            <button onClick={handleRestoreQuestPoint}>Restore with 1 Diamond</button>
+            <>
+              <button onClick={handleRestoreQuestPoint}>Restore with 1 Diamond</button>
+              <span className="quest-point-timer">
+                Regen : {regenCountdown}
+              </span>
+            </>
           )}
         </div>
         {/* Player Stats Bar (seperti di DailyQuest) */}

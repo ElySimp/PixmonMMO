@@ -14,9 +14,14 @@ function getDailyKeyDate() {
 function DailyQuest() {
     const [userQuests, setUserQuests] = useState([]);
     const [mainRewardClaimed, setMainRewardClaimed] = useState(false);
+    const [playerStats, setPlayerStats] = useState({ level: 1, gold: 0, xp: 0, diamonds: 0, quest_points: 0 });
+    const [steps, setSteps] = useState(0);
+    const [loading, setLoading] = useState(true); // Tambahkan state loading
+
     // localStorage.setItem('userId', response.data.data.user.id);
 
     useEffect(() => {
+        setLoading(true);
         refreshQuestStatus();
     }, []);
 
@@ -25,16 +30,15 @@ function DailyQuest() {
             const userId = localStorage.getItem('userId'); // Ambil userId yang sedang login
             const response = await axios.get(`${API_URL}/api/user/${userId}/quests`);
             const quests = Array.isArray(response.data) ? response.data : (response.data.data || []);
-            // console.log("API QUESTS:", quests); buat cek apakah data sudah benar
             const dailyQuests = quests.filter(q => q.repeat_type === "daily");
             setUserQuests(dailyQuests);
         } catch (error) {
             console.error("🚨 Error refreshing quest status:", error);
+        } finally {
+            setLoading(false); 
         }
     };
-    const [playerStats, setPlayerStats] = useState({ level: 1, gold: 0, xp: 0, diamonds: 0, quest_points: 0 });
-
-    const [steps, setSteps] = useState(0);
+    
 
     useEffect(() => {
         const userId = localStorage.getItem('userId');
@@ -96,6 +100,15 @@ function DailyQuest() {
     // const completed = userQuests.filter(q => q.completed).length;
     const claimed = userQuests.filter(q => q.claimed).length;
     const progressPercent = userQuests.length > 0 ? (claimed / userQuests.length) * 100 : 0;
+
+    if (loading) {
+        return (
+            <div className="miscquest-loading-container">
+                <div className="miscquest-loading-spinner"></div>
+                <div>Loading...</div>
+            </div>
+        );
+    }
 
     return (
         <div className="quest-container">
