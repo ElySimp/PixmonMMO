@@ -424,11 +424,11 @@ class User {
                 'UPDATE UserStats SET level = ?, updated_at = ? WHERE user_id = ?',
                 [newLevel, now, userId]
             );
-            // Update UserProfile level and add skill points
+            // Update UserProfile skill points only (level is stored in UserStats)
             const skillPointsToAdd = 1;
             await db.query(
-                'UPDATE UserProfile SET level = ?, skill_points = skill_points + ?, updated_at = ? WHERE user_id = ?',
-                [newLevel, skillPointsToAdd, now, userId]
+                'UPDATE UserProfile SET skill_points = skill_points + ?, updated_at = ? WHERE user_id = ?',
+                [skillPointsToAdd, now, userId]
             );
         } catch (error) {
             console.error('Error updating level:', error);

@@ -11,12 +11,14 @@ const User = require('./models/User');
 const Achievement = require('./models/Achievement');
 const Inventory = require('./models/Inventory');
 const UserProfile = require('./models/UserProfile');
+const DailyRewards = require('./models/DailyRewards');
 const inventoryController = require('./controllers/inventoryController');
 const { initializeTables, QuestSystem, UserQuest } = require('./models/QuestSystem');
 const authController = require('./controllers/authController');
 const achievementController = require('./controllers/achievementController');
 const questController = require('./controllers/questController');
 const userProfileController = require('./controllers/userProfileController');
+const dailyRewardsController = require('./controllers/dailyRewardsController');
 const petsController = require('./controllers/petsController');
 const { protect } = require('./middleware/auth');
 const checkAndFixDuplicateStats = require('./scripts/maintenance/check-and-fix-stats');
@@ -39,12 +41,12 @@ if (process.env.NODE_ENV === 'development') {
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database initialization function
-async function initializeDatabaseTables() {
-    const initSteps = [
+async function initializeDatabaseTables() {    const initSteps = [
         'UserLogin Table',
         'UserStats Table', 
         'Achievement Tables',
         'UserProfile Tables',
+        'DailyRewards Table',
         'Inventory Tables',
         'Pets Tables',
         'Quest Tables',
@@ -68,13 +70,16 @@ async function initializeDatabaseTables() {
         logger.dbStep('Achievement Tables', 'running');
         await Achievement.createTable();
         await Achievement.createUserAchievementsTable();
-        logger.dbStep('Achievement Tables', 'success');
-
-        // Initialize UserProfile tables
+        logger.dbStep('Achievement Tables', 'success');        // Initialize UserProfile tables
         logger.dbStep('UserProfile Tables', 'running');
         await UserProfile.createTable();
         await UserProfile.createWallpapersTable();
         logger.dbStep('UserProfile Tables', 'success');
+        
+        // Initialize DailyRewards table
+        logger.dbStep('DailyRewards Table', 'running');
+        await DailyRewards.createTable();
+        logger.dbStep('DailyRewards Table', 'success');
 
         // Initialize Inventory tables
         logger.dbStep('Inventory Tables', 'running');
@@ -167,6 +172,11 @@ app.get('/api/pets/:petId', userProfileController.getPet);
 
 // Initialization Routes
 app.post('/api/init-userprofile', userProfileController.initUserProfileTables);
+app.post('/api/init-daily-rewards', dailyRewardsController.initDailyRewardsTable);
+
+// Daily Rewards Routes
+app.get('/api/users/:userId/daily-rewards', dailyRewardsController.getUserDailyRewards);
+app.post('/api/users/:userId/claim-daily-reward', dailyRewardsController.claimDailyReward);
 
 // Inventory Routes
 app.get('/api/users/:userId/inventoryGet', inventoryController.getAllInventory);
@@ -250,6 +260,7 @@ logger.separator('API Routes Registered');
 logger.info('✅ Authentication routes: /api/auth/*', 'ROUTES');
 logger.info('✅ User stats routes: /api/user/stats, /api/users/:userId/stats', 'ROUTES');
 logger.info('✅ Achievement routes: /api/achievements, /api/users/:userId/achievements', 'ROUTES');
+logger.info('✅ Daily rewards routes: /api/users/:userId/daily-rewards', 'ROUTES');
 logger.info('✅ Profile routes: /api/userprofile/:userId/*', 'ROUTES');
 logger.info('✅ Inventory routes: /api/users/:userId/inventory*', 'ROUTES');
 logger.info('✅ Quest routes: /api/quests, /api/user/:userId/quest*', 'ROUTES');

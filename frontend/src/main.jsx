@@ -9,6 +9,7 @@ import Register from './pages/loginregist/Register.jsx'
 import MainHome from './pages/mainpage/MainHome.jsx'
 import MainInv from './pages/mainpage/MainInv.jsx'
 import MainAchievement from './pages/mainpage/MainAchievement.jsx'
+import HomeDaily from './pages/mainpage/HomeDaily.jsx'
 import MiscQuest from './pages/miscpage/MiscQuest.jsx'
 import MiscProfile from './pages/miscpage/MiscProfile.jsx' 
 import MiscPets from "./pages/miscpage/MiscPets.jsx"
@@ -35,7 +36,9 @@ createRoot(document.getElementById('root')).render(
           <Route path="/profile" element={<MiscProfile />} />
           <Route path="/pets" element={<MiscPets />} />
           <Route path="/shop" element={<MiscShop />} />
-          <Route path="/adventure" element={<Adventure />} />          <Route path="/friends" element={<Friends />} />
+          <Route path="/adventure" element={<Adventure />} />
+          <Route path="/daily" element={<HomeDaily />} />
+          <Route path="/friends" element={<Friends />} />
           <Route path="/gacha" element={<MiscGacha/>}/>
           <Route path="/support" element={<Support />} />
         </Routes>
