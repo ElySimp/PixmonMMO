@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './MainInv.css';
 import Topbar from '../../components/Topbar';
 import Sidebar from '../../components/Sidebar';
@@ -60,6 +61,7 @@ async function getIndexInventory() {
 
 const MainInv = () => {
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [count, setCount] = useState(0);
   const [inventory, setInventory] = useState([]);
   const [inventoryIndex, setInventoryIndex] = useState([]);
@@ -176,10 +178,9 @@ const MainInv = () => {
   return (
     <div className="maininv-invCont">
       <Sidebar profilePic="/dummy.jpg" />
-      <div className="maininv-invContent">
-        <Topbar
+      <div className="maininv-invContent">        <Topbar
           onMenuClick={() => console.log('Menu clicked')}
-          onSupportClick={() => console.log('Support clicked')}
+          onSupportClick={() => navigate('/support')}
           onFriendsClick={() => console.log('Friends clicked')}
           onSearch={(value) => console.log('Search:', value)}
           onChatClick={() => console.log('Chat clicked')}

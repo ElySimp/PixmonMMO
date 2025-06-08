@@ -23,9 +23,9 @@ const MainHome = () => {
   const handleMenuClick = () => {
     console.log('Menu clicked');
   };
-
   const handleSupportClick = () => {
     console.log('Support clicked');
+    navigate('/support');
   };
 
   const handleFriendsClick = () => {

@@ -12,23 +12,26 @@
     align-items: center;
     gap: 2rem;
   }
-
   .topbar-menu {
     background: none;
     border: none;
-    color: white;
+    color: white !important; /* !important untuk memastikan warna ini tidak terpengaruh oleh aturan topbar-left button */
     font-size: 1.2rem;
     cursor: pointer;
-  }
-
-  .topbar-left button {
+  }.topbar-left button {
     background: none;
     border: none;
-    color: #ffffff;
+    color: #808080;
     cursor: pointer;
     padding: 0.5rem 1rem;
     font-size: 1.2rem;
+    transition: all 0.2s ease;
   }
+  
+  .topbar-left button:hover {
+    color: #ffffff;
+  }
+  
 
   .topbar-right {
     display: flex;
@@ -431,8 +434,40 @@
     cursor: pointer;
     transition: all 0.3s ease;
   }
-
   .topup-banner:hover {
     background-color: #2f2f2f;
-    color: #2196f3; 
+    color: #4a90e2; 
+  }
+  /* Support Service Button Styles */
+  .support-service-btn {
+    display: flex;
+    align-items: center;
+    background-color: transparent;
+    border: none;
+    color: #808080;
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .support-service-btn:hover {
+    color: #ffffff;
+    transform: translateY(-2px);
+  }
+
+  /* Active state for topbar items */
+  .topbar-item.active {
+    color: #ffffff;
+    position: relative;
+    background-color: #101011;
+  }
+  .topbar-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #4a90e2;
   }
