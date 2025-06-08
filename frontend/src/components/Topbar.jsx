@@ -305,9 +305,15 @@ function Topbar({
 
   return (
     <nav className="topbar">
-      <div className="topbar-left">
-        <button className="topbar-menu" onClick={onMenuClick}>☰</button>
-        <button onClick={onSupportClick}>Support Service</button>
+      <div className="topbar-left">        <button className="topbar-menu" onClick={onMenuClick}>☰</button>        <button 
+          className={`topbar-item support-service-btn ${isActive('/support') ? 'active' : ''}`}
+          onClick={() => {
+            onSupportClick?.();
+            navigate('/support');
+          }}
+        >
+          Support Service
+        </button>
         <button 
           className={`topbar-item ${isActive('/friends') ? 'active' : ''}`}
           onClick={() => navigate('/friends')}>Friends</button>
