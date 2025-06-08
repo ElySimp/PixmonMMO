@@ -96,9 +96,9 @@ const HomeDaily = () => {
       setLoading(false);
     }
   };
-  
-  // Load user daily rewards data from the database
-  useEffect(() => {    const fetchDailyRewardsData = async () => {
+    // Load user daily rewards data from the database
+  useEffect(() => {
+    const fetchDailyRewardsData = async () => {
       setLoading(true);
       try {
         const userId = localStorage.getItem('userId');
@@ -146,9 +146,7 @@ const HomeDaily = () => {
         // If there's next claim info, set the formatted countdown
         if (data.nextClaimInfo) {
           setClaimCountdown(formatNextClaimTime(data.nextClaimInfo));
-        }
-  
-      } catch (error) {
+        }      } catch (error) {
         console.error('Error fetching daily rewards data:', error);
         toast.error('Failed to load daily rewards data. Please try refreshing.', {
           position: "top-right",
@@ -162,7 +160,9 @@ const HomeDaily = () => {
       } finally {
         setLoading(false);
       }
-    };    fetchDailyRewardsData();
+    };
+    
+    fetchDailyRewardsData();
   }, []); // Empty dependency array to run only once
 
   // Set up interval to update claim countdown
@@ -346,46 +346,9 @@ const HomeDaily = () => {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
+        closeOnClick: true,        pauseOnHover: true,
         draggable: true,
       });
-    }
-  };
-
-  // Function to refresh daily rewards data
-  const refreshDailyRewards = async () => {
-    setLoading(true);
-    try {
-      const userId = localStorage.getItem('userId') || '1';
-      const response = await getUserDailyRewards(userId);
-      
-      console.log('Refreshed daily rewards data:', response);
-      
-      let data;
-      if (response && response.success && response.data) {
-        data = response.data;
-      } else if (response && !response.success) {
-        throw new Error(response.message || 'Failed to refresh daily rewards');
-      } else {
-        data = response;
-      }
-      
-      setActiveDay(data.current_day || 1);
-      setStreakCount(data.streak_count || 0);
-      setTotalClaimed(data.total_claimed || 0);
-      setLastClaimDate(data.last_claimed_date);
-      setCanClaimToday(data.canClaimToday !== undefined ? data.canClaimToday : true);
-      setNextClaimInfo(data.nextClaimInfo || null);
-      
-      if (data.nextClaimInfo) {
-        setClaimCountdown(formatNextClaimTime(data.nextClaimInfo));
-      }
-  
-    } catch (error) {
-      console.error('Error refreshing daily rewards data:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -477,7 +440,7 @@ const HomeDaily = () => {
                 )}
               </div>
               
-              <button className="refresh-button" onClick={refreshDailyRewards}>
+              <button className="refresh-button" onClick={refreshDailyRewardsData}>
                 <FaSyncAlt />
                 Refresh Rewards
               </button>

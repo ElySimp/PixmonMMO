@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Daily Rewards</title>
+</head>
+<body>
+    <h1>Debug Daily Rewards Frontend</h1>
+    <div id="status">Loading...</div>
+    <div id="data"></div>
+    
+    <script>
+        async function debugRewards() {
+            const statusDiv = document.getElementById('status');
+            const dataDiv = document.getElementById('data');
+            
+            try {
+                statusDiv.textContent = 'Testing API connectivity...';
+                
+                // Test the daily rewards API
+                const response = await fetch('http://localhost:5000/api/users/1/daily-rewards');
+                const data = await response.json();
+                
+                statusDiv.textContent = 'API Response received!';
+                dataDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                
+            } catch (error) {
+                statusDiv.textContent = 'Error: ' + error.message;
+                dataDiv.innerHTML = '<pre>Error details: ' + error.toString() + '</pre>';
+            }
+        }
+        
+        debugRewards();
+    </script>
+</body>
+</html>

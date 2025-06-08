@@ -9,9 +9,9 @@ import { API_URL } from '../utils/config';
 export const getUserDailyRewards = async (userId) => {
   try {
     console.log(`[DailyRewardsService] Fetching daily rewards for userId: ${userId}`);
-    console.log(`[DailyRewardsService] API URL: ${API_URL}/api/users/${userId}/daily-rewards`);
+    console.log(`[DailyRewardsService] API URL: ${API_URL}/users/${userId}/daily-rewards`);
     
-    const response = await axios.get(`${API_URL}/api/users/${userId}/daily-rewards`);
+    const response = await axios.get(`${API_URL}/users/${userId}/daily-rewards`);
     
     console.log(`[DailyRewardsService] API response status: ${response.status}`);
     console.log('[DailyRewardsService] API response data:', response.data);
@@ -37,7 +37,7 @@ export const claimDailyReward = async (userId, dayCompleted, rewardType, rewardA
     console.log(`[DailyRewardsService] Claiming daily reward for userId: ${userId}`);
     console.log(`[DailyRewardsService] Claim details:`, { dayCompleted, rewardType, rewardAmount });
     
-    const response = await axios.post(`${API_URL}/api/users/${userId}/claim-daily-reward`, {
+    const response = await axios.post(`${API_URL}/users/${userId}/claim-daily-reward`, {
       dayCompleted,
       rewardType,
       rewardAmount
