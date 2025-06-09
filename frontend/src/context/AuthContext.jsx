@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_URL, TOKEN_KEY } from '../utils/config';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AuthContext = createContext(null);
 
@@ -18,6 +20,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   }, []);
+    // No reminder service initialization
 
   const fetchUser = async (token) => {
     try {
@@ -33,7 +36,6 @@ export const AuthProvider = ({ children }) => {
       } else {
         // Token invalid, remove it
         localStorage.removeItem(TOKEN_KEY);
-        localStorage.setItem(TOKEN_KEY, data.data.token);
       }
     } catch (error) {
       console.error('Error fetching user:', error);
@@ -58,6 +60,8 @@ export const AuthProvider = ({ children }) => {
         setUser(data.data.user);
         localStorage.setItem(TOKEN_KEY, data.data.token); // gunakan TOKEN_KEY
         localStorage.setItem('userId', data.data.user.id);
+          // User logged in successfully
+        
         navigate('/main');
         return { success: true };
       } else {
@@ -94,7 +98,6 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
-
   const logout = () => {
     setUser(null);
     localStorage.removeItem(TOKEN_KEY); // gunakan TOKEN_KEY
@@ -109,7 +112,12 @@ export const AuthProvider = ({ children }) => {
     loading
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      <ToastContainer />
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
