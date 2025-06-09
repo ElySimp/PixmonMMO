@@ -471,3 +471,147 @@
     height: 2px;
     background-color: #4a90e2;
   }
+
+/* Logout Alert Overlay */
+.logout-alert-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  backdrop-filter: blur(3px);
+}
+
+/* Logout Alert Modal */
+.logout-alert-modal {
+  background-color: #101011;
+  border-radius: 8px;
+  padding: 0;
+  min-width: 320px;
+  max-width: 400px;
+  border: 1px solid #2a2a2a;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Alert Header */
+.logout-alert-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.logout-alert-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: center;
+}
+
+/* Alert Body */
+.logout-alert-body {
+  padding: 20px 24px;
+  text-align: center;
+}
+
+.logout-alert-body p {
+  margin: 0 0 12px 0;
+  color: #aaa;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.logout-alert-body p:last-child {
+  margin-bottom: 0;
+}
+
+/* Alert Actions */
+.logout-alert-actions {
+  padding: 16px 24px 20px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* Cancel Button */
+.logout-cancel-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid #2a2a2a;
+  background-color: transparent;
+  color: #808080;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logout-cancel-btn:hover {
+  background-color: #1a1a1a;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.logout-cancel-btn:active {
+  transform: translateY(0px);
+}
+
+/* Confirm Button */
+.logout-confirm-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  background-color: #dc2626;
+  color: #ffffff;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logout-confirm-btn:hover {
+  background-color: #b91c1c;
+  transform: translateY(-2px);
+}
+
+.logout-confirm-btn:active {
+  transform: translateY(0px);
+  background-color: #991b1b;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .logout-alert-modal {
+    margin: 20px;
+    min-width: auto;
+    width: calc(100% - 40px);
+  }
+  
+  .logout-alert-actions {
+    flex-direction: column;
+  }
+  
+  .logout-cancel-btn,
+  .logout-confirm-btn {
+    flex: none;
+  }
+}
