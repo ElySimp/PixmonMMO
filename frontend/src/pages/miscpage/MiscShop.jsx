@@ -1,131 +1,171 @@
 import './MiscShop.css';
 import Topbar from '../../components/Topbar';
 import Sidebar from '../../components/Sidebar';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const diamondPackages = [
-  { id: 1, amount: 50, price: 10000 },
-  { id: 2, amount: 120, price: 22000 },
-  { id: 3, amount: 300, price: 50000 },
-  { id: 4, amount: 700, price: 110000 },
+const API_URL = "http://localhost:5000";
+
+const MAIN_TABS = [
+  { key: 'itemshop', label: 'Item Shop', icon: '🛒' },
+  { key: 'diamondmarket', label: 'Diamond Market', icon: '💎' },
+  { key: 'playermarket', label: 'Player Market', icon: '🧑‍🤝‍🧑' }
 ];
 
-const premiumItems = [
-  { id: 1, name: 'Change Username', price: 200, desc: 'Change your in-game name', img: '/change-username.png' },
-  { id: 2, name: 'Change Name Color', price: 150, desc: 'Customize your name color', img: '/change-color.png' },
-  { id: 3, name: 'Upgrade QP Cap', price: 300, desc: 'Increase your Quest Point cap', img: '/upgrade-qp.png' },
-  { id: 4, name: 'Upgrade EP Cap', price: 300, desc: 'Increase your Energy Point cap', img: '/upgrade-ep.png' },
-  { id: 5, name: 'Normal Key', price: 100, desc: 'Open normal chest', img: '/normal-key.png' },
-  { id: 6, name: 'Premium Key', price: 500, desc: 'Open premium chest', img: '/premium-key.png' },
+const ITEM_CATEGORIES = [
+  { key: 'potions', label: 'Potions', icon: '🧪' },
+  { key: 'weapons', label: 'Weapons', icon: '🗡️' },
+  { key: 'foods', label: 'Foods', icon: '🍔' },
+  { key: 'others', label: 'Other Items', icon: '📦' }
 ];
 
-const dummyItems = [
-  { id: 1, name: 'Potion', price: 100, img: '/potion.png' },
-  { id: 2, name: 'Super Ball', price: 300, img: '/superball.png' },
-  { id: 3, name: 'Revive', price: 500, img: '/revive.png' },
-  { id: 4, name: 'Rare Candy', price: 1000, img: '/rare-candy.png' },
+const DUMMY_ITEMS = {
+  potions: [
+    { icon: '🧪', title: 'Health Potion', price: 100 },
+    { icon: '🧪', title: 'Mana Potion', price: 120 },
+    { icon: '🧪', title: 'Stamina Potion', price: 90 }
+  ],
+  weapons: [
+    { icon: '🗡️', title: 'Iron Sword', price: 200 },
+    { icon: '🗡️', title: 'Steel Sword', price: 350 },
+    { icon: '🗡️', title: 'Wooden Bow', price: 180 }
+  ],
+  foods: [
+    { icon: '🍔', title: 'Burger', price: 80 },
+    { icon: '🍟', title: 'French Fries', price: 60 },
+    { icon: '🍕', title: 'Pizza Slice', price: 75 }
+  ],
+  others: [
+    { icon: '📦', title: 'Starter Pack', price: 500 },
+    { icon: '🎒', title: 'Adventurer Bag', price: 300 },
+    { icon: '🧭', title: 'Compass', price: 150 }
+  ]
+};
+
+const DIAMOND_MARKET = [
+  { seller: 'PlayerA', item: '100 Diamonds', price: 900 },
+  { seller: 'PlayerB', item: '50 Diamonds', price: 480 },
+  { seller: 'PlayerC', item: '30 Diamonds', price: 300 }
 ];
 
-const tabList = [
-  { key: 'diamonds', label: 'Diamonds' },
-  { key: 'premium', label: 'Premium' },
-  { key: 'items', label: 'Items' },
+const PLAYER_MARKET = [
+  { seller: 'PlayerD', item: 'Iron Sword', price: 500 },
+  { seller: 'PlayerE', item: 'Burger', price: 70 },
+  { seller: 'PlayerF', item: 'Steel Sword', price: 350 }
 ];
 
 const MiscShop = () => {
-  const [search, setSearch] = useState('');
-  const [tab, setTab] = useState('diamonds');
+  const [playerStats, setPlayerStats] = useState({ gold: 0, diamonds: 0 });
+  const [mainTab, setMainTab] = useState('itemshop');
+  const [itemCategory, setItemCategory] = useState('potions');
 
-  const filteredItems = dummyItems.filter(item =>
-    item.name.toLowerCase().includes(search.toLowerCase())
-  );
-  const filteredPremium = premiumItems.filter(item =>
-    item.name.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    const userId = localStorage.getItem('userId');
+    fetch(`${API_URL}/api/users/${userId}/stats`)
+      .then(res => res.json())
+      .then(data => {
+        setPlayerStats(data.data || data);
+      });
+  }, []);
 
   return (
     <div className="main-container">
       <Sidebar profilePic="/dummy.jpg" />
-      <div className="main-content">
+      <div className="shop-content">
         <Topbar />
-        <div className="shop-container">
-          <h2 className="shop-title">Shop</h2>
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.2rem', width: '100%' }}>
-            {tabList.map(t => (
-              <button
-                key={t.key}
-                className={`shop-tab-btn${tab === t.key ? ' active' : ''}`}
-                onClick={() => setTab(t.key)}
-                style={{
-                  flex: 1,
-                  padding: '0.6rem 0',
-                  borderRadius: 6,
-                  border: 'none',
-                  background: tab === t.key ? '#0275D8' : '#18191a',
-                  color: tab === t.key ? '#fff' : '#aaa',
-                  fontWeight: tab === t.key ? 'bold' : 'normal',
-                  cursor: 'pointer',
-                  fontSize: '1rem',
-                  transition: 'background 0.2s',
-                }}
+        <div className="shop-header-stats">
+          <div className='shop-header-gold'>
+            <span>🪙</span>
+            <span>{playerStats.gold} Gold</span>
+          </div>
+          <div className='shop-header-diamonds'>
+            <span>💎</span>
+            <span>{playerStats.diamonds} Diamonds</span>
+          </div>
+        </div>
+        <div className="shop-main-flex">
+          
+          {/* Sidebar Tabs */}
+          <div className="shop-sidebar-tabs">
+            {MAIN_TABS.map(tab => (
+              <div
+                key={tab.key}
+                className={`shop-sidebar-tab${mainTab === tab.key ? ' active' : ''}`}
+                onClick={() => setMainTab(tab.key)}
               >
-                {t.label}
-              </button>
+                <span className="shop-sidebar-icon">{tab.icon}</span>
+                <span>{tab.label}</span>
+              </div>
             ))}
           </div>
-          <input
-            type="text"
-            className="shop-search"
-            placeholder="Search items..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{ display: tab === 'items' || tab === 'premium' ? 'block' : 'none' }}
-          />
-          <div className="shop-items">
-            {tab === 'diamonds' && (
-              diamondPackages.map(pkg => (
-                <div className="shop-item" key={pkg.id}>
-                  <img src="/diamond.png" alt="Diamond" className="shop-item-img" />
-                  <div className="shop-item-info">
-                    <div className="shop-item-name">{pkg.amount} Diamonds</div>
-                    <div className="shop-item-price">Rp{pkg.price.toLocaleString()}</div>
-                  </div>
-                  <button className="shop-buy-btn">Top Up</button>
+
+          {/* Main Panel */}
+          <div className="shop-right-panel">
+            {/* Item Shop */}
+            {mainTab === 'itemshop' && (
+              <div className="shop-panel-content">
+                {/* Category selector moved to top */}
+                <div className="shop-item-categories-top">
+                  {ITEM_CATEGORIES.map(cat => (
+                    <div
+                      key={cat.key}
+                      className={`shop-item-category${itemCategory === cat.key ? ' active' : ''}`}
+                      onClick={() => setItemCategory(cat.key)}
+                    >
+                      <span className="shop-sidebar-icon">{cat.icon}</span>
+                      <span>{cat.label}</span>
+                    </div>
+                  ))}
                 </div>
-              ))
-            )}
-            {tab === 'premium' && (
-              filteredPremium.length === 0 ? (
-                <div className="shop-empty">No premium items found.</div>
-              ) : (
-                filteredPremium.map(item => (
-                  <div className="shop-item" key={item.id}>
-                    <img src={item.img} alt={item.name} className="shop-item-img" />
-                    <div className="shop-item-info">
-                      <div className="shop-item-name">{item.name}</div>
-                      <div style={{ color: '#aaa', fontSize: '0.95rem', marginBottom: 4 }}>{item.desc}</div>
-                      <div className="shop-item-price">{item.price} <span className="shop-currency">⦿</span></div>
+                <h3>{ITEM_CATEGORIES.find(cat => cat.key === itemCategory)?.label}</h3>
+                <div className="shop-items-list">
+                  {DUMMY_ITEMS[itemCategory].map((item, idx) => (
+                    <div className="shop-item-card" key={idx}>
+                      <span className="shop-item-icon">{item.icon}</span>
+                      <div className="shop-item-info">
+                        <div className="shop-item-title">{item.title}</div>
+                        <div className="shop-item-price">{item.price} Gold</div>
+                      </div>
+                      <button className="shop-item-btn blue">Buy</button>
                     </div>
-                    <button className="shop-buy-btn">Buy</button>
-                  </div>
-                ))
-              )
+                  ))}
+                </div>
+              </div>
             )}
-            {tab === 'items' && (
-              filteredItems.length === 0 ? (
-                <div className="shop-empty">No items found.</div>
-              ) : (
-                filteredItems.map(item => (
-                  <div className="shop-item" key={item.id}>
-                    <img src={item.img} alt={item.name} className="shop-item-img" />
-                    <div className="shop-item-info">
-                      <div className="shop-item-name">{item.name}</div>
-                      <div className="shop-item-price">{item.price} <span className="shop-currency">⦿</span></div>
+            {/* Diamond Market */}
+            {mainTab === 'diamondmarket' && (
+              <div className="shop-panel-content">
+                <h3>Diamond Market</h3>
+                <div className="shop-items-list">
+                  {DIAMOND_MARKET.map((entry, idx) => (
+                    <div className="shop-item-card" key={idx}>
+                      <span className="shop-item-icon">💎</span>
+                      <div className="shop-item-info">
+                        <div className="shop-item-title">{entry.seller} menjual {entry.item}</div>
+                        <div className="shop-item-price">{entry.price} Gold</div>
+                      </div>
+                      <button className="shop-item-btn blue">Buy</button>
                     </div>
-                    <button className="shop-buy-btn">Buy</button>
-                  </div>
-                ))
-              )
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* Player Market */}
+            {mainTab === 'playermarket' && (
+              <div className="shop-panel-content">
+                <h3>Player Market</h3>
+                <div className="shop-items-list">
+                  {PLAYER_MARKET.map((entry, idx) => (
+                    <div className="shop-item-card" key={idx}>
+                      <span className="shop-item-icon">🧑‍🤝‍🧑</span>
+                      <div className="shop-item-info">
+                        <div className="shop-item-title">{entry.seller} menjual {entry.item}</div>
+                        <div className="shop-item-price">{entry.price} Gold</div>
+                      </div>
+                      <button className="shop-item-btn blue">Buy</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         </div>
