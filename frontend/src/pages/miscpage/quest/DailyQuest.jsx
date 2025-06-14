@@ -132,21 +132,46 @@ function DailyQuest() {
                 </button>
 
                 <div className="player-stats-bar">
-                    <div className='player-stats-bar-left'>
-                        <span>Level</span>
-                        <span>Gold</span>
-                        <span>XP</span>
-                        <span>Diamonds</span>
-                        <span>QP</span>
+                    <div className="stats-row">
+                        <span className="stats-label">Level</span>
+                        <span className="stats-value">{playerStats.level} 🎮</span>
+                    </div>
+                    <div className="stats-row">
+                        <span className="stats-label">XP</span>
+                        <span className="stats-value">{playerStats.xp} ✨</span>
                     </div>
 
-                    <div className='player-stats-bar-right'>
-                        <span>{playerStats.level}</span>
-                        <span>{playerStats.gold}</span>
-                        <span>{playerStats.xp}</span>
-                        <span>{playerStats.diamonds}</span>
-                        <span>{playerStats.quest_points}</span>
-                    </div> 
+                    {/* buat bar */}
+                    {/* <div className="stats-progress-bar">
+                        <div
+                        className="stats-progress-bar-inner"
+                        style={{
+                            width: `${playerStats.xp_next ? Math.min((playerStats.xp / playerStats.xp_next) * 100, 100) : 0}%`
+                        }}
+                        />
+                    </div> */}
+                    
+                    <hr style={{ width: '100%', border: '1px solid #e0e0e0', margin: '0.2rem 0' }} />
+
+                    <div className="stats-row">
+                        <span className="stats-label">Daily Quest Streak</span>
+                        <span className="stats-streak">{playerStats.streak || 0} 🔥</span>
+                    </div>
+                    <div className="stats-row">
+                        <span className="stats-label">Gold</span>
+                        <span className="stats-value">{playerStats.gold} 🪙</span>
+                    </div>
+                    <div className="stats-row">
+                        <span className="stats-label">Diamonds</span>
+                        <span className="stats-value">{playerStats.diamonds} 💎</span>
+                    </div>
+
+                    <hr style={{ width: '100%', border: '1px solid #e0e0e0', margin: '0.2rem 0' }} />
+
+                    <div className="stats-row">
+                        <span className="stats-label">Quest Points</span>
+                        <span className="stats-value">{playerStats.quest_points} 📜</span>
+                    </div>
                 </div>
             </div>
             <div className="quest-title">
