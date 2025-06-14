@@ -266,25 +266,25 @@ class Inventory {
 
                 const randomIndex = Math.floor(Math.random() * filteredItems.length);
                 const selectedItem = filteredItems[randomIndex];
-
                 const now = new Date();
 
                 // gacha history
                 await db.query(
                     `INSERT INTO gachaResult 
                         (item_name, index_id, user_id, item_type, item_stats, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                    VALUES (?, ?, ?, ?, ?, ?)`,
                     [
                         selectedItem.item_name,
                         selectedItem.index_id,
                         userId,
-                        selectedItem.item_stats ? JSON.stringify(selectedItem.item_stats) : null,
                         selectedItem.item_type, 
+                        selectedItem.item_Stats ? JSON.stringify(selectedItem.item_Stats) : null,
                         now
                     ]
+                    
                 );
                 
-                
+
                 const [rows] = await db.query('SELECT COUNT(*) AS count FROM UserInventory WHERE user_id = ? AND index_id = ?', [userId, selectedItem.index_id]);
                 // UserInventory pushing
                 // cek udh ada ato lom
@@ -293,7 +293,7 @@ class Inventory {
                     await db.query(`
                         INSERT INTO UserInventory 
                             (item_name, index_id, user_id, item_type, amount, item_stats, rarity)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                            VALUES (?, ?, ?, ?, ?, ?, ?)
                         `, 
                         [
                             selectedItem.item_name, 
@@ -301,7 +301,7 @@ class Inventory {
                             userId, 
                             selectedItem.item_type, 
                             1,
-                            selectedItem.item_stats ? JSON.stringify(selectedItem.item_stats) : null,
+                            selectedItem.item_Stats ? JSON.stringify(selectedItem.item_Stats) : null,
                             selectedItem.rarity
                         ]
                     );
