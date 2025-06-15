@@ -45,9 +45,23 @@ exports.getUserProfile = async (req, res) => {
             });
         }
 
+          // If profile doesn't exist, create it
         if (!userProfile) {
-            return res.status(404).json({ success: false, message: 'User profile not found.' });
+            try {
+                userProfile = await UserProfile.createDefaultProfile(userId);
+                if (!userProfile) {
+                    return res.status(500).json({ success: false, message: 'Failed to create user profile.' });
+                }
+            } catch (createError) {
+                console.error('Error creating user profile:', createError);
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'Failed to create user profile',
+                    error: createError.message 
+                });
+            }
         }
+
 
         // Calculate max XP for current level
         const maxXp = Math.floor(50 * Math.pow(userProfile.level || 1, 1.4));
@@ -463,3 +477,29 @@ exports.uploadSingle = (fieldName) => {
 
 // Export multer upload untuk digunakan di routes
 exports.upload = upload;
+
+// Update avatar and wallpaper IDs
+exports.updateAvatarAndWallpaper = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const { avatar_id, wallpaper_id } = req.body;
+
+        if (!avatar_id || !wallpaper_id) {
+            return res.status(400).json({ success: false, message: 'Avatar and wallpaper IDs are required' });
+        }
+
+        const [result] = await db.query(
+            `UPDATE UserProfile SET avatar_id = ?, wallpaper_id = ?, updated_at = NOW() WHERE user_id = ?`,
+            [avatar_id, wallpaper_id, userId]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'User profile not found' });
+        }
+
+        res.json({ success: true, message: 'Avatar and wallpaper updated successfully' });
+    } catch (error) {
+        console.error('Error updating avatar and wallpaper:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};

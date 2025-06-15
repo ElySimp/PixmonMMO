@@ -130,6 +130,8 @@ async function initializeDatabaseTables() {    const initSteps = [
 app.post('/api/auth/register', authController.register);
 app.post('/api/auth/login', authController.login);
 app.get('/api/auth/me', protect, authController.getMe);
+app.get('/api/userlogin/:id', protect, authController.getUser); // Added for profile compatibility
+
 
 // User Stats Routes
 app.get('/api/user/stats', protect, authController.getStats);
@@ -146,6 +148,7 @@ app.post('/api/init-achievements', achievementController.initAchievementTables);
 
 // UserProfile Routes - FIXED
 app.get('/api/userprofile/:userId', protect, userProfileController.getUserProfile);
+app.put('/api/userprofile/:userId', protect, userProfileController.updateUserProfile);
 app.patch('/api/userprofile/:userId', protect, userProfileController.updateUserProfile);
 
 // Skill Points Routes
