@@ -1,0 +1,57 @@
+.filter-header {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.filter-buttons {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border-radius: 9999px;
+  border: 1px solid #ccc;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-btn.active {
+  background-color: #10b981; /* emerald-500 */
+  color: white;
+  border-color: #10b981;
+}
+
+.pets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  padding: 20px;
+}
+
+.pet-card {
+  background-color: white;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.adopt-btn {
+  margin-top: 10px;
+  padding: 6px 12px;
+  background-color: #3b82f6; /* blue-500 */
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.adopt-btn:hover {
+  background-color: #2563eb; /* blue-600 */
+}
