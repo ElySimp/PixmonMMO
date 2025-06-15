@@ -16,6 +16,18 @@ function BountyQuest() {
   const [playerStats, setPlayerStats] = useState({
     level: 1, gold: 0, xp: 0, diamonds: 0, quest_points: 0
   });
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [selectedQuest, setSelectedQuest] = useState(null);
+
+  const openOverlay = (quest) => {
+    setSelectedQuest(quest);
+    setShowOverlay(true);
+  };
+
+  const closeOverlay = () => {
+    setShowOverlay(false);
+    setSelectedQuest(null);
+  };
 
   // Fetch data on mount
   useEffect(() => {
@@ -183,11 +195,11 @@ function BountyQuest() {
   return (
     <div className="quest-container">
       <ToastContainer position="top-right" autoClose={2000} />
+      
       {/* Quest Point Section */}
       <div className="bounty-progress">
         <div className='bounty-progress-bar-top'>
-          Quest Points
-          <img className='quest-point-icon' src={questIcon} alt="quest-point-icon" />
+          Quest Points 📜
         </div>
         <div className='bounty-progress-bar'>
           <div
@@ -206,21 +218,31 @@ function BountyQuest() {
             </>
           )}
         </div>
-        {/* Player Stats Bar (seperti di DailyQuest) */}
+
+        {/* Player Stats Bar*/}
         <div className="player-stats-bar">
-          <div className='player-stats-bar-left'>
-            <span>Level</span>
-            <span>Gold</span>
-            <span>XP</span>
-            <span>Diamonds</span>
-            <span>QP</span>
+          <div className="stats-row">
+              <span className="stats-label">Level</span>
+              <span className="stats-value">{playerStats.level} 🎮</span>
           </div>
-          <div className='player-stats-bar-right'>
-            <span>{playerStats.level}</span>
-            <span>{playerStats.gold}</span>
-            <span>{playerStats.xp}</span>
-            <span>{playerStats.diamonds}</span>
-            <span>{playerStats.quest_points}</span>
+          <div className="stats-row">
+              <span className="stats-label">XP</span>
+              <span className="stats-value">{playerStats.xp} ✨</span>
+          </div>
+          
+          <hr style={{ width: '100%', border: '1px solid #e0e0e0', margin: '0.2rem 0' }} />
+
+          <div className="stats-row">
+              <span className="stats-label">Daily Quest Streak</span>
+              <span className="stats-streak">{playerStats.streak || 0} 🔥</span>
+          </div>
+          <div className="stats-row">
+              <span className="stats-label">Gold</span>
+              <span className="stats-value">{playerStats.gold} 🪙</span>
+          </div>
+          <div className="stats-row">
+              <span className="stats-label">Diamonds</span>
+              <span className="stats-value">{playerStats.diamonds} 💎</span>
           </div>
         </div>
       </div>
@@ -246,13 +268,60 @@ function BountyQuest() {
                 Claimed
               </button>
             ) : (
-              <button className="quest-go-btn" onClick={() => handleTakeQuest(quest.id)} disabled={questPoints <= 0}>
+              <button
+                className="quest-go-btn"
+                onClick={() => openOverlay(quest)}
+                disabled={questPoints <= 0}
+              >
                 {questPoints > 0 ? 'Take Quest' : 'Not Enough Quest Points'}
               </button>
             )}
           </div>
         ))}
       </div>
+
+      {/* Quest Overlay */}
+      {showOverlay && selectedQuest && (
+        <div className="bounty-overlay" onClick={closeOverlay}>
+          <div className="bounty-overlay-content" onClick={e => e.stopPropagation()}>
+            <h2>{selectedQuest.name}</h2>
+            <p>{selectedQuest.description}</p>
+            <div className="quest-reward">
+              Reward: {selectedQuest.gold_reward} Gold, {selectedQuest.xp_reward} XP
+            </div>
+            <div style={{margin: '1rem 0'}}>
+              <span style={{fontWeight: 'bold', fontSize: '1.2rem'}}>
+                [ {selectedQuest.progress || 0} / {selectedQuest.target || 15} ]
+              </span>
+              <div className="stats-progress-bar" style={{marginTop: '0.5rem'}}>
+                <div
+                  className="stats-progress-bar-inner"
+                  style={{
+                    width: `${Math.min((selectedQuest.progress || 0) / (selectedQuest.target || 15) * 100, 100)}%`
+                  }}
+                />
+              </div>
+            </div>
+            <button
+              className="quest-go-btn"
+              onClick={() => {
+                handleTakeQuest(selectedQuest.id);
+                closeOverlay();
+              }}
+              style={{margin: '1rem 0'}}
+            >
+              Take Quest
+            </button>
+            <button
+              onClick={closeOverlay}
+              className="quest-close-btn"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

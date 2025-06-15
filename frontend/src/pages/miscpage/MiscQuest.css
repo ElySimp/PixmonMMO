@@ -29,7 +29,7 @@
   position: absolute;
   bottom: 0;
   height: 3px;
-  transition: all 0.3s ease;
+  transition: all 0.5s ease;
   border-radius: 2px;
 }
 
@@ -50,7 +50,7 @@
 }
 
 .quest-progress-container {
-  width: 20%;
+  width: 22.5%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -278,19 +278,90 @@
 }
 
 .player-stats-bar {
-  margin-top: 2.5rem;
-  height: 12rem;
-  width: 10rem;
+  margin: 2rem auto 0 auto;
+  min-height: 13rem;
+  width: 15rem;
   padding: 0.8rem;
   font-size: 1.25rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 2rem;
-  border: 1px solid #f0f0f0;
-  border-radius: 10px;
+  gap: 0.4rem;
+  border: 3px solid #e0e0e0;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .player-stats-bar-left, .player-stats-bar-right {
   display: grid;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.1rem;
+}
+
+.stats-label {
+  color: #888;
+  font-weight: 500;
+}
+
+.stats-value {
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+}
+
+.stats-streak {
+  font-size: 1.2rem;
+  color: #C73737;
+  font-weight: bold;
+}
+
+.stats-progress-bar {
+  width: 100%;
+  height: 0.7rem;
+  background: #e0e0e0;
+  border-radius: 1rem;
+  overflow: hidden;
+  margin: 0.3rem 0 0.1rem 0;
+  position: relative;
+}
+
+.stats-progress-bar-inner {
+  height: 100%;
+  background: linear-gradient(90deg, #2A73A6, #5DADEC);
+  border-radius: 1rem;
+  transition: width 0.5s;
+}
+
+.bounty-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(20,20,20,0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bounty-overlay-content {
+  background: #232323;
+  color: #fff;
+  border-radius: 18px;
+  padding: 2.5rem 2rem;
+  min-width: 350px;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.quest-close-btn {
+  background-color: #f44336;
+  color: #fff;
 }

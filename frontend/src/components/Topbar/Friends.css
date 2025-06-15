@@ -1,140 +1,133 @@
-.friends-container {
+.friends-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  margin-top: 0;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+.friends-layout {
+  display: flex;
+  flex-direction: row;
+  height: calc(100vh - 4rem);
+  width: 100%;
+}
+
+.friends-nav {
+  width: 15rem;
+  background: #101011;
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: #101011;
-  border: 1.5px solid #232323;
-  border-radius: 12px;
-  max-width: 480px;
-  width: 100%;
-  margin: 2rem auto 0 auto;
-  padding: 2rem 2rem 1.5rem 2rem;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
-  min-height: 420px;
+  padding: 1.5rem 0 1.5rem 0;
+  gap: 1.5rem;
+  border-right: 2px solid #232323;
+  min-width: 15rem;
+  height: 100%;
 }
 
-.friends-tabs {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  width: 100%;
-  justify-content: center;
-}
-
-.friends-tabs button {
-  background: none;
-  border: none;
-  color: #888;
-  font-size: 1rem;
-  padding: 0.5rem 1.5rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-  font-weight: bold;
-}
-
-.friends-tabs button.active,
-.friends-tabs button:hover {
-  background: linear-gradient(45deg, #0275D8, #0056b3);
-  color: #fff;
-}
-
-.friends-search {
-  width: 100%;
-  padding: 0.6rem 1rem;
-  border-radius: 6px;
-  border: 1px solid #232323;
-  background: #18191a;
-  color: #fff;
-  margin-bottom: 1.2rem;
-  font-size: 1rem;
-  outline: none;
-}
-
-.friends-list {
-  list-style: none;
-  width: 100%;
-  padding: 0;
-  margin: 0;
-}
-
-.friend-item {
+.friends-nav-btn {
+  width: 4rem;
+  height: 4rem;
+  background: #232323;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background: rgba(255,255,255,0.02);
-  border-radius: 6px;
-  padding: 0.7rem 1rem;
-  margin-bottom: 0.7rem;
-  transition: background 0.2s;
+  justify-content: center;
+  font-size: 2rem;
+  color: #fff;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  border: 2px solid transparent;
+  transition: background 0.2s, border 0.2s;
+}
+.friends-nav-btn.active,
+.friends-nav-btn:hover,
+.friends-nav-friend.active,
+.friends-nav-friend:hover,
+.friends-tabs button.active,
+.friends-tabs button:hover {
+  background: #003153;
+  border-color: #fff;
 }
 
-.friend-item:hover {
-  background: rgba(2,117,216,0.08);
+.friends-nav-divider {
+  width: 70%;
+  height: 2px;
+  background: #232323;
+  margin: 1rem 0;
+  border-radius: 2px;
+}
+
+.friends-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 75%;
+  align-items: stretch;
+}
+
+.friends-nav-friend {
+  width: 100%;
+  min-height: 3.2rem;
+  background: #232323;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: #fff;
+  cursor: pointer;
+  position: relative;
+  border: 2px solid transparent;
+  padding: 0.7rem 1rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  transition: background 0.2s, border 0.2s;
+}
+
+.friends-nav-avatar {
+  font-weight: bold;
+  font-size: 1.3rem;
+  margin-right: 0.5rem;
 }
 
 .friend-status {
-  width: 10px;
-  height: 10px;
+  position: static;
+  width: 0.7rem;
+  height: 0.7rem;
   border-radius: 50%;
-  margin-right: 0.7rem;
-  display: inline-block;
+  background: #aaa;
+  border: 2px solid #181818;
+  margin-right: 0.5rem;
 }
-
 .friend-status.online {
-  background: #28a745;
-  box-shadow: 0 0 6px #28a74599;
+  background: #00e676;
 }
-
 .friend-status.offline {
   background: #888;
 }
 
-.friend-name {
+/* Main Content */
+.friends-main-content {
   flex: 1;
-  color: #fff;
-  font-size: 1rem;
-  font-weight: 500;
-}
-
-.dm-btn {
-  background: linear-gradient(45deg, #0275D8, #0056b3);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 0.4rem 1.2rem;
-  font-size: 0.95rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
-  margin-left: 1rem;
-}
-
-.dm-btn:hover {
-  background: linear-gradient(45deg, #0056b3, #0275D8);
-  transform: translateY(-2px);
-}
-
-.add-friends-section {
+  background: #181818;
+  padding: 2.5rem 3rem;
+  overflow-y: auto;
+  height: 100%;
   display: flex;
-  gap: 1rem;
-  width: 100%;
-  margin-top: 1rem;
+  flex-direction: column;
 }
 
-.add-friends-input {
-  flex: 1;
-  padding: 0.6rem 1rem;
-  border-radius: 6px;
-  border: 1px solid #232323;
-  background: #18191a;
-  color: #fff;
-  font-size: 1rem;
-  outline: none;
+.friends-tabs {
+  display: flex;
+  gap: 1.2rem;
+  margin-bottom: 1.5rem;
 }
-
-.add-friends-btn {
-  background: linear-gradient(45deg, #0275D8, #0056b3);
+.friends-tabs button {
+  background: #232323;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -142,157 +135,181 @@
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
+  transition: background 0.2s, color 0.2s;
 }
 
-.add-friends-btn:hover {
-  background: linear-gradient(45deg, #0056b3, #0275D8);
-  transform: translateY(-2px);
-}
-
-/* DM Overlay Styles */
-.dm-overlay {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dm-backdrop {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 1001;
-}
-
-.dm-modal {
-  position: relative;
-  background: #18191a;
-  border-radius: 12px;
-  padding: 2rem 1.5rem 1rem 1.5rem;
-  resize: both;
-  overflow: auto;
-  min-width: 320px;
-  min-height: 220px;
-  max-width: 95vw;
-  max-height: 90vh;
-  width: 350px;
-  z-index: 1002;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-
-.dm-modal-header {
-  cursor: move;
-  user-select: none;
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid #232323;
-  font-weight: bold;
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.dm-close {
-  position: absolute;
-  top: 10px; right: 14px;
-  background: none;
+.friends-search {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border-radius: 6px;
   border: none;
+  margin-bottom: 1.5rem;
+  background: #232323;
   color: #fff;
-  font-size: 1.5rem;
-  cursor: pointer;
+  font-size: 1rem;
 }
 
-.dm-history {
-  min-height: 80px;
-  max-height: 180px;
-  overflow-y: auto;
-  margin-bottom: 1rem;
+.friends-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.friend-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   background: #232323;
   border-radius: 8px;
-  padding: 1rem 0.5rem 1rem 0.5rem;
-  font-size: 1rem;
+  padding: 0.8rem 1.2rem;
+  margin-bottom: 1rem;
   color: #fff;
+}
+.friend-name {
+  flex: 1;
+  font-weight: bold;
+}
+.dm-btn {
+  background: #003153;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+.dm-btn:hover {
+  background: #003153;
+  color: #fff;
+  filter: brightness(0.95);
+}
+
+/* Add Friends */
+.add-friends-section {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
-
-.dm-message {
-  padding: 0.6rem 1rem;
-  border-radius: 18px;
-  max-width: 75%;
-  word-break: break-word;
-  margin-bottom: 0.3rem;
-  font-size: 1rem;
-  position: relative;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-.dm-message.from-me {
-  align-self: flex-end;
-  background: linear-gradient(120deg, #0275D8 60%, #0056b3 100%);
-  color: #fff;
-  border-bottom-right-radius: 6px;
-  border-bottom-left-radius: 18px;
-  border-top-left-radius: 18px;
-  border-top-right-radius: 18px;
-  margin-left: 20%;
-}
-
-.dm-message.from-them {
-  align-self: flex-start;
+.add-friends-input {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  border-radius: 6px;
+  border: none;
   background: #232323;
   color: #fff;
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 18px;
-  border-top-left-radius: 18px;
-  border-top-right-radius: 18px;
-  margin-right: 20%;
-  border: 1px solid #333;
+  font-size: 1rem;
+}
+.add-friends-btn {
+  background: #003153;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.7rem 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+.add-friends-btn:hover {
+  background: #003153;
+  color: #fff;
+  filter: brightness(0.95);
 }
 
+/* DM Chat */
+.dm-chat-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+.dm-chat-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 1.2rem;
+}
+.dm-back-btn {
+  background: #232323;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 1rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+  margin-right: 0.5rem;
+  transition: background 0.2s;
+}
+.dm-back-btn:hover {
+  background: #003153;
+  color: #fff;
+}
+.dm-history {
+  flex: 1;
+  overflow-y: auto;
+  background: #232323;
+  border-radius: 8px;
+  padding: 1.2rem;
+  margin-bottom: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
 .dm-empty {
   color: #aaa;
   text-align: center;
-  font-size: 0.95rem;
+  margin-top: 2rem;
 }
-
+.dm-message {
+  max-width: 60%;
+  padding: 0.7rem 1.2rem;
+  border-radius: 1.2rem;
+  font-size: 1rem;
+  word-break: break-word;
+}
+.dm-message.from-me {
+  align-self: flex-end;
+  background: #003153;
+  color: #fff;
+}
+.dm-message.from-them {
+  align-self: flex-start;
+  background: #333;
+  color: #fff;
+}
 .dm-input-row {
   display: flex;
-  gap: 0.5rem;
+  gap: 1rem;
 }
-
 .dm-input {
   flex: 1;
-  padding: 0.5rem 1rem;
+  padding: 0.7rem 1rem;
   border-radius: 6px;
-  border: 1px solid #232323;
-  background: #222;
+  border: none;
+  background: #232323;
   color: #fff;
   font-size: 1rem;
-  outline: none;
 }
-
 .dm-send-btn {
-  background: linear-gradient(45deg, #0275D8, #0056b3);
+  background: #003153;
   color: #fff;
   border: none;
   border-radius: 6px;
-  padding: 0.5rem 1.2rem;
-  font-size: 1rem;
+  padding: 0.7rem 1.5rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
+  transition: filter 0.2s;
+}
+.dm-send-btn:hover {
+  background: #003153;
+  color: #fff;
+  filter: brightness(0.95);
 }
 
-.dm-send-btn:hover {
-  background: linear-gradient(45deg, #0056b3, #0275D8);
-  transform: translateY(-2px);
+.main-content::-webkit-scrollbar,
+.friends-content::-webkit-scrollbar,
+.friends-main-content::-webkit-scrollbar {
+  display: none;
 }

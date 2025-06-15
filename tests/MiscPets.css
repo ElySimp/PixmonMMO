@@ -1,0 +1,298 @@
+/* ========== Base Layout ========== */
+.main-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #131314;
+  color: white;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* ========== Filter Section ========== */
+.filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-item label {
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.filter-item select,
+.reset-button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+}
+
+.reset-button {
+  background-color: #ef4444;
+  color: white;
+  cursor: pointer;
+}
+
+.reset-button:hover {
+  background-color: #dc2626;
+}
+
+/* ========== Card Grid ========== */
+.card-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+/* ========== Pet Card ========== */
+.misc-pet-card {
+  position: relative;
+  padding: 15px;
+  border-radius: 12px;
+  background-color: #1f1f20;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+
+.misc-pet-card:hover {
+  transform: translateY(-5px);
+}
+
+.pet-name {
+  margin: 8px 0 4px;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.pet-image {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.pet-info {
+  margin-top: 10px;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ========== Stats Section ========== */
+.real-time-status {
+  margin-top: 10px;
+}
+
+.stat-line {
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.stat-bar-background {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 6px;
+  background-color: #ebeff5;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+/* ========== Pet Actions ========== */
+.pet-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+
+.action-button {
+  padding: 6px 10px;
+  font-size: 14px;
+  border: none;
+  border-radius: 6px;
+  background-color: #0a0808;
+  color: white;
+  cursor: pointer;
+}
+
+.action-button:hover {
+  background-color: #eff1f4;
+}
+
+/* ========== Select Button ========== */
+.select-button-container {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.select-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  color: white;
+  background-color: #0b0b0b;
+  cursor: pointer;
+}
+
+.select-button.equipped {
+  background-color: #10b981;
+}
+
+.select-button:hover {
+  opacity: 0.9;
+}
+
+/* ========== Overlay ========== */
+.overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 50;
+}
+
+.overlay-content {
+  position: relative;
+  width: 320px;
+  padding: 2rem;
+  border-radius: 1rem;
+  background-color: #1f2937;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.overlay-image {
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 15px;
+}
+
+.overlay-stats p {
+  margin-bottom: 6px;
+}
+
+.close-button {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  font-size: 1.2rem;
+  color: white;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+/* ========== Animations ========== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ========== Rarity Labels ========== */
+.rarity-text {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 8px;
+  color: white;
+}
+
+.rarity-legendary {
+  background-color: #ac7b09;
+}
+
+.rarity-epic {
+  background-color: #760b8b;
+}
+
+.rarity-elite {
+  background-color: #10b981;
+}
+
+.rarity-common {
+  background-color: #9ca3af;
+}
+
+/* ========== Role Icon ========== */
+.role-icon {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 20px;
+}
+
+/* ========== Progress Bar ========== */
+.progress-bar-container {
+  width: 100%;
+  height: 12px;
+  margin-bottom: 8px;
+  border-radius: 9999px;
+  background-color: #4b5563;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.3s;
+}
+
+.petshouse-button {
+  background-color: #10b981;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.pet-stats-bar-container {
+  width: 100%;
+  background-color: #374151; /* Tailwind bg-gray-700 */
+  border-radius: 9999px;
+  height: 12px;
+  position: relative;
+  overflow: hidden;
+  margin-top: 0.25rem;
+}
+
+.pet-stats-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.5s ease-in-out;
+}
