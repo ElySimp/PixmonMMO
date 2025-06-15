@@ -1,0 +1,103 @@
+.pets-house-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #131314;
+  color: white;
+}
+
+.pets-house-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.petshouse-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 20px;
+}
+
+.petshouse-header h1 {
+  margin: 0;
+  color: white;
+}
+
+.back-button {
+  padding: 8px 16px;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-weight: bold;
+}
+
+.back-button:hover {
+  background-color: #555;
+}
+
+.filter-header {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.filter-buttons {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border-radius: 9999px;
+  border: 1px solid #555;
+  background-color: #222;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-btn.active {
+  background-color: #10b981; /* emerald-500 */
+  color: white;
+  border-color: #10b981;
+}
+
+.pets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.pet-card {
+  background-color: #1f1f20;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.pet-card:hover {
+  transform: translateY(-5px);
+}
+
+.adopt-btn {
+  margin-top: 15px;
+  padding: 8px 16px;
+  background-color: #3b82f6; /* blue-500 */
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.adopt-btn:hover {
+  background-color: #2563eb; /* blue-600 */
+}

@@ -111,14 +111,13 @@ const MainHome = () => {
   const handleDailyRewards = () => {
     console.log('Daily Rewards clicked');
     navigate('/daily');
-  };
-  return (
-    <div className="main-container">
+  };  return (
+    <div className="mainhome-container">
       <Sidebar 
         profilePic="/dummy.jpg"
       />
       
-      <div className="main-content">
+      <div className="mainhome-content">
         <Topbar 
           onMenuClick={handleMenuClick}
           onSupportClick={handleSupportClick}

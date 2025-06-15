@@ -15,6 +15,7 @@ import HomeDaily from './pages/mainpage/HomeDaily.jsx'
 import MiscQuest from './pages/miscpage/MiscQuest.jsx'
 import MiscProfile from './pages/miscpage/MiscProfile.jsx' 
 import MiscPets from "./pages/miscpage/MiscPets.jsx"
+import PetsHouse from "./pages/miscpage/pets/PetsHouse.jsx"
 import Adventure from './pages/mainpage/advpage/Adventure.jsx';
 import MiscGacha from './pages/miscpage/MiscGacha.jsx'
 import Friends from './components/Topbar/Friends.jsx'
@@ -36,6 +37,8 @@ createRoot(document.getElementById('root')).render(
           <Route path="/quest" element={<MiscQuest />} />
           <Route path="/profile" element={<MiscProfile />} />
           <Route path="/pets" element={<MiscPets />} />
+          <Route path="/misc-pets" element={<MiscPets />} />
+          <Route path="/pet-house" element={<PetsHouse />} />
           <Route path="/shop" element={<MiscShop />} />
           <Route path="/adventure" element={<Adventure />} />
           <Route path="/daily" element={<HomeDaily />} />

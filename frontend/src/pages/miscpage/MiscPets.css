@@ -1,65 +1,167 @@
-/* === Filter Section === */
-.filter-container {
+/* ========== Base Layout ========== */
+.misc-pets-container {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12rem; /* jarak antar elemen */
-  padding: 1rem;
-  flex-wrap: wrap;
-  margin-top: 12px;
-  margin-left: 120px;
-}
-
-.filter-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.filter-item select {
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  background-color: #1e1e1e;
+  min-height: 100vh;
+  background-color: #131314;
   color: white;
 }
 
-.role-label,
-.status-label {
-  color: white;
-}
-
-.filter-wrapper {
+.misc-pets-content {
+  flex: 1;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
+  width: 100%;
+  overflow-y: auto;
+  padding: 0;
+  margin: 0;
   height: 100vh;
 }
 
-/* === Card Container === */
-.card-container {
+.misc-pets-content .topbar {
+  width: 100%;
+  margin: 0;
+  padding: 1rem;
+  background-color: #101011;
+  height: 80px; /* Match the fixed height */
+  border-bottom: 2px solid #232323;
+}
+
+/* ========== Header Section ========== */
+.misc-pets-header-container {
+  margin: 20px;
+}
+
+.misc-pets-header {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 20px;
+  background: #101011;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1.5px solid #232323;
+}
+
+.misc-pets-header h1 {
+  margin: 0;
+  color: white;
+  font-size: 28px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 2px;
+}
+
+/* ========== Controls Section ========== */
+.misc-pets-controls {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.misc-pets-house-button {
+  padding: 10px 20px;
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
+  height: fit-content;
+  white-space: nowrap;
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.2);
+}
+
+.misc-pets-house-button:hover {
+  background-color: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* ========== Filter Section ========== */
+.misc-pets-filter-container {
+  display: flex;
+  justify-content: center;
   flex-wrap: wrap;
-  gap: 6px;
-  padding-top: 30px;
+  gap: 20px;
+  padding: 15px 20px;
+  background-color: #101011;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1.5px solid #232323;
+  flex: 1;
 }
 
-.pet-card-container {
+.misc-pets-filter-item {
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.misc-pets-filter-item label {
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #fff;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+}
+
+.misc-pets-filter-item select {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #232323;
+  background-color: #1a1a1a;
+  color: white;
+  font-size: 0.9rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.misc-pets-filter-item select:hover,
+.misc-pets-filter-item select:focus {
+  border-color: #0275D8;
+  box-shadow: 0 0 0 2px rgba(2, 117, 216, 0.2);
+  outline: none;
+}
+
+.misc-pets-reset-button {
+  background-color: #ef4444;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.2);
+}
+
+.misc-pets-reset-button:hover {
+  background-color: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* ========== Card Grid ========== */
+.misc-pets-card-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 40px;
-  justify-items: center;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 20px;
+  padding: 0 20px 30px 20px;
 }
 
-/* === Pet Card === */
+/* ========== Pet Card ========== */
 .misc-pet-card {
   position: relative;
   background: linear-gradient(145deg, #121212, #111010);
   color: rgb(227, 237, 237);
   border-radius: 12px;
-  padding: 50px;
+  padding: 20px;
   width: 250px;
-  margin: 27px;
+  margin: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -68,6 +170,11 @@
   z-index: 1;
   border: 2px solid rgb(21, 22, 22);
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.misc-pet-card:hover {
+  transform: translateY(-5px);
 }
 
 .misc-pet-card::before {
@@ -85,61 +192,93 @@
 }
 
 .pet-name {
-  font-size: 20px;
+  margin: 8px 0 4px;
+  font-size: 18px;
   font-weight: bold;
   text-align: center;
-}
-
-.pet-info,
-.pet-stats {
-  font-size: 17px;
-  text-align: center;
-  margin-bottom: 10px;
 }
 
 .pet-image {
   width: 120px;
   height: 120px;
   object-fit: contain;
+  border-radius: 12px;
   margin: 10px 0;
+  cursor: pointer;
 }
 
-/* === Stat Bars === */
+.pet-info {
+  margin-top: 10px;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ========== Stats Section ========== */
+.pet-stats {
+  margin-top: 10px;
+  width: 100%;
+}
+
+.real-time-status {
+  margin-top: 10px;
+  width: 100%;
+}
+
 .stat-line {
-  margin: 4px 0;
+  margin: 8px 0;
   width: 100%;
 }
 
 .stat-label {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 2px;
+  font-size: 12px;
+  margin-bottom: 4px;
 }
 
 .stat-bar-background {
+  width: 100%;
   height: 8px;
-  background-color: #333;
-  border-radius: 4px;
   overflow: hidden;
+  border-radius: 6px;
+  background-color: #333;
 }
 
 .stat-bar-fill {
   height: 100%;
+  border-radius: 6px;
+  transition: width 0.3s ease;
   background-color: #f6f5f5;
-  border-radius: 4px;
 }
 
-/* === Role Icon === */
-.role-icon {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  font-size: 20px;
+/* ========== Pet Actions ========== */
+.pet-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  width: 100%;
+  z-index: 10;
+  position: relative;
 }
 
-/* === Select Button === */
+.action-button {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: none;
+  border-radius: 6px;
+  background-color: #0a0808;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.action-button:hover {
+  background-color: #333;
+}
+
+/* ========== Select Button ========== */
 .select-button-container {
-  margin-top: 20px;
+  margin-top: 15px;
   text-align: center;
   width: 100%;
   display: flex;
@@ -160,47 +299,62 @@
 }
 
 .select-button:hover {
-  background-color: #e8e8f0;
-  color: #fff9f9;
+  background-color: #333;
 }
 
-/* === Reset Button === */
-.reset-button {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 8px 12px;
+.select-button.equipped {
+  background-color: #10b981;
+}
+
+/* ========== Equipped Glow Effect ========== */
+.equipped-glow {
+  box-shadow: 0 0 15px #10b981;
+  border-color: #10b981;
+}
+
+/* ========== Rarity Labels ========== */
+.rarity-text {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-weight: bold;
+  padding: 4px 8px;
   border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.reset-button:hover {
-  background-color: #c82333;
-}
-
-/* === Upload Button === */
-.upload-label {
-  display: inline-block;
-  padding: 6px 12px;
-  background-color: #444;
   color: white;
-  border-radius: 5px;
-  cursor: pointer;
-  margin: 10px 0;
-  font-size: 13px;
-  text-align: center;
+  font-size: 12px;
+  z-index: 5;
 }
 
-.upload-label:hover {
-  background-color: #666;
+.rarity-legendary {
+  background-color: #f39c12;
+  text-shadow: 0 0 5px #f1c40f, 0 0 10px #f39c12;
 }
 
-.upload-input {
-  display: none;
+.rarity-epic {
+  background-color: #9b59b6;
+  text-shadow: 0 0 5px #8e44ad, 0 0 10px #9b59b6;
 }
 
-/* === Black Button === */
+.rarity-elite {
+  background-color: #2ecc71;
+  text-shadow: 0 0 5px #27ae60, 0 0 10px #2ecc71;
+}
+
+.rarity-common {
+  background-color: #95a5a6;
+  text-shadow: 0 0 5px #7f8c8d, 0 0 10px #95a5a6;
+}
+
+/* ========== Role Icon ========== */
+.role-icon {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 20px;
+  z-index: 5;
+}
+
+/* ========== Black Button ========== */
 .black-button {
   background-color: #000;
   color: #fff;
@@ -221,42 +375,39 @@
   background-color: #222;
 }
 
-.pet-actions {
-  z-index: 10;
-  position: relative;
-}
-
-/* === Rarity Label === */
-.rarity-label {
-  font-weight: bold;
-  font-size: 1.2rem;
+/* ========== Upload Button ========== */
+.upload-label {
+  display: inline-block;
+  padding: 6px 12px;
+  background-color: #444;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 10px 0;
+  font-size: 13px;
   text-align: center;
-  margin-bottom: 0.5rem;
-  animation: glow 2s infinite alternate;
 }
 
-/* Warna per rarity */
-.rarity-legendary {
-  color: #f39c12;
-  text-shadow: 0 0 5px #f1c40f, 0 0 10px #f39c12;
+.upload-label:hover {
+  background-color: #666;
 }
 
-.rarity-epic {
-  color: #9b59b6;
-  text-shadow: 0 0 5px #8e44ad, 0 0 10px #9b59b6;
+.upload-input {
+  display: none;
 }
 
-.rarity-elite {
-  color: #2ecc71;
-  text-shadow: 0 0 5px #27ae60, 0 0 10px #2ecc71;
+/* ========== Animations ========== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.rarity-common {
-  color: #bdc3c7;
-  text-shadow: 0 0 5px #95a5a6, 0 0 10px #bdc3c7;
-}
-
-/* Animasi glowing */
 @keyframes glow {
   from {
     text-shadow: 0 0 5px transparent;
@@ -264,55 +415,5 @@
   to {
     text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
   }
-}
-
-.filter-container {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 20px;
-  padding: 20px;
-}
-
-.filter-item {
-  flex: 1;
-  min-width: 200px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.filter-item label {
-  margin-bottom: 5px;
-  font-weight: bold;
-  color: #fff;
-  filter: none;             /* Hapus efek filter jika ada */
-  text-shadow: none !important;  /* Ini yang benar-benar hapus glow */
-}
-
-
-.filter-item select {
-  width: 100%;
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  background-color: #111;
-  color: #fff;
-  font-size: 14px;
-}
-
-.reset-button {
-  align-self: center;
-  padding: 10px 20px;
-  background-color: #e74c3c;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.filter-item {
-  align-items: center;
-  text-align: center;
 }
 

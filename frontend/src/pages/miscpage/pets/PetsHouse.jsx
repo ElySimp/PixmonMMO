@@ -1,19 +1,31 @@
 import React, { useState } from 'react';
-import Sidebar from '../../components/Sidebar';
-import Topbar from '../../components/Topbar';
-import './Petshouse.css';
+import Sidebar from '../../../components/Sidebar';
+import Topbar from '../../../components/Topbar';
+import './PetsHouse.css';
+import { useNavigate } from 'react-router-dom';
 
-const Petshouse = () => {
+const PetsHouse = () => {
   const pets = ["PETS1", "PETS2", "PETS3", "PETS4"];
   const [filter, setFilter] = useState("All");
+  const navigate = useNavigate();
 
   const filteredPets = filter === "All" ? pets : pets.filter(p => p === filter);
 
+  const handleBackToMiscPets = () => {
+    navigate('/misc-pets');
+  };
   return (
-    <div className="main-container">
+    <div className="pets-house-container">
       <Sidebar profilePic="/dummy.jpg" />
-      <div className="main-content">
+      <div className="pets-house-content">
         <Topbar />
+
+        <div className="petshouse-header">
+          <button className="back-button" onClick={handleBackToMiscPets}>
+            ← Back to My Pets
+          </button>
+          <h1>Pet House</h1>
+        </div>
 
         {/* Filters */}
         <div className="filter-header">
@@ -45,4 +57,4 @@ const Petshouse = () => {
   );
 };
 
-export default Petshouse;
+export default PetsHouse;

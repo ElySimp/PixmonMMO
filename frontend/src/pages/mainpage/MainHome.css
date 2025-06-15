@@ -9,7 +9,6 @@
 }
 
 /* Main container - wraps the entire application */
-.main-container, 
 .mainhome-container {
   min-height: 100vh;
   background-color: #161716;
@@ -22,7 +21,6 @@
 }
 
 /* Main content wrapper */
-.main-content,
 .mainhome-content {
   flex: 1;
   display: flex;
@@ -34,24 +32,20 @@
   height: 100vh;
 }
 
-.main-content::-webkit-scrollbar,
 .mainhome-content::-webkit-scrollbar {
   width: 8px;
   transition: all 0.3s ease;
 }
 
-.main-content::-webkit-scrollbar-track,
 .mainhome-content::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.main-content::-webkit-scrollbar-thumb,
 .mainhome-content::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
 }
 
-.main-content::-webkit-scrollbar-thumb:hover,
 .mainhome-content::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
@@ -1006,4 +1000,4 @@
 
 .sidebar:not(:hover)::-webkit-scrollbar-thumb {
   opacity: 0;
-} 
+}
