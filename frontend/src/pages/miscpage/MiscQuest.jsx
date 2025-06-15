@@ -8,8 +8,7 @@ import BountyQuest from './quest/BountyQuest'
 import './MiscQuest.css'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-// const API_URL = "http://localhost:5000";
-// Main MiscQuest Component
+
 const MiscQuest = () => {
     // const [playerStats, setPlayerStats] = useState({ gold: 0, xp: 0, diamonds: 0, quest_points: 0 });
     const [activeLayer, setActiveLayer] = useState('daily');
@@ -18,14 +17,6 @@ const MiscQuest = () => {
     const tabs = ['daily', 'weekly', 'monthly', 'bounty'];
     const tabRefs = useRef({});
     const underlineRef = useRef(null);
-
-    // useEffect(() => {
-    //     const userId = localStorage.getItem('userId');
-    //     fetch(`${API_URL}/api/users/${userId}/stats`)
-    //         .then(res => res.json())
-    //         .then(data => setPlayerStats(data.data));
-    // }, []);
-
 
     const underlineColors = {
       daily: '#2A73A6',
