@@ -95,10 +95,10 @@ const MainAchievement = () => {
     : 0;
 
   return (
-    <div className="main-container">
+    <div className="mainachievement-container">
       <ToastContainer />
       <Sidebar profilePic="/dummy.jpg" />
-      <div className="main-content">
+      <div className="mainachievement-content">
         <Topbar 
           onMenuClick={() => console.log('Menu clicked')} 
           onSupportClick={() => console.log('Support clicked')} 

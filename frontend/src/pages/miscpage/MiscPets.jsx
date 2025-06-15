@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './MiscPets.css';
 import Topbar from '../../components/Topbar';
 import Sidebar from '../../components/Sidebar';
+import { useNavigate } from 'react-router-dom';
 import dummy from '../../assets/mix pets/dummy.jpg';
 import dummy1 from '../../assets/mix pets/dummy1.jpg';
 import dummy2 from '../../assets/mix pets/dummy2.jpg';
@@ -79,6 +80,8 @@ const MiscPets = () => {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedRarity, setSelectedRarity] = useState('');
   const [equippedPetName, setEquippedPetName] = useState('');
+  const [selectedPet, setSelectedPet] = useState(null);
+  const navigate = useNavigate();
 
   const [petStatuses, setPetStatuses] = useState(
     pets.reduce((acc, pet) => {
@@ -145,50 +148,65 @@ const MiscPets = () => {
     });
   }
 
-  return (
-    <div className="main-container">
+  const handleGoToPetHouse = () => {
+    navigate('/pet-house');
+  };  return (
+    <div className="misc-pets-container">
       <Sidebar profilePic="/dummy.jpg" />
-      <div className="main-content">
+      <div className="misc-pets-content">
         <Topbar />
-        <div className="filter-container">
-          <div className="filter-item">
-            <label htmlFor="roleFilter" className="role-label">Sort by Role:</label>
-            <select id="roleFilter" onChange={handleRoleChange} value={selectedRole}>
-              <option value="">All Roles</option>
-              <option value="assassin">Assassin</option>
-              <option value="tank">Tank</option>
-              <option value="mage">Mage</option>
-              <option value="support">Support</option>
-            </select>
+        
+        <div className="misc-pets-header-container">
+          <div className="misc-pets-header">
+            <h1>My Pets</h1>
           </div>
-          <div className="filter-item">
-            <label htmlFor="statusFilter" className="status-label">Sort by Status:</label>
-            <select id="statusFilter" onChange={handleStatusChange} value={selectedStatus}>
-              <option value="">All Status</option>
-              <option value="atk">ATK</option>
-              <option value="hp">HP</option>
-              <option value="def-phy">DEF PHY</option>
-              <option value="def-mage">DEF MAGIC</option>
-              <option value="max-mana">MAX MANA</option>
-              <option value="agility">AGILITY</option>
-            </select>
-          </div>
-          <div className="filter-item">
-            <label htmlFor="rarityFilter" className="rarity-label">Sort by Rarity:</label>
-            <select id="rarityFilter" onChange={handleRarityChange} value={selectedRarity}>
-              <option value="">All Rarity</option>
-              <option value="legendary">Legendary</option>
-              <option value="epic">Epic</option>
-              <option value="elite">Elite</option>
-              <option value="common">Common</option>
-            </select>
-          </div>
-          <div className="filter-item">
-            <button className="reset-button" onClick={handleResetFilter}>Reset Filter</button>
+          
+          <div className="misc-pets-controls">
+            <button className="misc-pets-house-button" onClick={handleGoToPetHouse}>
+              Go to Pet House
+            </button>
+            
+            <div className="misc-pets-filter-container">
+              <div className="misc-pets-filter-item">
+                <label htmlFor="roleFilter">Sort by Role:</label>
+                <select id="roleFilter" onChange={handleRoleChange} value={selectedRole}>
+                  <option value="">All Roles</option>
+                  <option value="assassin">Assassin</option>
+                  <option value="tank">Tank</option>
+                  <option value="mage">Mage</option>
+                  <option value="support">Support</option>
+                </select>
+              </div>
+              <div className="misc-pets-filter-item">
+                <label htmlFor="statusFilter">Sort by Status:</label>
+                <select id="statusFilter" onChange={handleStatusChange} value={selectedStatus}>
+                  <option value="">All Status</option>
+                  <option value="atk">ATK</option>
+                  <option value="hp">HP</option>
+                  <option value="def-phy">DEF PHY</option>
+                  <option value="def-mage">DEF MAGIC</option>
+                  <option value="max-mana">MAX MANA</option>
+                  <option value="agility">AGILITY</option>
+                </select>
+              </div>
+              <div className="misc-pets-filter-item">
+                <label htmlFor="rarityFilter">Sort by Rarity:</label>
+                <select id="rarityFilter" onChange={handleRarityChange} value={selectedRarity}>
+                  <option value="">All Rarity</option>
+                  <option value="legendary">Legendary</option>
+                  <option value="epic">Epic</option>
+                  <option value="elite">Elite</option>
+                  <option value="common">Common</option>
+                </select>
+              </div>
+              <div className="misc-pets-filter-item">
+                <button className="misc-pets-reset-button" onClick={handleResetFilter}>Reset Filter</button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="card-container">
+        <div className="misc-pets-card-container">
           {filteredPets.map((pet, index) => {
             const isEquipped = equippedPetName === pet.name;
             return (
@@ -224,13 +242,20 @@ const MiscPets = () => {
                 <div className="real-time-status">
                   {['happiness', 'hunger', 'health'].map((statusKey) => {
                     const value = petStatuses[pet.name]?.[statusKey] ?? 0;
+                    const barColor = 
+                      statusKey === 'hunger' ? '#f39c12' : 
+                      statusKey === 'health' ? '#e74c3c' : '#3498db';
+                    
                     return (
                       <div key={statusKey} className="stat-line">
                         <div className="stat-label">{statusKey.charAt(0).toUpperCase() + statusKey.slice(1)}: {value}%</div>
                         <div className="stat-bar-background">
                           <div
                             className="stat-bar-fill"
-                            style={{ width: `${value}%`, backgroundColor: statusKey === 'hunger' ? '#f39c12' : statusKey === 'health' ? '#e74c3c' : '#3498db' }}
+                            style={{ 
+                              width: `${value}%`, 
+                              backgroundColor: barColor 
+                            }}
                           />
                         </div>
                       </div>
