@@ -219,8 +219,13 @@ app.post('/api/user/:userId/claim-daily-main-reward', questController.claimDaily
 app.post('/api/user/:userId/restore-quest-point', questController.restoreQuestPoint);
 app.post('/api/user/:userId/quest/:questId/start', questController.startBountyQuest);
 
-// Pets Routes
+// Legacy Pets Routes
+const petsRoutes = require('./routes/petsRoutes');
+app.use('/api/pets', petsRoutes);
 
+// New Optimized Pets Routes
+const optimizedPetsRoutes = require('./routes/optimizedPetsRoutes');
+app.use('/api/v2/pets', optimizedPetsRoutes);
 
 // Overlay Profile Route
 app.get('/api/user/overlay-profile', protect, async (req, res) => {

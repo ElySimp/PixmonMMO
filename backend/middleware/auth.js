@@ -10,7 +10,14 @@ exports.protect = async (req, res, next) => {
             token = req.headers.authorization.split(' ')[1];
         }
 
-        // Check if token exists
+        // For development testing - bypass auth if no token
+        if (!token && process.env.NODE_ENV === 'development') {
+            console.log('⚠️ Warning: Authentication bypassed in development mode');
+            req.user = { id: 1 }; // Dummy user for development
+            return next();
+        }
+
+        // Check if token exists in production
         if (!token) {
             return res.status(401).json({
                 success: false,
@@ -20,12 +27,13 @@ exports.protect = async (req, res, next) => {
 
         try {
             // Verify token
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_for_development');
 
             // Get user from token
             req.user = await User.findById(decoded.id);
             next();
         } catch (error) {
+            console.error('JWT verification error:', error.message);
             return res.status(401).json({
                 success: false,
                 message: 'Not authorized to access this route'
