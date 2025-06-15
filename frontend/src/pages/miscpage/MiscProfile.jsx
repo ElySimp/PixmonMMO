@@ -533,10 +533,6 @@ const MiscProfile = () => {
         updateData.status_message = statusMessage;
       }
       
-      // Wallpaper
-      if (customWallpaperUrl && customWallpaperUrl !== defaultWallpaper) {
-        updateData.custom_wallpaper_url = customWallpaperUrl;
-      }
       
       // Skill points - only if there are changes
       updateData.hp_points = allocatedPoints.hp;
@@ -637,17 +633,57 @@ const MiscProfile = () => {
   };
   
   // Avatar and Pet handlers
-  const handleAvatarChange = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setTempAvatarSrc(e.target.result);
-      setShowAvatarCrop(true);
-    };
-    reader.readAsDataURL(file);
+  const handleAvatarChange = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    setTempAvatarSrc(e.target.result);
+    setShowAvatarCrop(true);
   };
+  reader.readAsDataURL(file);
+};
+
+const handleAvatarSave = async (croppedBlob) => {
+  if (!croppedBlob) return;
+  
+  setIsSaving(true);
+  const credentials = getUserCredentials();
+  if (!credentials) return;
+  
+  try {
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append('avatar', croppedBlob, 'avatar.jpg');
+    
+    const response = await axios.post(
+      `${API_URL}/userprofile/${credentials.userId}/upload-avatar`,
+      formData,
+      {
+        headers: { 
+          'Authorization': `Bearer ${credentials.token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
+    
+    if (response.data && response.data.success) {
+      setAvatarUrl(response.data.avatar_url);
+      setShowAvatarCrop(false);
+      setSaveError(null);
+      alert('Avatar updated successfully!');
+    } else {
+      throw new Error('Failed to upload avatar');
+    }
+  } catch (error) {
+    console.error('Error uploading avatar:', error);
+    setSaveError('Failed to upload avatar. Please try again.');
+  } finally {
+    setIsSaving(false);
+  }
+};
+
   
   const handleWallpaperChange = (event) => {
     const file = event.target.files[0];
@@ -895,20 +931,10 @@ const MiscProfile = () => {
                      >
                       <div className="misc-profile-plus-icon">+</div>
                       </button>
-                      
-                     {getAvailablePoints() > 0 && allocatedPoints[stat] > 0 && (
-                    <button 
-                      className="misc-profile-stat-minus-btn"
-                      onClick={() => handleStatChange(stat, -1)}
-                      disabled={isSaving}
-                    >
-                      <div className="misc-profile-minus-icon">-</div>
-                    </button>
-                  )}
-                </div>
-                    
-                    {getAvailablePoints() > 0 && (
-                    <button 
+                      </div>
+                        
+                      {getAvailablePoints() > 0 && (
+                      <button 
                       className="misc-profile-stat-max-btn"
                       onClick={() => handleMaxStat(stat)}
                       title={`Add all ${getAvailablePoints()} points to this stat`}
@@ -1012,7 +1038,7 @@ const MiscProfile = () => {
           <AvatarCropModal
             isOpen={showAvatarCrop}
             onClose={() => setShowAvatarCrop(false)}
-            onSave={setAvatarUrl}
+            onSave={handleAvatarSave} // 
             imageSrc={tempAvatarSrc}
           />
           <PetSelectionModal

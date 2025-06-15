@@ -112,6 +112,9 @@ class UserProfile {
             await db.query(
                 `INSERT INTO UserProfile (
                     user_id,
+                    avatar_url,
+                    custom_wallpaper_url,
+                    wallpaper_id,
                     status_message,
                     skill_points,
                     hp_points,
@@ -176,10 +179,10 @@ class UserProfile {
     }
 
     // Validate file type
-    static validateFileType(filename, allowedTypes = ['jpg', 'jpeg', 'png', 'gif']) {
-        const ext = path.extname(filename).toLowerCase().substring(1);
-        return allowedTypes.includes(ext);
-    }
+   static validateFileType(filename, allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp']) {
+    const ext = path.extname(filename).toLowerCase().substring(1);
+    return allowedTypes.includes(ext);
+}
 
     // Generate unique filename
     static generateUniqueFilename(originalFilename) {

@@ -12,6 +12,28 @@ const generateToken = (user) => {
     );
 };
 
+// Validate token helper
+const validateToken = async (token) => {
+    try {
+        if (!token) return { valid: false, message: 'No token provided' };
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
+
+        if (!user) {
+            return { valid: false, message: 'User not found' };
+        }
+
+        return { valid: true, user };
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            return { valid: false, message: 'Token expired' };
+        }
+        return { valid: false, message: 'Invalid token' };
+    }
+};
+
+
 exports.register = async (req, res) => {
     try {
         logger.debug(`Registration attempt for: ${req.body.username}`, 'AUTH');
@@ -89,6 +111,9 @@ exports.login = async (req, res) => {
         
         // Ensure user has only one stats record
         await User.ensureSingleStatsRecord(user.id);
+
+        // Ensure profile exists
+        await UserProfile.ensureProfileExists(user.id);
 
         await UserQuest.assignDailyQuests(user.id);
         
@@ -289,6 +314,29 @@ exports.updateUserStats = async (req, res) => {
         // Return updated stats in the format expected by the frontend
         res.json(updatedStats);    } catch (error) {
         logger.error('Error updating user stats', 'STATS', error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+
+};
+// Get specific user by ID
+exports.getUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: user
+        });
+    } catch (error) {
         res.status(500).json({
             success: false,
             message: error.message

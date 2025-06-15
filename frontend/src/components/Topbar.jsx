@@ -14,6 +14,7 @@ function Topbar({
   onNotificationClick 
 }) {
   const [showProfileCard, setShowProfileCard] = useState(false);
+  const [showLogoutAlert, setShowLogoutAlert] = useState(false); // State untuk alert logout
   const [overlayProfile, setOverlayProfile] = useState({
     username: 'Loading...', 
     level: 1,
@@ -284,16 +285,23 @@ function Topbar({
     setShowProfileCard(false);
   };
   
+  // Handler untuk menampilkan alert logout
   const handleLogoutClick = () => {
-    console.log('Logout clicked');
+    setShowLogoutAlert(true);
+  };
+
+  // Handler untuk konfirmasi logout
+  const handleConfirmLogout = () => {
+    console.log('Logout confirmed');
     
     try {
       localStorage.removeItem('token');
       localStorage.removeItem('authToken');
       localStorage.removeItem('userId');
       localStorage.removeItem('userProfile');
-      localStorage.removeItem('username'); // Tambahan: hapus username juga
+      localStorage.removeItem('username');
       
+      setShowLogoutAlert(false);
       setShowProfileCard(false);
       navigate('/');
       
@@ -303,159 +311,197 @@ function Topbar({
     }
   };
 
+  // Handler untuk membatalkan logout
+  const handleCancelLogout = () => {
+    setShowLogoutAlert(false);
+  };
+
   return (
-    <nav className="topbar">
-      <div className="topbar-left">        <button className="topbar-menu" onClick={onMenuClick}>☰</button>        <button 
-          className={`topbar-item support-service-btn ${isActive('/support') ? 'active' : ''}`}
-          onClick={() => {
-            onSupportClick?.();
-            navigate('/support');
-          }}
-        >
-          Support Service
-        </button>
-        <button 
-          className={`topbar-item ${isActive('/friends') ? 'active' : ''}`}
-          onClick={() => navigate('/friends')}>Friends</button>
-      </div>
-
-      <div className="topbar-right">
-        <input 
-          type="search" 
-          placeholder="Search..." 
-          className="topbar-search" 
-          onChange={(e) => onSearch?.(e.target.value)}
-        />
-        <button className="topbar-button" onClick={onChatClick}>
-          <img src={chatIcon} alt="Chat" className="topbar-icon" />
-        </button>
-        <button className="topbar-button" onClick={onNotificationClick}>
-          <img src={notificationIcon} alt="Notifications" className="topbar-icon" />
-        </button>
-
-        <div className="topbar-button profile-dropdown-container">
+    <>
+      <nav className="topbar">
+        <div className="topbar-left">
+          <button className="topbar-menu" onClick={onMenuClick}>☰</button>
           <button 
-            ref={profileButtonRef}
-            onClick={handleProfileClick} 
-            className="profile-button"
+            className={`topbar-item support-service-btn ${isActive('/support') ? 'active' : ''}`}
+            onClick={() => {
+              onSupportClick?.();
+              navigate('/support');
+            }}
           >
-            <img 
-              src={profileImage}
-              alt="Profile" 
-              className="topbar-icon" 
-            />
+            Support Service
           </button>
-          
-          {showProfileCard && (
-            <div className="profile-card" ref={profileCardRef}>
-              <div className="profile-header">
-                <div className="profile-avatar">
-                  <img src={profileImage} alt="Profile" />
-                </div>
-                <div className="profile-info">
-                  <div className="profile-username">{overlayProfile.username}</div>
-                  <div className="profile-level">Lvl {overlayProfile.level}</div>
-                  <div className="profile-xp-bar">
-                    <div className="xp-bar">
-                      <div 
-                        className="xp-progress"  
-                        style={{ width: `${(overlayProfile.xp / overlayProfile.maxXp) * 100}%` }}
-                      ></div>
-                    </div>
+          <button 
+            className={`topbar-item ${isActive('/friends') ? 'active' : ''}`}
+            onClick={() => navigate('/friends')}>Friends</button>
+        </div>
+
+        <div className="topbar-right">
+          <input 
+            type="search" 
+            placeholder="Search..." 
+            className="topbar-search" 
+            onChange={(e) => onSearch?.(e.target.value)}
+          />
+          <button className="topbar-button" onClick={onChatClick}>
+            <img src={chatIcon} alt="Chat" className="topbar-icon" />
+          </button>
+          <button className="topbar-button" onClick={onNotificationClick}>
+            <img src={notificationIcon} alt="Notifications" className="topbar-icon" />
+          </button>
+
+          <div className="topbar-button profile-dropdown-container">
+            <button 
+              ref={profileButtonRef}
+              onClick={handleProfileClick} 
+              className="profile-button"
+            >
+              <img 
+                src={profileImage}
+                alt="Profile" 
+                className="topbar-icon" 
+              />
+            </button>
+            
+            {showProfileCard && (
+              <div className="profile-card" ref={profileCardRef}>
+                <div className="profile-header">
+                  <div className="profile-avatar">
+                    <img src={profileImage} alt="Profile" />
                   </div>
-                </div>
-              </div>
-              
-              <div className="profile-currencies">
-                <div className="currency-item">
-                  <span className="currency-icon">🪙</span>
-                  <span className="currency-label">Gold</span>
-                  <span className="currency-amount">{overlayProfile.gold.toLocaleString()}</span>
-                  <button 
-                    className="currency-add" 
-                    onClick={() => handleCurrencyAdd('gold')}
-                  >+</button>
-                </div>
-                <div className="currency-item">
-                  <span className="currency-icon">💎</span>
-                  <span className="currency-label">Diamond</span>
-                  <span className="currency-amount">{overlayProfile.diamonds.toLocaleString()}</span>
-                  <button 
-                    className="currency-add"
-                    onClick={() => handleCurrencyAdd('diamonds')}
-                  >+</button>
-                </div>
-              </div>
-              
-              <div className="profile-stats">
-                <div className="stat-item">
-                  <div className="stat-label">
-                    <span>Quest Point <span className="stat-icon">📜</span></span>
-                    <span className="stat-value">{overlayProfile.questPoints}/{overlayProfile.maxQuestPoints}</span>
-                  </div>
-                  <div className="stat-bar-container">
-                    <div className="stat-bar quest-bar">
-                      <div 
-                        className="stat-progress" 
-                        style={{ width: `${(overlayProfile.questPoints / overlayProfile.maxQuestPoints) * 100}%` }}
-                      ></div>
+                  <div className="profile-info">
+                    <div className="profile-username">{overlayProfile.username}</div>
+                    <div className="profile-level">Lvl {overlayProfile.level}</div>
+                    <div className="profile-xp-bar">
+                      <div className="xp-bar">
+                        <div 
+                          className="xp-progress"  
+                          style={{ width: `${(overlayProfile.xp / overlayProfile.maxXp) * 100}%` }}
+                        ></div>
+                      </div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="stat-item">
-                  <div className="stat-label">
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <span>Energy Point <span className="stat-icon">⚡</span></span>
-                      <span className="energy-timer">{overlayProfile.energyTimer}</span>
-                      <button 
-                        className="refill-btn"
-                        onClick={handleRefill}
-                      >Refill?</button>
-                    </div>
-                    <span className="stat-value">{overlayProfile.energyPoints}/{overlayProfile.maxEnergyPoints}</span>
+                <div className="profile-currencies">
+                  <div className="currency-item">
+                    <span className="currency-icon">🪙</span>
+                    <span className="currency-label">Gold</span>
+                    <span className="currency-amount">{overlayProfile.gold.toLocaleString()}</span>
+                    <button 
+                      className="currency-add" 
+                      onClick={() => handleCurrencyAdd('gold')}
+                    >+</button>
                   </div>
-                  <div className="energy-row">
-                    <div className="energy-bar">
-                      <div 
-                        className="stat-progress" 
-                        style={{ width: `${(overlayProfile.energyPoints / overlayProfile.maxEnergyPoints) * 100}%` }}
-                      ></div>
+                  <div className="currency-item">
+                    <span className="currency-icon">💎</span>
+                    <span className="currency-label">Diamond</span>
+                    <span className="currency-amount">{overlayProfile.diamonds.toLocaleString()}</span>
+                    <button 
+                      className="currency-add"
+                      onClick={() => handleCurrencyAdd('diamonds')}
+                    >+</button>
+                  </div>
+                </div>
+                
+                <div className="profile-stats">
+                  <div className="stat-item">
+                    <div className="stat-label">
+                      <span>Quest Point <span className="stat-icon">📜</span></span>
+                      <span className="stat-value">{overlayProfile.questPoints}/{overlayProfile.maxQuestPoints}</span>
+                    </div>
+                    <div className="stat-bar-container">
+                      <div className="stat-bar quest-bar">
+                        <div 
+                          className="stat-progress" 
+                          style={{ width: `${(overlayProfile.questPoints / overlayProfile.maxQuestPoints) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="stat-item">
+                    <div className="stat-label">
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <span>Energy Point <span className="stat-icon">⚡</span></span>
+                        <span className="energy-timer">{overlayProfile.energyTimer}</span>
+                        <button 
+                          className="refill-btn"
+                          onClick={handleRefill}
+                        >Refill?</button>
+                      </div>
+                      <span className="stat-value">{overlayProfile.energyPoints}/{overlayProfile.maxEnergyPoints}</span>
+                    </div>
+                    <div className="energy-row">
+                      <div className="energy-bar">
+                        <div 
+                          className="stat-progress" 
+                          style={{ width: `${(overlayProfile.energyPoints / overlayProfile.maxEnergyPoints) * 100}%` }}
+                        ></div>
+                      </div>
                     </div>
                   </div>
                 </div>
+                
+                <div className="profile-actions">
+                  <button className="action-button profile" onClick={handleMyProfileClick}>
+                    <span className="action-icon">👤</span>
+                    <span>My Profile</span>
+                  </button>
+                  <button className="action-button membership" onClick={handleMembershipClick}>
+                    <span className="action-icon">👑</span>
+                    <span>Membership</span>
+                  </button>
+                  <button className="action-button settings" onClick={handleSettingsClick}>
+                    <span className="action-icon">⚙️</span>
+                    <span>Settings</span>
+                  </button>
+                  <button className="action-button logout" onClick={handleLogoutClick}>
+                    <span className="action-icon">🚪</span>
+                    <span>Log Out</span>
+                  </button>
+                </div>
+                
+                <div 
+                  className="topup-banner"
+                  onClick={handleTopUpClick}
+                >
+                  TOP UP SEKARANG JUGA !
+                </div>
               </div>
-              
-              <div className="profile-actions">
-                <button className="action-button profile" onClick={handleMyProfileClick}>
-                  <span className="action-icon">👤</span>
-                  <span>My Profile</span>
-                </button>
-                <button className="action-button membership" onClick={handleMembershipClick}>
-                  <span className="action-icon">👑</span>
-                  <span>Membership</span>
-                </button>
-                <button className="action-button settings" onClick={handleSettingsClick}>
-                  <span className="action-icon">⚙️</span>
-                  <span>Settings</span>
-                </button>
-                <button className="action-button logout" onClick={handleLogoutClick}>
-                  <span className="action-icon">🚪</span>
-                  <span>Log Out</span>
-                </button>
-              </div>
-              
-              <div 
-                className="topup-banner"
-                onClick={handleTopUpClick}
-              >
-                TOP UP SEKARANG JUGA !
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {/* Logout Confirmation Alert */}
+      {showLogoutAlert && (
+        <div className="logout-alert-overlay">
+          <div className="logout-alert-modal">
+            <div className="logout-alert-header">
+              <h3>Confirm Logout</h3>
+            </div>
+            <div className="logout-alert-body">
+              <p>Are you sure you want to log out?</p>
+             
+            </div>
+            <div className="logout-alert-actions">
+              <button 
+                className="logout-cancel-btn" 
+                onClick={handleCancelLogout}
+              >
+                Cancel
+              </button>
+              <button 
+                className="logout-confirm-btn" 
+                onClick={handleConfirmLogout}
+              >
+                Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

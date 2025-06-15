@@ -409,9 +409,7 @@
   gap: 15px; /* Increased gap for better spacing */
 }
 
-/* Fixed plus and minus buttons */
-.misc-profile-stat-plus-btn, 
-.misc-profile-stat-minus-btn {
+.misc-profile-stat-plus-btn {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -432,20 +430,8 @@
   transform: scale(1.1);
 }
 
-.misc-profile-stat-minus-btn:not(.disabled):hover {
-  background-color: #dc3545;
-  border-color: #b02a37;
-  transform: scale(1.1);
-}
 
-.misc-profile-stat-plus-btn.disabled,
-.misc-profile-stat-minus-btn.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.misc-profile-stat-plus-btn::after, 
-.misc-profile-stat-minus-btn::after {
+.misc-profile-stat-plus-btn::after {
   content: '';
   position: absolute;
   top: 0;
@@ -456,13 +442,11 @@
   transition: all 0.4s ease;
 }
 
-.misc-profile-stat-plus-btn:not(.disabled):hover::after, 
-.misc-profile-stat-minus-btn:not(.disabled):hover::after {
+.misc-profile-stat-plus-btn:not(.disabled):hover::after {
   left: 100%;
 }
 
-.misc-profile-plus-icon, 
-.misc-profile-minus-icon {
+.misc-profile-plus-icon {
   font-size: 24px;
   color: white;
   position: absolute;
