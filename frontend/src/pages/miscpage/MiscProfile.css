@@ -1,10 +1,11 @@
 .misc-profile-stat-box:hover .misc-profile-stat-bonus {
   color: #00d9ff;
-}.misc-profile-profile-page {
+}
+
+.misc-profile-profile-page {
   flex: 1;
   padding: 0;
   position: relative;
-  padding-top: 20px;
 }
 
 /* Profile edit button */
@@ -62,6 +63,8 @@
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0);
+  border-bottom: 2px solid #232323;
+
   z-index: 1;
   transition: 0.5s ease;
 }
@@ -157,10 +160,6 @@
   border-radius: 50%;
 }
 
-.misc-profile-profile-character-avatar:hover .misc-profile-pixel-character {
-  transform: scale(1.1);
-}
-
 .misc-profile-character-name {
   margin-top: 10px;
   font-size: 18px;
@@ -239,7 +238,8 @@
   }
 }
 
-.misc-profile-xp-fill::after {
+/* gausah si kyknya terlalu bnyak jdnya */
+/* .misc-profile-xp-fill::after {
   content: "";
   position: absolute;
   top: 0;
@@ -255,12 +255,12 @@
   100% {
     transform: translateX(100%);
   }
-}
+} */
 
 /* Fixed Status message section with proper button positioning */
 .misc-profile-profile-status-message {
   margin: 20px;
-  padding: 20px;
+  padding: 1.5rem;
   background-color: #101010;
   border-radius: 10px;
   position: relative;
@@ -269,6 +269,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 15px;
+  border: 1px solid #232323;
 }
 
 .misc-profile-status-content {
@@ -277,7 +278,7 @@
 
 .misc-profile-status-text {
   color: white;
-  font-size: 16px;
+  font-size: 1.2rem;
 }
 
 .misc-profile-status-input {
@@ -311,7 +312,7 @@
   border: none;
   border-radius: 15px;
   padding: 6px 12px;
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
@@ -354,6 +355,7 @@
   align-items: center;
   position: relative;
   transform-origin: center;
+  border: 1px solid #232323;
 }
 
 .misc-profile-stat-info {
@@ -435,15 +437,7 @@
   content: '';
   position: absolute;
   top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: all 0.4s ease;
-}
-
-.misc-profile-stat-plus-btn:not(.disabled):hover::after {
-  left: 100%;
+  transition: all 0.5s ease;
 }
 
 .misc-profile-plus-icon {
@@ -490,6 +484,7 @@
   width: calc(100% - 40px);
   background-color: #101010;
   border-radius: 10px;
+  border: 1px solid #232323;
   padding: 15px 20px;
   display: flex;
   justify-content: center;
@@ -565,6 +560,7 @@
 
 /* Bottom section */
 .misc-profile-bottom-section {
+  height: 21rem;
   display: grid;
   grid-template-columns: 1fr 2fr;
   gap: 20px;
@@ -574,9 +570,10 @@
 .misc-profile-favorite-pet-container {
   background-color: #101010;
   border-radius: 10px;
-  padding: 15px;
+  padding: 1.2rem;
   position: relative;
   transition: all 0.4s ease;
+  border: 1px solid #232323;
 }
 
 .misc-profile-favorite-pet-container:hover {
@@ -634,7 +631,7 @@
     transform: translateY(0);
   }
   100% {
-    transform: translateY(-10px);
+    transform: translateY(-5px);
   }
 }
 
@@ -645,7 +642,7 @@
 .misc-profile-pet-detail {
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
+  padding: 0.5rem 1rem;
   font-size: 1rem;
   transition: all 0.3s ease;
   position: relative;
@@ -655,8 +652,6 @@
 .misc-profile-pet-detail:hover {
   background-color: rgba(0, 123, 255, 0.1);
   border-radius: 5px;
-  padding-left: 5px;
-  padding-right: 5px;
 }
 
 .misc-profile-pet-detail::after {
@@ -700,14 +695,14 @@
 /* Fixed positioning for Edit Pet button */
 .misc-profile-edit-pet-btn {
   position: absolute;
-  bottom: 15px;
-  right: 15px;
+  bottom: 1rem;
+  right: 1.2rem;
   background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 15px;
-  padding: 6px 12px;
-  font-size: 12px;
+  border-radius: 10px;
+  padding: 4px 12px;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
   z-index: 5;
@@ -725,6 +720,7 @@
   padding: 15px;
   position: relative;
   transition: all 0.4s ease;
+  border: 1px solid #232323;
 }
 
 .misc-profile-achievements-container:hover {
@@ -733,10 +729,10 @@
 }
 
 .misc-profile-achievements-grid {
+  margin-top: 4rem;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  margin-bottom: 40px; /* Added margin for the button */
 }
 
 .misc-profile-achievement-item {
@@ -745,7 +741,7 @@
   align-items: center;
   text-align: center;
   transition: all 0.3s ease;
-  padding-top: 10px;
+  /* padding-top: 4rem; */
 }
 
 .misc-profile-achievement-item:hover {
@@ -753,8 +749,8 @@
 }
 
 .misc-profile-achievement-icon {
-  width: 50px;
-  height: 50px;
+  width: 4rem;
+  height: 4rem;
   border-radius: 5px;
   margin-bottom: 10px;
   transition: all 0.4s ease;
@@ -787,7 +783,7 @@
 }
 
 .misc-profile-achievement-text {
-  font-size: 12px;
+  font-size: 1rem;
   color: #ddd;
   transition: all 0.3s ease;
 }
@@ -799,14 +795,14 @@
 /* Fixed positioning for View All Achievements button */
 .misc-profile-view-achievements-btn {
   position: absolute;
-  bottom: 15px;
-  right: 15px;
+  bottom: 1rem;
+  right: 1.2rem;
   background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 15px;
-  padding: 6px 12px;
-  font-size: 12px;
+  border-radius: 10px;
+  padding: 4px 12px;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
   z-index: 5;
@@ -816,6 +812,21 @@
   background-color: #0056b3;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.misc-profile-select-achievements-btn {
+  position: absolute;
+  bottom: 1rem;
+  left: 1.2rem;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  border: 1px solid #232323;
+  padding: 4px 12px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 5;
 }
 
 /* Error and loading states */

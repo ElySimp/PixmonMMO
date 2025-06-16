@@ -622,7 +622,7 @@ const MiscProfile = () => {
   
   // Achievement selection handlers
   const handleViewAllAchievements = () => {
-    window.location.href = '/achievements';
+    window.location.href = '/achievement';
   };
   
   const handleSelectAchievements = () => {
@@ -837,7 +837,7 @@ const MiscProfile = () => {
                     <span className="misc-profile-stat-value">{level}</span>
                   </div>
                   <div className="misc-profile-xp-container">
-                    <span className="misc-profile-stat-label">Xp</span>
+                    <span className="misc-profile-stat-label">XP</span>
                     <div className="misc-profile-xp-bar">
                       <div 
                         className="misc-profile-xp-fill"

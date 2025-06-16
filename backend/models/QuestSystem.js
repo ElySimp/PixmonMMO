@@ -42,7 +42,7 @@ class Quest {
             {
                 name: "Take 5 Steps",
                 description: "Take 5 steps in the adventure.",
-                xp_reward: 100,
+                xp_reward: 75,
                 gold_reward: 50,
                 repeat_type: "daily",
                 level_required: 1,
@@ -51,8 +51,8 @@ class Quest {
             {
                 name: "Take 20 Steps",
                 description: "Take 20 steps in the adventure.",
-                xp_reward: 200,
-                gold_reward: 100,
+                xp_reward: 100,
+                gold_reward: 75,
                 repeat_type: "daily",
                 level_required: 1,
                 quest_points_required: 0
@@ -60,7 +60,7 @@ class Quest {
             {
                 name: "Win 1 Battle",
                 description: "Win 1 battle against a wild Pixmon.",
-                xp_reward: 120,
+                xp_reward: 100,
                 gold_reward: 60,
                 repeat_type: "daily",
                 level_required: 1,
@@ -79,8 +79,8 @@ class Quest {
             {
                 name: "Defeat 3 Wild Pixmon",
                 description: "Defeat 3 wild Pixmon in battle.",
-                xp_reward: 300,
-                gold_reward: 150,
+                xp_reward: 100,
+                gold_reward: 50,
                 repeat_type: "bounty",
                 level_required: 1,
                 quest_points_required: 1
@@ -88,8 +88,8 @@ class Quest {
             {
                 name: "Earn 500 Gold",
                 description: "Earn a total of 500 gold from any source.",
-                xp_reward: 400,
-                gold_reward: 200,
+                xp_reward: 100,
+                gold_reward: 60,
                 repeat_type: "bounty",
                 level_required: 1,
                 quest_points_required: 1
@@ -97,8 +97,8 @@ class Quest {
             {
                 name: "Catch 3 Unique Pixmon",
                 description: "Catch 3 different Pixmon species.",
-                xp_reward: 500,
-                gold_reward: 250,
+                xp_reward: 125,
+                gold_reward: 100,
                 repeat_type: "bounty",
                 level_required: 1,
                 quest_points_required: 1
