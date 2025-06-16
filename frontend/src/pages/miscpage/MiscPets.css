@@ -296,6 +296,11 @@
   margin-left: 0.3rem;
 }
 
+.filter-group option {
+  background-color:  #101011;
+  border-radius: 10px;
+}
+
 .filter-group select {
   padding: 0.6rem 0.8rem;
   border-radius: 4px;
@@ -305,6 +310,15 @@
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-image: url("data:image/svg+xml,%3Csvg%20fill='white'%20viewBox='0%200%2024%2024'%20xmlns='http://www.w3.org/2000/svg'%3E%3Cpath%20d='M7.41%208.59%2012%2013.17l4.59-4.58L18%2010l-6%206-6-6z'/%3E%3C/svg%3E");
+
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 8px 10px;
 }
 
 .filter-group select:focus {
@@ -312,6 +326,16 @@
   background-color: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.2);
 }
+
+.filter-group select:hover {
+  background-color: #2a2a2a;
+  background-image: url("data:image/svg+xml,%3Csvg%20fill='white'%20viewBox='0%200%2024%2024'%20xmlns='http://www.w3.org/2000/svg'%3E%3Cpath%20d='M7.41%208.59%2012%2013.17l4.59-4.58L18%2010l-6%206-6-6z'/%3E%3C/svg%3E");
+
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 25px 25px;
+}
+
 
 .reset-filters-btn {
   padding: 0.6rem 1rem;

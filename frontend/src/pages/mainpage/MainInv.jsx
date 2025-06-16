@@ -199,27 +199,29 @@ const MainInv = () => {
         <div className="maininv-Inventory-Data-Container">
           <div className="maininv-sortingSquare">
             <div className="maininv-innerSort">Filter by Type</div>
-            <select value={selectedType} onChange={handleTypeChange}>
-              {ITEM_TYPES.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-
-            <div className="maininv-innerSort">Filter by Usage</div>
-            <select value={selectedUsage} onChange={handleUsageChange}>
-              {USAGE_TYPES.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-
-            {selectedUsage === 'Equip' && (
-              <>
-                <div className="maininv-innerSort">Equip Category</div>
-                <select classname="maininv-option" value={equipCategory} onChange={handleEquipCategoryChange}>
-                  {EQUIP_CATEGORIES.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
+              <select value={selectedType} onChange={handleTypeChange}>
+                {ITEM_TYPES.map(type => (
+                  <option  className = "maininv-option" key={type} value={type}>{type}</option>
+                ))}
+              </select>
+              <br></br>
+              <br></br>
+              <div className="maininv-innerSort">Filter by Usage</div>
+              <select value={selectedUsage} onChange={handleUsageChange}>
+                {USAGE_TYPES.map(type => (
+                  <option className = "maininv-option" key={type} value={type}>{type}</option>
+                ))}
+              </select>
+              <br></br>
+              <br></br>
+              {selectedUsage === 'Equip' && (
+                <>
+                  <div className="maininv-innerSort">Equip Category</div>
+                  <select className="maininv-option" value={equipCategory} onChange={handleEquipCategoryChange}>
+                    {EQUIP_CATEGORIES.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
               </>
             )}
           </div>

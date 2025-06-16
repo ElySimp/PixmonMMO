@@ -34,13 +34,33 @@
   text-align: center;
   flex-direction: column;
   padding: 1rem;
-
-
 }
 
-.maininv-option {
-    background-color: #101011;
+.maininv-option:hover {
+  background-color: #2a2a2a;
+  box-shadow: 0 0 6px rgba(200, 200, 200, 0.2);
+  cursor: pointer;
 }
+
+.maininv-option:hover {
+  background-color: #2a2a2a;
+  box-shadow: 0 0 6px rgba(200, 200, 200, 0.2);
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%204%205'%3E%3Cpath%20fill='white'%20d='M2%205L0%200h4z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 8px 10px;
+  cursor: pointer;
+}
+
+.maininv-sortingSquare select:hover {
+  background-color: #2a2a2a;
+  background-image: url("data:image/svg+xml,%3Csvg%20fill='white'%20viewBox='0%200%2024%2024'%20xmlns='http://www.w3.org/2000/svg'%3E%3Cpath%20d='M7.41%208.59%2012%2013.17l4.59-4.58L18%2010l-6%206-6-6z'/%3E%3C/svg%3E");
+
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 25px 25px;
+}
+
 
 .maininv-sortingSquare option {
   background-color:  #101011;
@@ -58,8 +78,21 @@
   border: none;
   outline: none;
   padding-left: 0.5rem;
+  padding-right: 2rem; /* to avoid text overlapping the arrow */
   transition: all 0.3s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-image: url("data:image/svg+xml,%3Csvg%20fill='white'%20viewBox='0%200%2024%2024'%20xmlns='http://www.w3.org/2000/svg'%3E%3Cpath%20d='M7.41%208.59%2012%2013.17l4.59-4.58L18%2010l-6%206-6-6z'/%3E%3C/svg%3E");
+
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 8px 10px;
+
+  box-shadow: none;
 }
+
 
 .maininv-sortingSquare select option {
   border-radius: 10px;
@@ -77,6 +110,7 @@
   align-items: center;
   justify-content: center;
 }
+
 
 .maininv-inventory-Info {
   background-color: #101011;
