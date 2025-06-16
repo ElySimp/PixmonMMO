@@ -7,6 +7,10 @@ import potion from '../../assets/inv_asset/potion.png';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../utils/config';
 
+const USAGE_TYPES = ['All', 'Consumables', 'Equip', 'Gacha'];
+const EQUIP_CATEGORIES = ['All', 'Weapon', 'Armor', 'Accessory']; // Placeholder values
+const ITEM_TYPES = ['All', 'Potion', 'Food', 'Key'];
+
 const emptyInventoryStyle = {
   textAlign: 'center',
   padding: '20px',
@@ -51,7 +55,6 @@ async function getIndexInventory() {
     const res = await fetch(`${API_URL}/inventoryIndex`);
     const data = await res.json();
     if (data.success) return data.inventoryIndex;
-    console.error('Failed to get inventory index');
     return [];
   } catch (error) {
     console.error("Error fetching inventory index:", error);
@@ -65,7 +68,9 @@ const MainInv = () => {
   const [count, setCount] = useState(0);
   const [inventory, setInventory] = useState([]);
   const [inventoryIndex, setInventoryIndex] = useState([]);
-  const [selectedOption, setSelectedOption] = useState("all");
+  const [selectedType, setSelectedType] = useState('All');
+  const [selectedUsage, setSelectedUsage] = useState('All');
+  const [equipCategory, setEquipCategory] = useState('All');
   const [showInventory, setShowInventory] = useState(true);
 
   const reloadInventory = async () => {
@@ -79,106 +84,110 @@ const MainInv = () => {
     }
   };
 
-  const handleChange = (e) => {
-    const newValue = e.target.value;
+  const handleTypeChange = (e) => {
     setShowInventory(false);
-    setSelectedOption(newValue);
+    setSelectedType(e.target.value);
+    setTimeout(() => setShowInventory(true), 0);
+  };
+
+  const handleUsageChange = (e) => {
+    const value = e.target.value;
+    setShowInventory(false);
+    setSelectedUsage(value);
+    if (value !== 'Equip') setEquipCategory('All');
+    setTimeout(() => setShowInventory(true), 0);
+  };
+
+  const handleEquipCategoryChange = (e) => {
+    setShowInventory(false);
+    setEquipCategory(e.target.value);
     setTimeout(() => setShowInventory(true), 0);
   };
 
   useEffect(() => {
     if (authLoading) return;
-    getIndexInventory()
-      .then(setInventoryIndex)
-      .catch(() => setInventoryIndex([]));
+    getIndexInventory().then(setInventoryIndex).catch(() => setInventoryIndex([]));
   }, [authLoading]);
 
   useEffect(() => {
-    if (authLoading) return;
-    if (user && user.id) {
-      getInventoryCount(user.id)
-        .then(setCount)
-        .catch(() => setCount(0));
-    } else {
-      setCount(0);
-    }
+    if (authLoading || !user?.id) return;
+    getInventoryCount(user.id).then(setCount).catch(() => setCount(0));
+    getInventoryData(user.id).then(setInventory).catch(() => setInventory([]));
   }, [user, authLoading]);
 
-  useEffect(() => {
-    if (authLoading) return;
-    if (user && user.id) {
-      getInventoryData(user.id)
-        .then(setInventory)
-        .catch(() => setInventory([]));
-    } else {
-      setInventory([]);
-    }
-  }, [user, authLoading]);
-
-  function InventoryItem({ item, filter }) {
+  const InventoryItem = ({ item }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const { user } = useAuth();
+    const itemData = inventoryIndex[item.index_id - 1] || {};
+    const { rarity = 1, description = 'No description available', item_category = 'none' } = itemData;
 
-    if (filter !== "all" && filter !== item.item_type) {
+    const usageType =
+      item.item_type === 'potion' || item.item_type === 'food' ? 'Consumables'
+      : item.item_type === 'key' ? 'Gacha'
+      : 'Equip';
+
+    if ((selectedType !== 'All' && selectedType.toLowerCase() !== item.item_type) ||
+        (selectedUsage !== 'All' && selectedUsage !== usageType)) {
       return null;
     }
 
+    if (selectedUsage === 'Equip' && equipCategory !== 'All') {
+      console.warn('Equip filtering is currently skipped — waiting for backend data structure.');
+    }
+
     const handleUse = async () => {
-      if (user && user.id && item.index_id) {
-        await itemUse(user.id, item.index_id);
-        setIsOpen(false);
-        await reloadInventory(); // ✅ Reload after using item
-      }
+      await itemUse(user.id, item.index_id);
+      setIsOpen(false);
+      await reloadInventory();
     };
+
+    const effect = item.item_stats?.health_regen || item.item_stats?.hunger_value || item.item_stats?.mana_regen || 0;
+    const statLabel = item.item_stats?.health_regen ? 'Health Regen'
+      : item.item_stats?.hunger_value ? 'Hunger Value'
+      : item.item_stats?.mana_regen ? 'Mana Regen'
+      : 'No Effect';
+
+    const rarityColors = ['gray', 'green', 'blue', 'gold'];
 
     return (
       <div className="maininv-item-container">
-        <div className="maininv-inventory-items" onClick={() => setIsOpen(true)}>
-          <div className="maininv-amt"> x{item.amount || 1} </div>
-          <div className="maininv-items">
-            <img src={potion} alt="potion" />
-          </div>
+        <div
+          className="maininv-inventory-items"
+          style={{ border: `2px solid ${rarityColors[rarity - 1]}` }}
+          onClick={() => setIsOpen(true)}
+        >
+          <img src={potion} alt="potion" />
+          <div className="maininv-amt">x{item.amount}</div>
         </div>
 
         {isOpen && (
           <div className="maininv-centered-box" onClick={() => setIsOpen(false)}>
             <div className="maininv-box-content" onClick={e => e.stopPropagation()}>
-              <div className="overlay-name">{item.item_name}</div>
-              <div className="maininv-items">
-                <img src={potion} alt="potion" />
-              </div>
-              <div className="maininv-item-stats">effect : {item.effect_value || 0}%</div>
-              <div className="maininv-description">
-                {inventoryIndex && item.index_id && inventoryIndex[item.index_id - 1]
-                  ? inventoryIndex[item.index_id - 1].description
-                  : "No description available"}
-              </div>
-
-              <div className="maininv-buttons" style={{ display: "flex", gap: "1rem", marginTop: "1rem", justifyContent: "center" }}>
-                <button className="maininv-overlay-btns" onClick={handleUse}>
-                  Use
-                </button>
-                <button className="maininv-overlay-btns" onClick={() => setIsOpen(false)}>
-                  Close
-                </button>
+              <h3 className="overlay-name">{item.item_name}</h3>
+              <img src={potion} alt="potion" />
+              <div className="maininv-item-stats">{statLabel}: {effect}%</div>
+              <div className="maininv-description">{description}</div>
+              <div className="maininv-buttons">
+                <button className="maininv-use-btn" onClick={handleUse}>Use</button>
+                <button className="maininv-close-btn" onClick={() => setIsOpen(false)}>Close</button>
               </div>
             </div>
           </div>
         )}
       </div>
     );
-  }
+  };
 
-  function MainInvCreation({ inventory, filter }) {
-    return inventory.map((item, index) => (
-      <InventoryItem key={item.id || index} item={item} filter={filter} />
-    ));
-  }
+  const MainInvCreation = () => (
+    inventory.map((item, index) => (
+      <InventoryItem key={item.id || index} item={item} />
+    ))
+  );
 
   return (
     <div className="maininv-invCont">
       <Sidebar profilePic="/dummy.jpg" />
-      <div className="maininv-invContent">        <Topbar
+      <div className="maininv-invContent">
+        <Topbar
           onMenuClick={() => console.log('Menu clicked')}
           onSupportClick={() => navigate('/support')}
           onFriendsClick={() => console.log('Friends clicked')}
@@ -189,34 +198,43 @@ const MainInv = () => {
         />
         <div className="maininv-Inventory-Data-Container">
           <div className="maininv-sortingSquare">
-            <div className="maininv-innerSort">filter</div>
-            <br />
-            <label>Choose a type</label>
-            <br />
-            <select
-              id="Sort"
-              name="Choice"
-              className="maininv-inventory-sorting-content"
-              value={selectedOption}
-              onChange={handleChange}
-            >
-              <option value="all">All</option>
-              <option value="potion">Potion</option>
-              <option value="food">Food</option>
-              <option value="key">Key</option>
+            <div className="maininv-innerSort">Filter by Type</div>
+            <select value={selectedType} onChange={handleTypeChange}>
+              {ITEM_TYPES.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
             </select>
+
+            <div className="maininv-innerSort">Filter by Usage</div>
+            <select value={selectedUsage} onChange={handleUsageChange}>
+              {USAGE_TYPES.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+
+            {selectedUsage === 'Equip' && (
+              <>
+                <div className="maininv-innerSort">Equip Category</div>
+                <select classname="maininv-option" value={equipCategory} onChange={handleEquipCategoryChange}>
+                  {EQUIP_CATEGORIES.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </>
+            )}
           </div>
 
-          <div className="maininv-right-side-inv">
+          <div style={{ flex: 1 }}>
             <div className="maininv-inventory-Info">
               <label className="maininv-inv-word">Inventory</label>
               <div className="maininv-inventory-capacity">
-                capacity : {count} / 100 (User ID: {user?.id})
+                Capacity : {count} / 100 
               </div>
             </div>
+
             <div className="maininv-actual-inventory">
               {showInventory && (inventory.length > 0 ? (
-                <MainInvCreation inventory={inventory} filter={selectedOption} />
+                <MainInvCreation />
               ) : (
                 <div style={emptyInventoryStyle}>Your inventory is empty</div>
               ))}
