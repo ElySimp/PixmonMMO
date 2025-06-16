@@ -619,8 +619,12 @@ class UserProfile {
     // Get all wallpapers
     static async getAllWallpapers() {
         try {
-            const [rows] = await db.query('SELECT * FROM Wallpapers ORDER BY id');
-            return rows;
+            const [wallpapers] = await db.query(`
+                SELECT id, name, wallpaper_url as image_url, is_premium
+                FROM Wallpapers
+                ORDER BY id
+            `);
+            return wallpapers;
         } catch (error) {
             console.error('Error getting all wallpapers:', error);
             throw error;
@@ -638,6 +642,63 @@ class UserProfile {
         } catch (error) {
             console.error('Error validating wallpaper:', error);
             return false;
+        }
+    }
+
+    // Get all available avatars
+    static async getAllAvatars() {
+        try {
+            const [avatars] = await db.query(`
+                SELECT id, name, image_path as image_url, is_premium
+                FROM Avatars
+                ORDER BY id
+            `);
+            return avatars;
+        } catch (error) {
+            console.error('Error getting avatars:', error);
+            throw error;
+        }
+    }
+
+    // Update user's avatar
+    static async updateAvatar(userId, avatarId) {
+        try {
+            const [result] = await db.query(
+                `UPDATE UserProfile 
+                SET avatar_id = ?, updated_at = NOW()
+                WHERE user_id = ?`,
+                [avatarId, userId]
+            );
+
+            if (result.affectedRows === 0) {
+                throw new Error('User profile not found');
+            }
+
+            return await this.getByUserId(userId);
+        } catch (error) {
+            console.error('Error updating avatar:', error);
+            throw error;
+        }
+    }
+
+    // Update user's wallpaper
+    static async updateWallpaper(userId, wallpaperId) {
+        try {
+            const [result] = await db.query(
+                `UPDATE UserProfile 
+                SET wallpaper_id = ?, updated_at = NOW()
+                WHERE user_id = ?`,
+                [wallpaperId, userId]
+            );
+
+            if (result.affectedRows === 0) {
+                throw new Error('User profile not found');
+            }
+
+            return await this.getByUserId(userId);
+        } catch (error) {
+            console.error('Error updating wallpaper:', error);
+            throw error;
         }
     }
 }

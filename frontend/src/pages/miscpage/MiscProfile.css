@@ -938,3 +938,151 @@
     justify-content: center;
   }
 }
+
+/* Modal Overlay */
+.misc-profile-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Avatar Modal */
+.misc-profile-avatar-modal {
+  background-color: #1a1a1a;
+  border-radius: 10px;
+  padding: 20px;
+  width: 80%;
+  max-width: 800px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.misc-profile-avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.misc-profile-avatar-item {
+  cursor: pointer;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.misc-profile-avatar-item:hover {
+  transform: scale(1.05);
+  border-color: #007bff;
+}
+
+.misc-profile-avatar-preview {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+/* Wallpaper Modal */
+.misc-profile-wallpaper-modal {
+  background-color: #1a1a1a;
+  border-radius: 10px;
+  padding: 20px;
+  width: 90%;
+  max-width: 1000px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.misc-profile-wallpaper-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.misc-profile-wallpaper-item {
+  cursor: pointer;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.misc-profile-wallpaper-item:hover {
+  transform: scale(1.05);
+  border-color: #007bff;
+}
+
+.misc-profile-wallpaper-preview {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.misc-profile-close-modal-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.misc-profile-close-modal-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Avatar and Wallpaper Selection Buttons */
+.misc-profile-avatar-select-btn,
+.misc-profile-wallpaper-select-btn {
+  background-color: rgba(0, 123, 255, 0.8);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  backdrop-filter: blur(5px);
+}
+
+.misc-profile-avatar-select-btn:hover,
+.misc-profile-wallpaper-select-btn:hover {
+  background-color: rgba(0, 123, 255, 1);
+  transform: translateY(-2px);
+}
+
+.misc-profile-avatar-select-btn:disabled,
+.misc-profile-wallpaper-select-btn:disabled {
+  background-color: rgba(128, 128, 128, 0.8);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.misc-profile-avatar-edit-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 50%;
+}
+
+.misc-profile-profile-character-avatar:hover .misc-profile-avatar-edit-overlay {
+  opacity: 1;
+}

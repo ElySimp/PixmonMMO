@@ -503,3 +503,73 @@ exports.updateAvatarAndWallpaper = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
+
+exports.updateAvatar = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { avatar_id } = req.body;
+
+        if (req.user.id !== parseInt(userId)) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+        if (!avatar_id) {
+            return res.status(400).json({ error: 'Avatar ID is required' });
+        }
+        const presetAvatars = [1, 2, 3, 4, 5];
+        if (!presetAvatars.includes(parseInt(avatar_id))) {
+            return res.status(400).json({ error: 'Invalid avatar ID' });
+        }
+        const avatarUrl = `/assets/avatars/avatar${avatar_id}.jpg`;
+        const updateQuery = `
+            INSERT INTO user_profiles (user_id, avatar_url) 
+            VALUES (?, ?)
+            ON DUPLICATE KEY UPDATE 
+                avatar_url = VALUES(avatar_url),
+                updated_at = CURRENT_TIMESTAMP
+        `;
+        await db.execute(updateQuery, [userId, avatarUrl]);
+        res.json({
+            success: true,
+            message: 'Avatar updated successfully',
+            avatar_url: avatarUrl
+        });
+    } catch (error) {
+        console.error('Error updating avatar:', error);
+        res.status(500).json({ error: 'Failed to update avatar' });
+    }
+};
+
+exports.updateWallpaper = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { wallpaper_id } = req.body;
+
+        if (req.user.id !== parseInt(userId)) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+        if (!wallpaper_id) {
+            return res.status(400).json({ error: 'Wallpaper ID is required' });
+        }
+        const presetWallpapers = [1, 2, 3, 4, 5];
+        if (!presetWallpapers.includes(parseInt(wallpaper_id))) {
+            return res.status(400).json({ error: 'Invalid wallpaper ID' });
+        }
+        const wallpaperUrl = `/assets/wallpapers/wallpaper${wallpaper_id}.jpg`;
+        const updateQuery = `
+            INSERT INTO user_profiles (user_id, wallpaper) 
+            VALUES (?, ?)
+            ON DUPLICATE KEY UPDATE 
+                wallpaper = VALUES(wallpaper),
+                updated_at = CURRENT_TIMESTAMP
+        `;
+        await db.execute(updateQuery, [userId, wallpaperUrl]);
+        res.json({
+            success: true,
+            message: 'Wallpaper updated successfully',
+            wallpaper: wallpaperUrl
+        });
+    } catch (error) {
+        console.error('Error updating wallpaper:', error);
+        res.status(500).json({ error: 'Failed to update wallpaper' });
+    }
+};

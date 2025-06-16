@@ -8,111 +8,137 @@ import trophyImage from '../../assets/MAIN/trophy.png';
 import { API_URL, TOKEN_KEY } from '../../utils/config';
 import axios from 'axios';
 
-// Avatar Crop Modal Component
-const AvatarCropModal = ({ isOpen, onClose, onSave, imageSrc }) => {
-  const [cropData, setCropData] = useState({ x: 0, y: 0, size: 200 });
-  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
-  const canvasRef = useRef(null);
-  const imageRef = useRef(null);
-  
-  useEffect(() => {
-    if (imageSrc && imageRef.current) {
-      const img = imageRef.current;
-      img.onload = () => {
-        const minSize = Math.min(img.naturalWidth, img.naturalHeight);
-        setImageSize({ width: img.naturalWidth, height: img.naturalHeight });
-        setCropData({ x: 0, y: 0, size: minSize });
-      };
-    }
-  }, [imageSrc]);
+// Preset data
+const PRESET_AVATARS = [
+  { id: 1, name: 'Knight', image_path: '/assets/avatars/avatar1.jpg' },
+  { id: 2, name: 'Mage', image_path: '/assets/avatars/avatar2.jpg' },
+  { id: 3, name: 'Archer', image_path: '/assets/avatars/avatar3.jpg' },
+  { id: 4, name: 'Warrior', image_path: '/assets/avatars/avatar4.jpg' },
+  { id: 5, name: 'Paladin', image_path: '/assets/avatars/avatar5.jpg' }
+];
 
-  const handleSave = () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const img = imageRef.current;
-    
-    canvas.width = 200;
-    canvas.height = 200;
-    
-    const scaleX = img.naturalWidth / img.width;
-    const scaleY = img.naturalHeight / img.height;
-    
-    ctx.drawImage(
-      img,
-      cropData.x * scaleX,
-      cropData.y * scaleY,
-      cropData.size * scaleX,
-      cropData.size * scaleY,
-      0,
-      0,
-      200,
-      200
-    );
-    
-    canvas.toBlob(onSave, 'image/jpeg', 0.9);
+const PRESET_WALLPAPERS = [
+  { id: 1, name: 'Classic', wallpaper_url: '/assets/wallpapers/wallpaper1.jpg' },
+  { id: 2, name: 'NightSky', wallpaper_url: '/assets/wallpapers/wallpaper2.jpg' },
+  { id: 3, name: 'Forest', wallpaper_url: '/assets/wallpapers/wallpaper3.jpg' },
+  { id: 4, name: 'Beach', wallpaper_url: '/assets/wallpapers/wallpaper4.jpg' },
+  { id: 5, name: 'Mountains', wallpaper_url: '/assets/wallpapers/wallpaper5.jpg' }
+];
+
+// Avatar Selection Modal Component
+const AvatarSelectionModal = ({ isOpen, onClose, onSelect }) => {
+  const [avatars, setAvatars] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchAvatars();
+    }
+  }, [isOpen]);
+
+  const fetchAvatars = async () => {
+    setLoading(true);
+    try {
+      setAvatars(PRESET_AVATARS);
+    } catch (error) {
+      setAvatars(PRESET_AVATARS);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const getAvatarSrc = (avatar) => avatar.image_path || avatar.image_url || '';
+
   if (!isOpen) return null;
-  
+
   return (
-    <div className="crop-modal-overlay">
-      <div className="crop-modal">
-        <h3>Crop Avatar (1:1)</h3>
-        <div className="crop-container">
-          <img
-            ref={imageRef}
-            src={imageSrc}
-            alt="Crop preview"
-            style={{ maxWidth: '400px', maxHeight: '400px' }}
-          />
-          <div 
-            className="crop-selector"
-            style={{
-              left: cropData.x,
-              top: cropData.y,
-              width: cropData.size,
-              height: cropData.size,
-            }}
-          />
+    <div className="misc-profile-modal-overlay">
+      <div className="misc-profile-avatar-modal">
+        <h3>Select Avatar</h3>
+        <div className="misc-profile-avatar-grid">
+          {loading ? (
+            <div>Loading avatars...</div>
+          ) : avatars.length === 0 ? (
+            <div>No avatars available</div>
+          ) : (
+            avatars.map(avatar => (
+              <div 
+                key={avatar.id} 
+                className="misc-profile-avatar-item"
+                onClick={() => onSelect(avatar)}
+              >
+                <img 
+                  src={getAvatarSrc(avatar)} 
+                  alt={`Avatar ${avatar.id}`} 
+                  className="misc-profile-avatar-preview"
+                />
+              </div>
+            ))
+          )}
         </div>
-        <div className="crop-controls">
-          <label>
-            X: <input 
-              type="range" 
-              min="0" 
-              max={Math.max(0, imageSize.width - cropData.size)}
-              value={cropData.x}
-              onChange={(e) => setCropData({...cropData, x: parseInt(e.target.value)})}
-            />
-          </label>
-          <label>
-            Y: <input 
-              type="range" 
-              min="0" 
-              max={Math.max(0, imageSize.height - cropData.size)}
-              value={cropData.y}
-              onChange={(e) => setCropData({...cropData, y: parseInt(e.target.value)})}
-            />
-          </label>
-          <label>
-            Size: <input 
-              type="range" 
-              min="100" 
-              max={Math.min(imageSize.width, imageSize.height)}
-              value={cropData.size}
-              onChange={(e) => setCropData({...cropData, size: parseInt(e.target.value)})}
-            />
-          </label>
-        </div>
-        <div className="crop-actions">
-          <button onClick={handleSave}>Save</button>
-          <button onClick={onClose}>Cancel</button>
-        </div>
-        <canvas ref={canvasRef} style={{ display: 'none' }} />
+        <button onClick={onClose} className="misc-profile-close-modal-btn">Close</button>
       </div>
     </div>
   );
 };
+
+// Wallpaper Selection Modal Component
+const WallpaperSelectionModal = ({ isOpen, onClose, onSelect }) => {
+  const [wallpapers, setWallpapers] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchWallpapers();
+    }
+  }, [isOpen]);
+
+  const fetchWallpapers = async () => {
+    setLoading(true);
+    try {
+      setWallpapers(PRESET_WALLPAPERS);
+    } catch (error) {
+      setWallpapers(PRESET_WALLPAPERS);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getWallpaperSrc = (wallpaper) => wallpaper.wallpaper_url || wallpaper.image_url || '';
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="misc-profile-modal-overlay">
+      <div className="misc-profile-wallpaper-modal">
+        <h3>Select Wallpaper</h3>
+        <div className="misc-profile-wallpaper-grid">
+          {loading ? (
+            <div>Loading wallpapers...</div>
+          ) : wallpapers.length === 0 ? (
+            <div>No wallpapers available</div>
+          ) : (
+            wallpapers.map(wallpaper => (
+              <div 
+                key={wallpaper.id} 
+                className="misc-profile-wallpaper-item"
+                onClick={() => onSelect(wallpaper)}
+              >
+                <img 
+                  src={getWallpaperSrc(wallpaper)} 
+                  alt={`Wallpaper ${wallpaper.id}`} 
+                  className="misc-profile-wallpaper-preview"
+                />
+              </div>
+            ))
+          )}
+        </div>
+        <button onClick={onClose} className="misc-profile-close-modal-btn">Close</button>
+      </div>
+    </div>
+  );
+};
+
 
 // Pet Selection Modal Component
 const PetSelectionModal = ({ isOpen, onClose, onSelect }) => {
@@ -283,8 +309,8 @@ const MiscProfile = () => {
   const [selectedAchievements, setSelectedAchievements] = useState([]);
   
   // Modal states
-  const [showAvatarCrop, setShowAvatarCrop] = useState(false);
-  const [tempAvatarSrc, setTempAvatarSrc] = useState('');
+  const [showAvatarSelection, setShowAvatarSelection] = useState(false);
+  const [showWallpaperSelection, setShowWallpaperSelection] = useState(false);
   const [showPetSelection, setShowPetSelection] = useState(false);
   const [showAchievementSelection, setShowAchievementSelection] = useState(false);
   
@@ -632,69 +658,71 @@ const MiscProfile = () => {
     }
   };
   
-  // Avatar and Pet handlers
-  const handleAvatarChange = async (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-  
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    setTempAvatarSrc(e.target.result);
-    setShowAvatarCrop(true);
-  };
-  reader.readAsDataURL(file);
-};
-
-const handleAvatarSave = async (croppedBlob) => {
-  if (!croppedBlob) return;
-  
-  setIsSaving(true);
-  const credentials = getUserCredentials();
-  if (!credentials) return;
-  
-  try {
-    // Create FormData for file upload
-    const formData = new FormData();
-    formData.append('avatar', croppedBlob, 'avatar.jpg');
+  // Avatar and Wallpaper handlers
+  const handleAvatarSelect = async (avatar) => {
+    setIsSaving(true);
+    const credentials = getUserCredentials();
+    if (!credentials) return;
     
-    const response = await axios.post(
-      `${API_URL}/userprofile/${credentials.userId}/upload-avatar`,
-      formData,
-      {
-        headers: { 
-          'Authorization': `Bearer ${credentials.token}`,
-          'Content-Type': 'multipart/form-data'
+    try {
+      const response = await axios.put(
+        `${API_URL}/userprofile/${credentials.userId}/avatar`,
+        { avatar_id: avatar.id },
+        {
+          headers: { 
+            'Authorization': `Bearer ${credentials.token}`,
+            'Content-Type': 'application/json'
+          }
         }
+      );
+      
+      if (response.data && response.data.success) {
+        setAvatarUrl(`/assets/avatars/${avatar.image_path}`);
+        setShowAvatarSelection(false);
+        setSaveError(null);
+        alert('Avatar updated successfully!');
+      } else {
+        throw new Error('Failed to update avatar');
       }
-    );
-    
-    if (response.data && response.data.success) {
-      setAvatarUrl(response.data.avatar_url);
-      setShowAvatarCrop(false);
-      setSaveError(null);
-      alert('Avatar updated successfully!');
-    } else {
-      throw new Error('Failed to upload avatar');
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+      setSaveError('Failed to update avatar. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
-  } catch (error) {
-    console.error('Error uploading avatar:', error);
-    setSaveError('Failed to upload avatar. Please try again.');
-  } finally {
-    setIsSaving(false);
-  }
-};
+  };
 
-  
-  const handleWallpaperChange = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+  const handleWallpaperSelect = async (wallpaper) => {
+    setIsSaving(true);
+    const credentials = getUserCredentials();
+    if (!credentials) return;
     
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setCustomWallpaperUrl(e.target.result);
-      setWallpaper(e.target.result);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const response = await axios.put(
+        `${API_URL}/userprofile/${credentials.userId}/wallpaper`,
+        { wallpaper_id: wallpaper.id },
+        {
+          headers: { 
+            'Authorization': `Bearer ${credentials.token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (response.data && response.data.success) {
+        setWallpaper(`/assets/wallpapers/${wallpaper.wallpaper_url}`);
+        setShowWallpaperSelection(false);
+        setSaveError(null);
+        alert('Wallpaper updated successfully!');
+      } else {
+        throw new Error('Failed to update wallpaper');
+      }
+    } catch (error) {
+      console.error('Error updating wallpaper:', error);
+      setSaveError('Failed to update wallpaper. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   const handleStatusChange = (event) => {
@@ -776,16 +804,13 @@ const handleAvatarSave = async (croppedBlob) => {
               <div className="misc-profile-wallpaper-overlay"></div>
               {isEditing && (
                 <div className="misc-profile-edit-wallpaper-container">
-                  <label className="misc-profile-wallpaper-upload-label">
-                    Change Wallpaper:
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      onChange={handleWallpaperChange} 
-                      className="misc-profile-wallpaper-input"
-                      disabled={isSaving}
-                    />
-                  </label>
+                  <button 
+                    className="misc-profile-wallpaper-select-btn"
+                    onClick={() => setShowWallpaperSelection(true)}
+                    disabled={isSaving}
+                  >
+                    Change Wallpaper
+                  </button>
                 </div>
               )}
               <div className="misc-profile-profile-inner-container">
@@ -794,16 +819,13 @@ const handleAvatarSave = async (croppedBlob) => {
                     <img src={avatarUrl} alt="Character" className="misc-profile-pixel-character" />
                     {isEditing && (
                       <div className="misc-profile-avatar-edit-overlay">
-                        <label className="misc-profile-avatar-upload-label">
-                          Change Avatar:
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={handleAvatarChange} 
-                            className="misc-profile-avatar-input"
-                            disabled={isSaving}
-                          />
-                        </label>
+                        <button 
+                          className="misc-profile-avatar-select-btn"
+                          onClick={() => setShowAvatarSelection(true)}
+                          disabled={isSaving}
+                        >
+                          Change Avatar
+                        </button>
                       </div>
                     )}
                   </div>
@@ -1035,11 +1057,15 @@ const handleAvatarSave = async (croppedBlob) => {
             </div>
           </div>
           {/* Modals */}
-          <AvatarCropModal
-            isOpen={showAvatarCrop}
-            onClose={() => setShowAvatarCrop(false)}
-            onSave={handleAvatarSave} // 
-            imageSrc={tempAvatarSrc}
+          <AvatarSelectionModal
+            isOpen={showAvatarSelection}
+            onClose={() => setShowAvatarSelection(false)}
+            onSelect={handleAvatarSelect}
+          />
+          <WallpaperSelectionModal
+            isOpen={showWallpaperSelection}
+            onClose={() => setShowWallpaperSelection(false)}
+            onSelect={handleWallpaperSelect}
           />
           <PetSelectionModal
             isOpen={showPetSelection}
@@ -1054,7 +1080,7 @@ const handleAvatarSave = async (croppedBlob) => {
           />
         </div>
       </div>
-    );
-  };
+  );
+};
   
-  export default MiscProfile;
+export default MiscProfile;
