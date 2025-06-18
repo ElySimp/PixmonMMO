@@ -155,7 +155,7 @@ const MainInv = () => {
           style={{ border: `2px solid ${rarityColors[rarity - 1]}` }}
           onClick={() => setIsOpen(true)}
         >
-          <img src={potion} alt="potion" />
+          <img src={inventoryIndex[item.index_id - 1].path} alt="fix this shet" />  
           <div className="maininv-amt">x{item.amount}</div>
         </div>
 
@@ -163,7 +163,7 @@ const MainInv = () => {
           <div className="maininv-centered-box" onClick={() => setIsOpen(false)}>
             <div className="maininv-box-content" onClick={e => e.stopPropagation()}>
               <h3 className="overlay-name">{item.item_name}</h3>
-              <img src={potion} alt="potion" />
+              <img className="maininv-img" src={inventoryIndex[item.index_id - 1].path} alt="fix this shet" />
               <div className="maininv-item-stats">{statLabel}: {effect}%</div>
               <div className="maininv-description">{description}</div>
               <div className="maininv-buttons">

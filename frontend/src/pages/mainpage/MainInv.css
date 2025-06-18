@@ -187,8 +187,8 @@
 
 .maininv-inventory-items img {
   pointer-events: none;
-  width: 50%;
-  height: 50%;
+  width: 65%;
+  height: 65%;
 }
 
 .maininv-amt {
@@ -239,11 +239,17 @@
 }
 
 .maininv-box-content img {
-  width: 30%;
-  height: auto;
+  width: 55%;
+  height: 55%;
   margin-bottom: 1rem;
 }
 
+.maininv-img {
+  width: 120%;
+  height: 120%;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+}
 .overlay-name {
   font-size: 1.5rem;
   font-weight: bold;
