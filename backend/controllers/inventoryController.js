@@ -99,15 +99,20 @@ exports.gachaResult = async (req, res) => {
             return res.status(400).json({ error: 'User ID is required' });
         }
 
-        await Inventory.gachaResultMultiStore(userId, 10);
+        const results = await Inventory.gachaResultMultiStore(userId, 10); // <-- capture returned gacha results
 
-        return res.status(200).json({ message: 'Gacha pull successful' });
+        return res.status(200).json({
+            success: true,
+            message: 'Gacha pull successful',
+            results: results
+        });
 
     } catch (error) {
         console.error('Error in gachaResult controller:', error);
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
+
 
 exports.gachaResultSingle = async (req, res) => {
     try {

@@ -233,106 +233,115 @@ class Inventory {
     }
 
     static async gachaResultMultiStore(userId, limit) {
-        function chooseRarity() {
-            const random = Math.random() * 100;
-            if (random < 60) return 1;
-            else if (random < 90) return 2;
-            else return 3;
-        }
+    function chooseRarity() {
+        const random = Math.random() * 100;
+        if (random < 60) return 1;
+        else if (random < 90) return 2;
+        else return 3;
+    }
 
-    
-        try {
-            let stored = 0;
+    try {
+        let stored = 0;
+        const results = [];
 
-            while (stored < limit) {
-                const chosenRarity = chooseRarity();
+        while (stored < limit) {
+            const chosenRarity = chooseRarity();
 
-                const [items] = await db.query(
-                    `SELECT * FROM IndexInventory WHERE rarity = ?`,
-                    [chosenRarity]
-                );
+            const [items] = await db.query(
+                `SELECT * FROM IndexInventory WHERE rarity = ?`,
+                [chosenRarity]
+            );
 
-                if (!items || items.length === 0) {
-                    console.log(`No items found with rarity ${chosenRarity}`);
-                    continue;
-                }
+            if (!items || items.length === 0) {
+                console.log(`No items found with rarity ${chosenRarity}`);
+                continue;
+            }
 
-                // Filter out index_id 9 and 10
-                const filteredItems = items.filter(item => item.index_id !== 9 && item.index_id !== 10);
-                if (filteredItems.length === 0) {
-                    console.log(`All items with rarity ${chosenRarity} are excluded`);
-                    continue;
-                }
+            const filteredItems = items.filter(item => item.index_id !== 9 && item.index_id !== 10);
+            if (filteredItems.length === 0) {
+                console.log(`All items with rarity ${chosenRarity} are excluded`);
+                continue;
+            }
 
-                const randomIndex = Math.floor(Math.random() * filteredItems.length);
-                const selectedItem = filteredItems[randomIndex];
-                const now = new Date();
+            const randomIndex = Math.floor(Math.random() * filteredItems.length);
+            const selectedItem = filteredItems[randomIndex];
+            const now = new Date();
 
-                // gacha history
-                await db.query(
-                    `INSERT INTO gachaResult 
-                        (item_name, index_id, user_id, item_type, item_stats, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?)`,
+            // Store gacha result
+            await db.query(
+                `INSERT INTO gachaResult 
+                    (item_name, index_id, user_id, item_type, item_stats, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)`,
+                [
+                    selectedItem.item_name,
+                    selectedItem.index_id,
+                    userId,
+                    selectedItem.item_type,
+                    selectedItem.item_Stats ? JSON.stringify(selectedItem.item_Stats) : null,
+                    now
+                ]
+            );
+
+            // Add to UserInventory
+            const [rows] = await db.query(
+                'SELECT COUNT(*) AS count FROM UserInventory WHERE user_id = ? AND index_id = ?',
+                [userId, selectedItem.index_id]
+            );
+
+            if (rows[0].count === 0) {
+                await db.query(`
+                    INSERT INTO UserInventory 
+                        (item_name, index_id, user_id, item_type, amount, item_stats, rarity)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    `,
                     [
                         selectedItem.item_name,
                         selectedItem.index_id,
                         userId,
-                        selectedItem.item_type, 
+                        selectedItem.item_type,
+                        1,
                         selectedItem.item_Stats ? JSON.stringify(selectedItem.item_Stats) : null,
-                        now
+                        selectedItem.rarity
                     ]
-                    
                 );
-                
-
-                const [rows] = await db.query('SELECT COUNT(*) AS count FROM UserInventory WHERE user_id = ? AND index_id = ?', [userId, selectedItem.index_id]);
-                // UserInventory pushing
-                // cek udh ada ato lom
-                rows[0].count;
-                if (rows[0].count === 0) {
-                    await db.query(`
-                        INSERT INTO UserInventory 
-                            (item_name, index_id, user_id, item_type, amount, item_stats, rarity)
-                            VALUES (?, ?, ?, ?, ?, ?, ?)
-                        `, 
-                        [
-                            selectedItem.item_name, 
-                            selectedItem.index_id,
-                            userId, 
-                            selectedItem.item_type, 
-                            1,
-                            selectedItem.item_Stats ? JSON.stringify(selectedItem.item_Stats) : null,
-                            selectedItem.rarity
-                        ]
-                    );
-                }
-                else if (rows[0].count > 0) {
-                    await db.query(`
-                        UPDATE UserInventory 
-                        SET amount = amount + 1
-                        WHERE user_id = ? AND index_id = ?
-                        `, [userId, selectedItem.index_id]
-                    );
-                }
-                
-                const [rows2] = await db.query('SELECT COUNT(*) AS count FROM gachaResult WHERE user_id = ?', [userId]);
-                
-                if (rows2[0].count > 21) {
-                    await db.query(`
-                        DELETE FROM gachaResult
-                        WHERE user_id = ?
-                        ORDER BY created_at ASC
-                        LIMIT 1 ;
-                        `, [userId]
-                    );
-                }
-                
-                stored++;
+            } else {
+                await db.query(`
+                    UPDATE UserInventory 
+                    SET amount = amount + 1
+                    WHERE user_id = ? AND index_id = ?
+                    `,
+                    [userId, selectedItem.index_id]
+                );
             }
-        } catch (err) {
-            console.error('Error in gachaResultMultiStore:', err);
+
+            // Maintain only last 21 gacha results
+            const [rows2] = await db.query(
+                'SELECT COUNT(*) AS count FROM gachaResult WHERE user_id = ?',
+                [userId]
+            );
+
+            if (rows2[0].count > 21) {
+                await db.query(`
+                    DELETE FROM gachaResult
+                    WHERE user_id = ?
+                    ORDER BY created_at ASC
+                    LIMIT 1;
+                    `,
+                    [userId]
+                );
+            }
+
+            results.push(selectedItem); // collect the result
+            stored++;
         }
+
+        return results; // return the collected gacha results
+    } catch (err) {
+        console.error('Error in gachaResultMultiStore:', err);
+        return []; // return empty array on error
+    }
 }
+
 
     static async normalKeyObtain (userId) {
         const [rows] = ('SELECT COUNT(*) AS count FROM UserInventory WHERE user_id = ? AND index_id = ?', [userId, 9])
