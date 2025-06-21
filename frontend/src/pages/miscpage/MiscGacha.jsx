@@ -27,6 +27,9 @@ async function singlePull(userId) {
   }
 }
 
+async function insertData(userId, index_id) {
+  
+}
 async function getIndexInventory() {
   try {
     const res = await fetch(`${API_URL}/inventoryIndex`);
@@ -61,16 +64,34 @@ const MiscGacha = () => {
   }, [showResults, currentIndex, rollResult]);
 
   const handleTenPull = async () => {
-    if (user?.id) {
-      const results = await tenPull(user.id);
-      if (results) {
-        setRollResult(results);
-        setCurrentIndex(0);
-        setShowResults(true);
-      }
-    } else {
-      console.log('User not logged in yet');
+    function chooseRarity() {
+      const random = Math.random() * 100;
+      if (random < 60) return 1;
+      else if (random < 90) return 2;
+      else return 3;
     }
+
+    const result = [];
+    let stored = 0;
+
+    while (stored < 10) {
+      const chosenRarity = chooseRarity();
+      const filtered = inventoryIndex.filter(item => item.rarity === chosenRarity);
+
+      if (filtered.length > 0) {
+        const randomIndex = Math.floor(Math.random() * filtered.length);
+        if (filtered[randomIndex].index_id === 9 || filtered[randomIndex].index_id === 10) {
+          continue;
+        }
+        result.push(filtered[randomIndex]);
+        stored++;
+      }
+    }
+
+    setCurrentIndex(0); // Reset index for animation
+    setRollResult(result);
+    setShowResults(true);
+    console.log("Pulled results:", result);
   };
 
   const handleOnePull = () => {
@@ -112,7 +133,7 @@ const MiscGacha = () => {
                 tabIndex={0}
                 onKeyPress={(e) => { if (e.key === 'Enter') handleOnePull(); }}
               >
-                1x Pull
+                Open 1x
               </div>
 
               <div
@@ -123,7 +144,7 @@ const MiscGacha = () => {
                 tabIndex={0}
                 onKeyPress={(e) => { if (e.key === 'Enter') handleTenPull(); }}
               >
-                10x Pull
+                Open 10x 
               </div>
             </div>
           </div>
@@ -134,23 +155,18 @@ const MiscGacha = () => {
       {showResults && (
         <div className="gacha-overlay" onClick={() => setShowResults(false)}>
           <div className="gacha-results-center">
-            {rollResult.slice(0, currentIndex + 1).map((item, i) => {
-              const match = inventoryIndex.find(inv => inv.index_id === item.index_id);
-              return (
-                <div key={`${item.index_id}-${i}`} className="gacha-result-card fade-in">
-                  {match && (
-                    <img
-                      src={match.path}
-                      alt={item.item_name}
-                      className="gacha-result-img"
-                    />
-                  )}
-                  <p>{item.item_name}</p>
-                  <p>Rarity: {item.rarity}</p>
-                  <p>Type: {item.item_type}</p>
-                </div>
-              );
-            })}
+            {rollResult.slice(0, currentIndex + 1).map((item, i) => (
+              <div key={`${item.item_name}-${i}`} className="gacha-result-card fade-in">
+                <img
+                  src={item.path || '/default.png'}
+                  alt={item.item_name}
+                  className="gacha-result-img"
+                />
+                <p>{item.item_name}</p>
+                <p>Rarity: {item.rarity}</p>
+                <p>Type: {item.item_type}</p>
+              </div>
+            ))}
           </div>
         </div>
       )}

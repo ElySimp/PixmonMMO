@@ -454,7 +454,70 @@ class Inventory {
         }
     }
 
-    
+    static async inputItem (userId, index_id) {
+        const [rows] = await db.query('SELECT * FROM IndexInventory WHERE user_id = ? AND index_id = ?', [user_id, index_id]);
+        const selectedItem = rows[0];
+
+        const [rows2] = await db.query(
+                'SELECT COUNT(*) AS count FROM UserInventory WHERE user_id = ? AND index_id = ?',
+                [userId, selectedItem.index_id]
+            );
+
+            if (rows2[0].count === 0) {
+                await db.query(`
+                    INSERT INTO UserInventory 
+                        (item_name, index_id, user_id, item_type, amount, item_stats, rarity)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    `,
+                    [
+                        selectedItem.item_name,
+                        selectedItem.index_id,
+                        userId,
+                        selectedItem.item_type,
+                        1,
+                        selectedItem.item_Stats ? JSON.stringify(selectedItem.item_Stats) : null,
+                        selectedItem.rarity
+                    ]
+                );
+            } else {
+                await db.query(`
+                    UPDATE UserInventory 
+                    SET amount = amount + 1
+                    WHERE user_id = ? AND index_id = ?
+                    `,
+                    [userId, selectedItem.index_id]
+                );
+            }
+            await db.query(
+                `INSERT INTO gachaResult 
+                    (item_name, index_id, user_id, item_type, item_stats, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)`,
+                [
+                    selectedItem.item_name,
+                    selectedItem.index_id,
+                    userId,
+                    selectedItem.item_type,
+                    selectedItem.item_Stats ? JSON.stringify(selectedItem.item_Stats) : null,
+                    now
+                ]
+            );
+            const [rows3] = await db.query(
+                'SELECT COUNT(*) AS count FROM gachaResult WHERE user_id = ?',
+                [userId]
+            );
+
+            if (rows3[0].count > 21) {
+                await db.query(`
+                    DELETE FROM gachaResult
+                    WHERE user_id = ?
+                    ORDER BY created_at ASC
+                    LIMIT 1;
+                    `,
+                    [userId]
+                );
+            }
+
+    }
     
 }
 
