@@ -22,6 +22,7 @@ const dailyRewardsController = require('./controllers/dailyRewardsController');
 const petsController = require('./controllers/petsController');
 const { protect } = require('./middleware/auth');
 const checkAndFixDuplicateStats = require('./scripts/maintenance/check-and-fix-stats');
+const userProfileRoutes = require('./routes/userProfileRoutes');
 
 const app = express();
 
@@ -320,3 +321,5 @@ app.listen(PORT, async () => {
         // Don't exit process, let server continue to run
     }
 });
+
+app.use('/api/userprofile', userProfileRoutes);

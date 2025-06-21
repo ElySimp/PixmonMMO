@@ -1,12 +1,18 @@
 import { API_URL } from '../utils/config';
 
+const TOKEN_KEY = 'TOKEN_KEY';
+
+function getToken() {
+  return localStorage.getItem(TOKEN_KEY) || localStorage.getItem('token');
+}
+
 /**
  * Fetch all pets from the database
  * @returns {Promise} Promise that resolves to an array of pets
  */
 export const getAllPets = async () => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     const response = await fetch(`${API_URL}/pets`, {
       method: 'GET',
       headers: {
@@ -34,7 +40,7 @@ export const getAllPets = async () => {
  */
 export const getUserPets = async (userId) => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     const response = await fetch(`${API_URL}/pets/user/${userId}`, {
       method: 'GET',
       headers: {
@@ -62,7 +68,7 @@ export const getUserPets = async (userId) => {
  */
 export const getPetsByRole = async (role) => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     const response = await fetch(`${API_URL}/pets/role/${role}`, {
       method: 'GET',
       headers: {
@@ -90,7 +96,7 @@ export const getPetsByRole = async (role) => {
  */
 export const getPetSkillsByRole = async (role) => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     const response = await fetch(`${API_URL}/pets/skills/${role}`, {
       method: 'GET',
       headers: {
@@ -118,7 +124,7 @@ export const getPetSkillsByRole = async (role) => {
  */
 export const addPetToUser = async (petData) => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     const response = await fetch(`${API_URL}/pets/add-to-user`, {
       method: 'POST',
       headers: {
@@ -147,7 +153,7 @@ export const addPetToUser = async (petData) => {
  */
 export const updatePetStatus = async (userPetId, statusData) => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     const response = await fetch(`${API_URL}/pets/status/${userPetId}`, {
       method: 'PATCH',
       headers: {
@@ -175,7 +181,7 @@ export const updatePetStatus = async (userPetId, statusData) => {
  */
 export const toggleEquipPet = async (equipData) => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     const response = await fetch(`${API_URL}/pets/equip`, {
       method: 'PATCH',
       headers: {
@@ -204,7 +210,7 @@ export const toggleEquipPet = async (equipData) => {
  */
 export const calculatePetStats = async (petId, level) => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     const response = await fetch(`${API_URL}/pets/stats/${petId}/${level}`, {
       method: 'GET',
       headers: {

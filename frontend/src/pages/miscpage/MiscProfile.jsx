@@ -7,6 +7,7 @@ import favoritePetImage from '../../assets/MAIN/pets_sample.png';
 import trophyImage from '../../assets/MAIN/trophy.png';
 import { API_URL, TOKEN_KEY } from '../../utils/config';
 import axios from 'axios';
+import { getUserPets } from '../../services/petsService';
 
 // Preset data
 const PRESET_AVATARS = [
@@ -147,21 +148,18 @@ const PetSelectionModal = ({ isOpen, onClose, onSelect }) => {
   
   useEffect(() => {
     if (isOpen) {
-      fetchUserPets();
+      fetchUserPetsModal();
     }
   }, [isOpen]);
 
-  const fetchUserPets = async () => {
+  const fetchUserPetsModal = async () => {
     setLoading(true);
     try {
       const userId = localStorage.getItem('userId');
-      const token = localStorage.getItem(TOKEN_KEY);
-      const response = await axios.get(`${API_URL}/pets/user/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setPets(response.data || []);
+      const pets = await getUserPets(userId);
+      setPets(Array.isArray(pets) ? pets : []);
     } catch (error) {
-      console.error('Error fetching pets:', error);
+      setPets([]);
     } finally {
       setLoading(false);
     }
@@ -170,10 +168,10 @@ const PetSelectionModal = ({ isOpen, onClose, onSelect }) => {
   if (!isOpen) return null;
   
   return (
-    <div className="pet-modal-overlay">
-      <div className="pet-modal">
-        <h3>Select Favorite Pet</h3>
-        <div className="pet-grid">
+    <div className="miscprofile-pet-modal-overlay">
+      <div className="miscprofile-pet-modal">
+        <h3 className="miscprofile-pet-modal-title">Select Favorite Pet</h3>
+        <div className="miscprofile-pet-grid">
           {loading ? (
             <div>Loading pets...</div>
           ) : pets.length === 0 ? (
@@ -182,68 +180,76 @@ const PetSelectionModal = ({ isOpen, onClose, onSelect }) => {
             pets.map(pet => (
               <div 
                 key={pet.id} 
-                className="pet-item"
+                className="miscprofile-pet-item"
                 onClick={() => onSelect(pet)}
               >
-                <img src={pet.image_url || favoritePetImage} alt={pet.name} />
-                <div className="pet-info">
-                  <div>{pet.name}</div>
-                  <div>Level {pet.level}</div>
-                  <div className={`rarity ${pet.rarity.toLowerCase()}`}>{pet.rarity}</div>
+                <img src={pet.image_url} alt={pet.name} className="miscprofile-pet-image" />
+                <div className="miscprofile-pet-info">
+                  <div className="miscprofile-pet-name">{pet.name}</div>
+                  <div className="miscprofile-pet-level">Level {pet.current_level}</div>
+                  <div className={`miscprofile-pet-rarity ${pet.rarity?.toLowerCase()}`}>{pet.rarity}</div>
                 </div>
               </div>
             ))
           )}
         </div>
-        <button onClick={onClose} className="close-modal-btn">Close</button>
+        <button onClick={onClose} className="miscprofile-pet-close-modal-btn">Close</button>
       </div>
     </div>
   );
 };
 
 // Achievement Selection Modal Component
-const AchievementSelectionModal = ({ isOpen, onClose, onSelect, selectedAchievements }) => {
+const AchievementSelectionModal = ({ isOpen, onClose, onSelect, selectedAchievements, onSave }) => {
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(false);
-  
+  const [localSelected, setLocalSelected] = useState(selectedAchievements || []);
+
   useEffect(() => {
     if (isOpen) {
       fetchUserAchievements();
+      setLocalSelected(selectedAchievements || []);
     }
-  }, [isOpen]);
+  }, [isOpen, selectedAchievements]);
 
   const fetchUserAchievements = async () => {
     setLoading(true);
     try {
       const userId = localStorage.getItem('userId');
       const token = localStorage.getItem(TOKEN_KEY);
-      const response = await axios.get(`${API_URL}/achievements/user/${userId}`, {
+      const response = await axios.get(`${API_URL}/users/${userId}/achievements`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setAchievements(response.data || []);
+      setAchievements(Array.isArray(response.data.achievements) ? response.data.achievements : []);
     } catch (error) {
-      console.error('Error fetching achievements:', error);
+      setAchievements([]);
     } finally {
       setLoading(false);
     }
   };
 
   const handleToggleAchievement = (achievement) => {
-    const isSelected = selectedAchievements.some(a => a.id === achievement.id);
+    const isSelected = localSelected.some(a => a.id === achievement.id);
     if (isSelected) {
-      onSelect(selectedAchievements.filter(a => a.id !== achievement.id));
-    } else if (selectedAchievements.length < 3) {
-      onSelect([...selectedAchievements, achievement]);
+      setLocalSelected(localSelected.filter(a => a.id !== achievement.id));
+    } else if (localSelected.length < 3) {
+      setLocalSelected([...localSelected, achievement]);
     }
+  };
+
+  const handleSave = () => {
+    onSelect(localSelected);
+    if (onSave) onSave(localSelected);
+    onClose();
   };
 
   if (!isOpen) return null;
   
   return (
-    <div className="achievement-modal-overlay">
-      <div className="achievement-modal">
-        <h3>Select Achievements to Display (Max 3)</h3>
-        <div className="achievement-grid">
+    <div className="miscprofile-achievement-modal-overlay">
+      <div className="miscprofile-achievement-modal">
+        <h3 className="miscprofile-achievement-modal-title">Select Achievements to Display (Max 3)</h3>
+        <div className="miscprofile-achievement-grid">
           {loading ? (
             <div>Loading achievements...</div>
           ) : achievements.length === 0 ? (
@@ -252,25 +258,25 @@ const AchievementSelectionModal = ({ isOpen, onClose, onSelect, selectedAchievem
             achievements.map(achievement => (
               <div 
                 key={achievement.id} 
-                className={`achievement-item ${selectedAchievements.some(a => a.id === achievement.id) ? 'selected' : ''}`}
+                className={`miscprofile-achievement-item ${localSelected.some(a => a.id === achievement.id) ? 'selected' : ''}`}
                 onClick={() => handleToggleAchievement(achievement)}
               >
-                <img src={achievement.icon_url || trophyImage} alt={achievement.name} />
-                <div className="achievement-info">
-                  <div className="achievement-name">{achievement.name}</div>
-                  <div className="achievement-description">{achievement.description}</div>
+                <img src={achievement.icon_name ? `/achievements/${achievement.icon_name}.png` : trophyImage} alt={achievement.title || achievement.name} className="miscprofile-achievement-icon" />
+                <div className="miscprofile-achievement-info">
+                  <div className="miscprofile-achievement-name">{achievement.title || achievement.name}</div>
+                  <div className="miscprofile-achievement-description">{achievement.description}</div>
                 </div>
-                {selectedAchievements.some(a => a.id === achievement.id) && (
-                  <div className="selected-indicator">✓</div>
+                {localSelected.some(a => a.id === achievement.id) && (
+                  <div className="miscprofile-achievement-selected-indicator">✓</div>
                 )}
               </div>
             ))
           )}
         </div>
-        <div className="selected-count">
-          Selected: {selectedAchievements.length}/3
+        <div className="miscprofile-achievement-selected-count">
+          Selected: {localSelected.length}/3
         </div>
-        <button onClick={onClose} className="close-modal-btn">Done</button>
+        <button onClick={handleSave} className="miscprofile-achievement-close-modal-btn">Done</button>
       </div>
     </div>
   );
@@ -633,7 +639,6 @@ const MiscProfile = () => {
     setIsSaving(true);
     const credentials = getUserCredentials();
     if (!credentials) return;
-    
     try {
       const response = await axios.put(`${API_URL}/userprofile/${credentials.userId}/selected-achievements`, {
         achievement_ids: achievements.map(a => a.id)
@@ -643,15 +648,15 @@ const MiscProfile = () => {
           'Content-Type': 'application/json'
         }
       });
-      
       if (response.data && response.data.success) {
         setSelectedAchievements(achievements);
         setSaveError(null);
+        await fetchUserProfile();
+        alert('Achievements updated!');
       } else {
         throw new Error('Failed to update selected achievements');
       }
     } catch (error) {
-      console.error('Error updating selected achievements:', error);
       setSaveError('Failed to update selected achievements. Please try again.');
     } finally {
       setIsSaving(false);
@@ -663,7 +668,6 @@ const MiscProfile = () => {
     setIsSaving(true);
     const credentials = getUserCredentials();
     if (!credentials) return;
-    
     try {
       const response = await axios.put(
         `${API_URL}/userprofile/${credentials.userId}/avatar`,
@@ -675,11 +679,11 @@ const MiscProfile = () => {
           }
         }
       );
-      
       if (response.data && response.data.success) {
-        setAvatarUrl(`/assets/avatars/${avatar.image_path}`);
+        setAvatarUrl(`/assets/avatars/avatar${avatar.id}.jpg`);
         setShowAvatarSelection(false);
         setSaveError(null);
+        await fetchUserProfile();
         alert('Avatar updated successfully!');
       } else {
         throw new Error('Failed to update avatar');
@@ -696,7 +700,6 @@ const MiscProfile = () => {
     setIsSaving(true);
     const credentials = getUserCredentials();
     if (!credentials) return;
-    
     try {
       const response = await axios.put(
         `${API_URL}/userprofile/${credentials.userId}/wallpaper`,
@@ -708,11 +711,11 @@ const MiscProfile = () => {
           }
         }
       );
-      
       if (response.data && response.data.success) {
-        setWallpaper(`/assets/wallpapers/${wallpaper.wallpaper_url}`);
+        setWallpaper(`/assets/wallpapers/wallpaper${wallpaper.id}.jpg`);
         setShowWallpaperSelection(false);
         setSaveError(null);
+        await fetchUserProfile();
         alert('Wallpaper updated successfully!');
       } else {
         throw new Error('Failed to update wallpaper');
@@ -751,9 +754,37 @@ const MiscProfile = () => {
     setShowPetSelection(true);
   };
   
-  const handlePetSelect = (pet) => {
-    setFavoritePet(pet.name);
-    setFavoritePetData(pet);
+  const handlePetSelect = async (pet) => {
+    setIsSaving(true);
+    const credentials = getUserCredentials();
+    if (!credentials) return;
+    try {
+      const response = await axios.put(
+        `${API_URL}/userprofile/${credentials.userId}/favorite-pet`,
+        { pet_id: pet.id },
+        {
+          headers: { 
+            'Authorization': `Bearer ${credentials.token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      if (response.data && response.data.success) {
+        setFavoritePet(pet.name);
+        setFavoritePetData(pet);
+        setShowPetSelection(false);
+        setSaveError(null);
+        await fetchUserProfile();
+        alert('Favorite pet updated!');
+      } else {
+        throw new Error('Failed to update favorite pet');
+      }
+    } catch (error) {
+      console.error('Error updating favorite pet:', error);
+      setSaveError('Failed to update favorite pet. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
     // We've removed the loading state check to immediately render the profile
   
@@ -1003,7 +1034,7 @@ const MiscProfile = () => {
                 </div>
                 <button 
                   className="misc-profile-edit-pet-btn"
-                  onClick={handlePetEdit}
+                  onClick={() => setShowPetSelection(true)}
                 >
                   Edit
                 </button>
@@ -1015,7 +1046,7 @@ const MiscProfile = () => {
                     selectedAchievements.map(achievement => (
                       <div key={achievement.id} className="misc-profile-achievement-item">
                         <img 
-                          src={achievement.icon_url || trophyImage} 
+                          src={achievement.icon_name ? `/achievements/${achievement.icon_name}.png` : trophyImage} 
                           alt={achievement.name} 
                           className="misc-profile-achievement-icon" 
                         />
@@ -1048,7 +1079,7 @@ const MiscProfile = () => {
                   </button>
                   <button 
                     className="misc-profile-select-achievements-btn"
-                    onClick={handleSelectAchievements}
+                    onClick={() => setShowAchievementSelection(true)}
                   >
                     Select ({selectedAchievements.length}/3)
                   </button>
@@ -1075,8 +1106,9 @@ const MiscProfile = () => {
           <AchievementSelectionModal
             isOpen={showAchievementSelection}
             onClose={() => setShowAchievementSelection(false)}
-            onSelect={handleAchievementSelect}
+            onSelect={setSelectedAchievements}
             selectedAchievements={selectedAchievements}
+            onSave={handleAchievementSelect}
           />
         </div>
       </div>
