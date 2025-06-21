@@ -69,9 +69,9 @@ exports.PetsDataObtain = async (req, res) => {
         const userId = req.params.userId;
 
         const [rows] = await db.query(`
-            SELECT Pets.*, UserPets.nickname, UserPets.equipped, UserPets.current_level, 
-                  UserPets.current_hp, UserPets.current_mana, UserPets.happiness,
-                  UserPets.hunger, UserPets.health, UserPets.experience
+            SELECT Pets.*, UserPets.name, UserPets.equipped, UserPets.current_level, 
+                  UserPets.current_hp, UserPets.current_mana, UserPets.current_atk, UserPets.current_def_phy, UserPets.current_def_magic, UserPets.current_agility,
+                  UserPets.role, UserPets.time_date
             FROM UserPets
             JOIN Pets ON UserPets.Pets_id = Pets.id
             WHERE UserPets.user_id = ?

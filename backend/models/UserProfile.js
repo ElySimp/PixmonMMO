@@ -25,6 +25,7 @@ class UserProfile {
                     custom_wallpaper_url VARCHAR(255),
                     avatar_url VARCHAR(255),
                     favorite_pet_id INT,
+                    wallpaper VARCHAR(255) DEFAULT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at DATETIME DEFAULT NULL,
                     FOREIGN KEY (user_id) REFERENCES UserLogin(id) ON DELETE CASCADE,
@@ -392,12 +393,15 @@ class UserProfile {
                 console.log('Adding status_message update:', updates.status_message);
             }
             
-            // Handle preset wallpaper
-            if (updates.wallpaper_id !== undefined) {
-                updateFields.push('wallpaper_id = ?');
-                updateValues.push(updates.wallpaper_id);
-                updateFields.push('custom_wallpaper_url = NULL');
-                console.log('Adding wallpaper_id update:', updates.wallpaper_id);
+            // Handle avatar updates
+            if (updates.avatar_url !== undefined) {
+                updateFields.push('avatar_url = ?');
+                updateValues.push(updates.avatar_url);
+            }
+            // Handle wallpaper (preset/custom)
+            if (updates.wallpaper !== undefined) {
+                updateFields.push('wallpaper = ?');
+                updateValues.push(updates.wallpaper);
             }
             
             // Handle pet updates
@@ -698,6 +702,73 @@ class UserProfile {
             return await this.getByUserId(userId);
         } catch (error) {
             console.error('Error updating wallpaper:', error);
+            throw error;
+        }
+    }
+
+    // Get favorite pet detail (join UserPets & Pets)
+    static async getFavoritePet(userId) {
+        try {
+            // Ambil favorite_pet_id dari UserProfile
+            const [profileRows] = await db.query(
+                'SELECT favorite_pet_id FROM UserProfile WHERE user_id = ?',
+                [userId]
+            );
+            if (!profileRows || profileRows.length === 0 || !profileRows[0].favorite_pet_id) {
+                return null;
+            }
+            const favoritePetId = profileRows[0].favorite_pet_id;
+            // Join ke UserPets dan Pets
+            const [petRows] = await db.query(
+                `SELECT up.id, up.name, up.current_level as level, up.role, up.current_hp, up.current_atk, up.current_def_phy, up.current_def_magic, up.current_mana, up.current_agility, up.rarity, p.image_url
+                FROM UserPets up
+                LEFT JOIN Pets p ON up.Pets_id = p.id
+                WHERE up.id = ? AND up.user_id = ?`,
+                [favoritePetId, userId]
+            );
+            if (!petRows || petRows.length === 0) return null;
+            return petRows[0];
+        } catch (error) {
+            console.error('Error getting favorite pet:', error);
+            throw error;
+        }
+    }
+
+    // UserSelectedAchievements: get selected achievements (join ke Achievements)
+    static async getSelectedAchievements(userId) {
+        try {
+            const [rows] = await db.query(
+                `SELECT a.id, a.title, a.description, a.icon_name, a.category
+                 FROM UserSelectedAchievements usa
+                 JOIN Achievements a ON usa.achievement_id = a.id
+                 WHERE usa.user_id = ?
+                 ORDER BY usa.created_at ASC
+                 LIMIT 3`,
+                [userId]
+            );
+            return rows;
+        } catch (error) {
+            console.error('Error getting selected achievements:', error);
+            throw error;
+        }
+    }
+
+    // UserSelectedAchievements: set selected achievements (replace all for user)
+    static async setSelectedAchievements(userId, achievementIds) {
+        try {
+            // Hapus semua dulu
+            await db.query('DELETE FROM UserSelectedAchievements WHERE user_id = ?', [userId]);
+            // Insert baru (maks 3)
+            if (Array.isArray(achievementIds)) {
+                for (let i = 0; i < Math.min(3, achievementIds.length); i++) {
+                    await db.query(
+                        'INSERT INTO UserSelectedAchievements (user_id, achievement_id) VALUES (?, ?)',
+                        [userId, achievementIds[i]]
+                    );
+                }
+            }
+        } catch (error) {
+            console.error('Error setting selected achievements:', error);
             throw error;
         }
     }

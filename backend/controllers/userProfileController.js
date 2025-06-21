@@ -5,6 +5,7 @@ const UserProfile = require('../models/UserProfile');
 const User = require('../models/User');
 const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
+const { protect } = require('../middleware/auth');
 
 // Configure multer for file upload
 const upload = multer({
@@ -45,7 +46,7 @@ exports.getUserProfile = async (req, res) => {
             });
         }
 
-          // If profile doesn't exist, create it
+        // If profile doesn't exist, create it
         if (!userProfile) {
             try {
                 userProfile = await UserProfile.createDefaultProfile(userId);
@@ -62,15 +63,21 @@ exports.getUserProfile = async (req, res) => {
             }
         }
 
-
         // Calculate max XP for current level
         const maxXp = Math.floor(50 * Math.pow(userProfile.level || 1, 1.4));
+
+        // Ambil data favorite pet
+        const favoritePet = await UserProfile.getFavoritePet(userId);
+        // Ambil selected achievements
+        const selectedAchievements = await UserProfile.getSelectedAchievements(userId);
 
         // Combine profile data with stats (already included in getByUserId)
         const combinedData = {
             success: true,
             ...userProfile,
-            maxXp: maxXp
+            maxXp: maxXp,
+            favorite_pet: favoritePet,
+            selected_achievements: selectedAchievements
         };
 
         res.json(combinedData);
@@ -515,19 +522,15 @@ exports.updateAvatar = async (req, res) => {
         if (!avatar_id) {
             return res.status(400).json({ error: 'Avatar ID is required' });
         }
+        // Preset avatar validation (1-5)
         const presetAvatars = [1, 2, 3, 4, 5];
         if (!presetAvatars.includes(parseInt(avatar_id))) {
             return res.status(400).json({ error: 'Invalid avatar ID' });
         }
+        // Set avatar_url sesuai format frontend
         const avatarUrl = `/assets/avatars/avatar${avatar_id}.jpg`;
-        const updateQuery = `
-            INSERT INTO user_profiles (user_id, avatar_url) 
-            VALUES (?, ?)
-            ON DUPLICATE KEY UPDATE 
-                avatar_url = VALUES(avatar_url),
-                updated_at = CURRENT_TIMESTAMP
-        `;
-        await db.execute(updateQuery, [userId, avatarUrl]);
+        // Update via model UserProfile
+        const updatedProfile = await UserProfile.update(userId, { avatar_url: avatarUrl });
         res.json({
             success: true,
             message: 'Avatar updated successfully',
@@ -550,19 +553,15 @@ exports.updateWallpaper = async (req, res) => {
         if (!wallpaper_id) {
             return res.status(400).json({ error: 'Wallpaper ID is required' });
         }
+        // Preset wallpaper validation (1-5)
         const presetWallpapers = [1, 2, 3, 4, 5];
         if (!presetWallpapers.includes(parseInt(wallpaper_id))) {
             return res.status(400).json({ error: 'Invalid wallpaper ID' });
         }
+        // Set wallpaper_url sesuai format frontend
         const wallpaperUrl = `/assets/wallpapers/wallpaper${wallpaper_id}.jpg`;
-        const updateQuery = `
-            INSERT INTO user_profiles (user_id, wallpaper) 
-            VALUES (?, ?)
-            ON DUPLICATE KEY UPDATE 
-                wallpaper = VALUES(wallpaper),
-                updated_at = CURRENT_TIMESTAMP
-        `;
-        await db.execute(updateQuery, [userId, wallpaperUrl]);
+        // Update via model UserProfile
+        const updatedProfile = await UserProfile.update(userId, { wallpaper: wallpaperUrl });
         res.json({
             success: true,
             message: 'Wallpaper updated successfully',
@@ -571,5 +570,77 @@ exports.updateWallpaper = async (req, res) => {
     } catch (error) {
         console.error('Error updating wallpaper:', error);
         res.status(500).json({ error: 'Failed to update wallpaper' });
+    }
+};
+
+// Tambahkan endpoint untuk update favorite pet
+exports.updateFavoritePet = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { pet_id } = req.body;
+        if (req.user.id !== parseInt(userId)) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+        if (!pet_id) {
+            return res.status(400).json({ error: 'Pet ID is required' });
+        }
+        const updatedProfile = await UserProfile.update(userId, { favorite_pet_id: pet_id });
+        res.json({
+            success: true,
+            message: 'Favorite pet updated successfully',
+            favorite_pet_id: pet_id
+        });
+    } catch (error) {
+        console.error('Error updating favorite pet:', error);
+        res.status(500).json({ error: 'Failed to update favorite pet' });
+    }
+};
+
+// Endpoint untuk GET/PUT selected achievements
+exports.getSelectedAchievements = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const achievements = await UserProfile.getSelectedAchievements(userId);
+        res.json(achievements);
+    } catch (error) {
+        console.error('Error getting selected achievements:', error);
+        res.status(500).json({ error: 'Failed to get selected achievements' });
+    }
+};
+
+exports.updateSelectedAchievements = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { achievement_ids } = req.body;
+        if (req.user.id !== parseInt(userId)) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+        if (!Array.isArray(achievement_ids) || achievement_ids.length > 3) {
+            return res.status(400).json({ error: 'Invalid achievement selection (max 3)' });
+        }
+        await UserProfile.setSelectedAchievements(userId, achievement_ids);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating selected achievements:', error);
+        res.status(500).json({ error: 'Failed to update selected achievements' });
+    }
+};
+
+// Endpoint: GET /api/userprofile/:userId/pets
+exports.getUserPets = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        // Join UserPets dan Pets
+        const [rows] = await require('../config/database').query(`
+            SELECT up.id, up.name, up.current_level as level, up.role, up.rarity, p.image_url
+            FROM UserPets up
+            LEFT JOIN Pets p ON up.Pets_id = p.id
+            WHERE up.user_id = ?
+            ORDER BY up.current_level DESC, up.id ASC
+        `, [userId]);
+        res.json({ success: true, data: rows });
+    } catch (error) {
+        console.error('Error getting user pets:', error);
+        res.status(500).json({ success: false, message: 'Failed to get user pets' });
     }
 };
