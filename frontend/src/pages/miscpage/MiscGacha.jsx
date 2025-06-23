@@ -55,7 +55,7 @@ const MiscGacha = () => {
     if (showResults && currentIndex < rollResult.length - 1) {
       const timer = setTimeout(() => {
         setCurrentIndex(prev => prev + 1);
-      }, 400);
+      }, 40);
       return () => clearTimeout(timer);
     }
   }, [showResults, currentIndex, rollResult]);
@@ -77,19 +77,19 @@ const MiscGacha = () => {
 
       if (filtered.length > 0) {
         const randomIndex = Math.floor(Math.random() * filtered.length);
-        if (filtered[randomIndex].index_id === 9 || filtered[randomIndex].index_id === 10) {
-          continue;
-        }
+        if (filtered[randomIndex].index_id === 9 || filtered[randomIndex].index_id === 10) continue;
         result.push(filtered[randomIndex]);
         stored++;
       }
     }
+
     stored = 0;
     while (stored < 10) {
       fetch(`${API_URL}/users/${user.id}/${result[stored].index_id}/itemInput`);
       stored++;
     }
-    setCurrentIndex(0); // Reset index for animation
+
+    setCurrentIndex(0);
     setRollResult(result);
     setShowResults(true);
     console.log("Pulled results:", result);
@@ -103,10 +103,12 @@ const MiscGacha = () => {
     }
   };
 
+  const rarityColors = ['gray', 'green', 'blue', 'gold'];
+
   return (
     <div className="miscGacha-Container">
       <Sidebar profilePic="/dummy.jpg" />
-      <div className="maininv-invContent">
+      <div className="miscgacha-secContent">
         <Topbar
           onMenuClick={() => console.log('Menu clicked')}
           onSupportClick={() => console.log('Support clicked')}
@@ -126,51 +128,37 @@ const MiscGacha = () => {
           <div className="miscgacha-content-container">
             <div className="miscgacha-rates">View Details</div>
             <div className="miscgacha-pull-container">
-              <div
-                className="miscgacha-pull"
-                onClick={handleOnePull}
-                style={{ cursor: 'pointer' }}
-                role="button"
-                tabIndex={0}
-                onKeyPress={(e) => { if (e.key === 'Enter') handleOnePull(); }}
-              >
-                Open 1x
-              </div>
-
-              <div
-                className="miscgacha-pull"
-                onClick={handleTenPull}
-                style={{ cursor: 'pointer' }}
-                role="button"
-                tabIndex={0}
-                onKeyPress={(e) => { if (e.key === 'Enter') handleTenPull(); }}
-              >
-                Open 10x 
-              </div>
+              <div className="miscgacha-pull" onClick={handleOnePull}>Open 1x</div>
+              <div className="miscgacha-pull" onClick={handleTenPull}>Open 10x</div>
             </div>
           </div>
+
+  {/* ✅ Overlay now inside the banner area only */}
+  {showResults && (
+    <div className="gacha-overlay" onClick={() => setShowResults(false)}>
+      <div className="gacha-results-center">
+        {rollResult.slice(0, currentIndex + 1).map((item, i) => (
+          <div
+            key={`${item.item_name}-${i}`}
+            className="gacha-result-card fade-in"
+            style={{
+              border: `3px solid ${rarityColors[item.rarity - 1] || 'gray'}`,
+              borderRadius: '10px',
+            }}
+          >
+            <img
+              src={item.path || '/default.png'}
+              alt={item.item_name}
+              className="gacha-result-img"
+            />
+            <p>{item.item_name}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
         </div>
       </div>
-
-      {/* Gacha Results Overlay */}
-      {showResults && (
-        <div className="gacha-overlay" onClick={() => setShowResults(false)}>
-          <div className="gacha-results-center">
-            {rollResult.slice(0, currentIndex + 1).map((item, i) => (
-              <div key={`${item.item_name}-${i}`} className="gacha-result-card fade-in">
-                <img
-                  src={item.path || '/default.png'}
-                  alt={item.item_name}
-                  className="gacha-result-img"
-                />
-                <p>{item.item_name}</p>
-                <p>Rarity: {item.rarity}</p>
-                <p>Type: {item.item_type}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
