@@ -738,7 +738,7 @@ class UserProfile {
     static async getSelectedAchievements(userId) {
         try {
             const [rows] = await db.query(
-                `SELECT a.id, a.title, a.description, a.icon_name, a.category
+                `SELECT a.id, a.title, a.description, a.icon_name, a.icon_path, a.category
                  FROM UserSelectedAchievements usa
                  JOIN Achievements a ON usa.achievement_id = a.id
                  WHERE usa.user_id = ?

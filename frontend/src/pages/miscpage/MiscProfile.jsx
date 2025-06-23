@@ -220,7 +220,8 @@ const AchievementSelectionModal = ({ isOpen, onClose, onSelect, selectedAchievem
       const response = await axios.get(`${API_URL}/users/${userId}/achievements`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setAchievements(Array.isArray(response.data.achievements) ? response.data.achievements : []);
+      const unlocked = (Array.isArray(response.data.achievements) ? response.data.achievements : []).filter(a => a.completed);
+      setAchievements(unlocked);
     } catch (error) {
       setAchievements([]);
     } finally {
@@ -261,7 +262,11 @@ const AchievementSelectionModal = ({ isOpen, onClose, onSelect, selectedAchievem
                 className={`miscprofile-achievement-item ${localSelected.some(a => a.id === achievement.id) ? 'selected' : ''}`}
                 onClick={() => handleToggleAchievement(achievement)}
               >
-                <img src={achievement.icon_name ? `/achievements/${achievement.icon_name}.png` : trophyImage} alt={achievement.title || achievement.name} className="miscprofile-achievement-icon" />
+                <img 
+                  src={achievement.icon_path || (achievement.icon_name ? `/achievements/${achievement.icon_name}.png` : trophyImage)}
+                  alt={achievement.title || achievement.name} 
+                  className="miscprofile-achievement-icon"
+                />
                 <div className="miscprofile-achievement-info">
                   <div className="miscprofile-achievement-name">{achievement.title || achievement.name}</div>
                   <div className="miscprofile-achievement-description">{achievement.description}</div>
@@ -1046,11 +1051,16 @@ const MiscProfile = () => {
                     selectedAchievements.map(achievement => (
                       <div key={achievement.id} className="misc-profile-achievement-item">
                         <img 
-                          src={achievement.icon_name ? `/achievements/${achievement.icon_name}.png` : trophyImage} 
-                          alt={achievement.name} 
+                          src={achievement.icon_path || (achievement.icon_name ? `/achievements/${achievement.icon_name}.png` : trophyImage)}
+                          alt={achievement.title || achievement.name} 
                           className="misc-profile-achievement-icon" 
                         />
-                        <div className="misc-profile-achievement-text">{achievement.name}</div>
+                        <div className="misc-profile-achievement-text">
+                          <div className="misc-profile-achievement-title">{achievement.title || achievement.name}</div>
+                          {achievement.description && (
+                            <div className="misc-profile-achievement-desc">{achievement.description}</div>
+                          )}
+                        </div>
                       </div>
                     ))
                   ) : (

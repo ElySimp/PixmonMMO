@@ -156,7 +156,7 @@ const MainAchievement = () => {
                       >
                         <div className={`mainachievement-icon ${achievement.completed ? 'completed' : 'locked'} ${newlyUnlocked.includes(achievement.id) ? 'pulse' : ''}`}>
                           <img 
-                            src={`/achievements/${achievement.icon_name}.png`} 
+                            src={achievement.icon_path || `/achievements/${achievement.icon_name}.png`} 
                             alt={achievement.title}
                             onError={(e) => {
                               e.target.src = '/achievements/default_achievement.png';
@@ -192,7 +192,7 @@ const MainAchievement = () => {
                     >
                       <div className={`mainachievement-icon ${achievement.completed ? 'completed' : 'locked'} ${newlyUnlocked.includes(achievement.id) ? 'pulse' : ''}`}>
                         <img 
-                          src={`/achievements/${achievement.icon_name}.png`} 
+                          src={achievement.icon_path || `/achievements/${achievement.icon_name}.png`} 
                           alt={achievement.title}
                           onError={(e) => {
                             e.target.src = '/achievements/default_achievement.png';
