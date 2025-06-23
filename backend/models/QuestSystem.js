@@ -160,7 +160,10 @@ class UserQuest {
             `SELECT last_completed FROM UserQuest WHERE user_id = ? AND quest_id = ?`,
             [userId, questId]
         );
-        if (uq.length > 0 && uq[0].last_completed && moment(uq[0].last_completed).tz("Asia/Jakarta").format('YYYY-MM-DD') === today) {
+        if (uq.length > 0 && 
+            uq[0].completed &&
+            uq[0].last_completed && 
+            moment(uq[0].last_completed).tz("Asia/Jakarta").format('YYYY-MM-DD') === today) {
             // Sudah completed hari ini, jangan update lagi
             return;
         }
@@ -225,23 +228,11 @@ class QuestSystem {
     }
 
     static async completeQuest(userId, questId) {
-        const [questData] = await db.query(
-            'SELECT xp_reward, gold_reward FROM Quest WHERE id = ?',
-            [questId]
-        );
-
-        if (!questData.length) throw new Error('Quest not found');
-
+        // Hanya update status quest, TIDAK menambah reward!
         await db.query(
             'UPDATE UserQuest SET completed = TRUE, last_completed = CURRENT_TIMESTAMP WHERE user_id = ? AND quest_id = ?',
             [userId, questId]
         );
-
-        await db.query(
-            'UPDATE UserStats SET xp = xp + ?, gold = gold + ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?',
-            [questData[0].xp_reward, questData[0].gold_reward, userId]
-        );
-
         console.log(`User ${userId} completed quest ${questId}`);
     }
 
@@ -250,17 +241,16 @@ class QuestSystem {
             'SELECT completed, claimed FROM UserQuest WHERE user_id = ? AND quest_id = ?',
             [userId, questId]
         );
-
         if (!questStatus.length) throw new Error('Quest not found for this user');
         if (!questStatus[0].completed) throw new Error('Quest must be completed before claiming reward');
         if (questStatus[0].claimed) throw new Error('Quest reward already claimed');
-        
+
         const [questData] = await db.query(
             'SELECT xp_reward, gold_reward FROM Quest WHERE id = ?',
             [questId]
         );
 
-        // Update UserStats
+        // Update UserStats (reward diberikan di sini!)
         await db.query(
             'UPDATE UserStats SET xp = xp + ?, gold = gold + ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?',
             [questData[0].xp_reward, questData[0].gold_reward, userId]
@@ -305,9 +295,7 @@ class QuestSystem {
                 // Tambahkan quest harian baru jika ada
                 await db.query(
                     `INSERT INTO UserQuest (user_id, quest_id, completed, claimed)
-                    SELECT ?, q.id, 
-                        CASE WHEN LOWER(q.name) LIKE '%login%' THEN TRUE ELSE FALSE END,
-                        FALSE
+                    SELECT ?, q.id, FALSE, FALSE
                     FROM Quest q
                     WHERE q.repeat_type = "daily"
                     AND NOT EXISTS (
