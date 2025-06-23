@@ -27,9 +27,6 @@ async function singlePull(userId) {
   }
 }
 
-async function insertData(userId, index_id) {
-  
-}
 async function getIndexInventory() {
   try {
     const res = await fetch(`${API_URL}/inventoryIndex`);
@@ -87,7 +84,11 @@ const MiscGacha = () => {
         stored++;
       }
     }
-
+    stored = 0;
+    while (stored < 10) {
+      fetch(`${API_URL}/users/${user.id}/${result[stored].index_id}/itemInput`);
+      stored++;
+    }
     setCurrentIndex(0); // Reset index for animation
     setRollResult(result);
     setShowResults(true);

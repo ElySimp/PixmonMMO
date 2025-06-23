@@ -191,6 +191,7 @@ app.get('/api/users/:userId/onePull', inventoryController.gachaResultSingle);
 app.get('/api/users/:userId/NormalObtain', inventoryController.NormalKeyObtain);
 app.get('/api/users/:userId/MythicalObtain', inventoryController.MythicalKeyObtain);
 app.get('/api/users/:userId/:index_id/ItemUse', inventoryController.ItemUsage);
+app.get('/api/users/:userId/:index_id/itemInput', inventoryController.ItemInput);
 
 
 // Quest Routes

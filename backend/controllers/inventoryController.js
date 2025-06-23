@@ -183,15 +183,15 @@ exports.ItemUsage = async (req, res) => {
     }
 };
 
-exports.ItemUsage = async (req, res) => {
+exports.ItemInput = async (req, res) => {
     try {
         const userId = req.params.userId;
         const index_id = parseInt(req.params.index_id, 10);
 
-        await inventory.inputItem(userId, index_id);
-        return res.status(200).json({ message: 'usage successful' });
+        await Inventory.inputItem(userId, index_id);
+        return res.status(200).json({ message: 'input successful' });
     } catch (error) {
-        console.error('Error in ItemUsage controller:', error);
+        console.error('Error in ItemInput controller:', error);
         return res.status(500).json({ error: 'Internal server error' });
     }
 }

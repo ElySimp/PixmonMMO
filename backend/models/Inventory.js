@@ -455,7 +455,7 @@ class Inventory {
     }
 
     static async inputItem (userId, index_id) {
-        const [rows] = await db.query('SELECT * FROM IndexInventory WHERE user_id = ? AND index_id = ?', [user_id, index_id]);
+        const [rows] = await db.query('SELECT * FROM IndexInventory WHERE index_id = ?', [index_id]);
         const selectedItem = rows[0];
 
         const [rows2] = await db.query(
@@ -488,6 +488,7 @@ class Inventory {
                     [userId, selectedItem.index_id]
                 );
             }
+            const now = new Date();
             await db.query(
                 `INSERT INTO gachaResult 
                     (item_name, index_id, user_id, item_type, item_stats, created_at)
