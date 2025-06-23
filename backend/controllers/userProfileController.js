@@ -266,7 +266,7 @@ exports.uploadCustomWallpaper = async (req, res) => {
         res.json({
             success: true,
             message: 'Custom wallpaper uploaded successfully',
-            custom_wallpaper_url: updatedProfile.custom_wallpaper_url,
+            wallpaper_url: updatedProfile.wallpaper_url,
             userId: updatedProfile.id,
             level: updatedProfile.level,
             maxXp

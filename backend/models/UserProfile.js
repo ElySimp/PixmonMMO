@@ -22,7 +22,6 @@ class UserProfile {
                     damage_points INT DEFAULT 0,
                     agility_points INT DEFAULT 0,
                     wallpaper_id INT,
-                    custom_wallpaper_url VARCHAR(255),
                     avatar_url VARCHAR(255),
                     favorite_pet_id INT,
                     wallpaper VARCHAR(255) DEFAULT NULL,
@@ -109,28 +108,32 @@ class UserProfile {
             const level = statsResult?.[0]?.level || 1;
             const initialSkillPoints = level * 1; 
             
-            // Insert default profile
             await db.query(
                 `INSERT INTO UserProfile (
                     user_id,
-                    avatar_url,
-                    custom_wallpaper_url,
-                    wallpaper_id,
                     status_message,
                     skill_points,
                     hp_points,
                     damage_points,
                     agility_points,
+                    selected_wallpaper_id,
+                    selected_avatar_id,
+                    wallpaper_url,
+                    avatar_url,
                     created_at,
                     updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
                 [
                     userId,
                     'Ready for adventure!',
                     initialSkillPoints,
-                    0, // Initial hp points
-                    0, // Initial damage points
-                    0  // Initial agility points
+                    0, // hp_points
+                    0, // damage_points
+                    0, // agility_points
+                    1, // selected_wallpaper_id
+                    1, // selected_avatar_id
+                    '/assets/wallpapers/wallpaper1.jpg', // wallpaper_url default
+                    '/assets/avatars/avatar1.jpg' // avatar_url default
                 ]
             );
             
@@ -274,15 +277,15 @@ class UserProfile {
 
             // Get current wallpaper URL to delete old file
             const currentProfile = await this.getByUserId(userId);
-            const oldWallpaperUrl = currentProfile?.custom_wallpaper_url;
+            const oldWallpaperUrl = currentProfile?.wallpaper_url;
 
             // Save new wallpaper file
             const wallpaperUrl = await this.saveWallpaperFile(userId, fileBuffer, originalFilename);
 
-            // Update database
+            // Update database (update wallpaper_url, bukan custom_wallpaper_url)
             const [result] = await db.query(
                 `UPDATE UserProfile 
-                SET custom_wallpaper_url = ?, wallpaper_id = NULL, updated_at = NOW()
+                SET wallpaper_url = ?, selected_wallpaper_id = NULL, updated_at = NOW()
                 WHERE user_id = ?`,
                 [wallpaperUrl, userId]
             );
