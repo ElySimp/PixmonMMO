@@ -70,9 +70,21 @@ const HomeDaily = () => {
         setError("User ID not found. Please log in.");
         return;
       }
+
+      const rewards = [
+        { type: "gold", amount: 250 },
+        { type: "gold", amount: 500 },
+        { type: "diamond", amount: 5 },
+        { type: "gold", amount: 750 },
+        { type: "gold", amount: 1000 },
+        { type: "diamond", amount: 10 },
+        { type: "gold", amount: 1500 }
+      ];
+      const dayIdx = (dailyRewards.current_day || 1) - 1;
+      const reward = rewards[dayIdx];
       
       setLoading(true);
-      const response = await claimDailyReward(userId);
+      const response = await claimDailyReward(userId, dailyRewards.current_day, reward.type, reward.amount);
       
       if (response.success) {
         setClaimStatus("success");

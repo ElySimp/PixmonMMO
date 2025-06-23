@@ -60,8 +60,17 @@ function DailyQuest() {
         fetch(`${API_URL}/api/users/${userId}/stats`)
             .then(res => res.json())
             .then(data => {
-                console.log('Stats API response:', data); // Tambahkan ini
-                setPlayerStats(data.data || data)
+                setPlayerStats(data.data || data);
+
+                // Cek apakah main reward sudah di-claim hari ini
+                const lastClaim = (data.data || data).last_daily_main_reward;
+                if (lastClaim) {
+                    const today = moment().tz("Asia/Jakarta").format('YYYY-MM-DD');
+                    const claimedDate = moment(lastClaim).tz("Asia/Jakarta").format('YYYY-MM-DD');
+                    setMainRewardClaimed(claimedDate === today);
+                } else {
+                    setMainRewardClaimed(false);
+                }
             });
     }, []);
 
@@ -88,7 +97,7 @@ function DailyQuest() {
     const handleClaimMainReward = async () => {
         const userId = localStorage.getItem('userId');
         const res = await axios.post(`${API_URL}/api/user/${userId}/claim-daily-main-reward`);
-        setMainRewardClaimed(true);
+        // setMainRewardClaimed(true);
         await refreshPlayerStats(); // Tambahkan ini!
         toast.success(res.data.message || '🎉 5 Diamonds & 1 Key Claimed!');
     };

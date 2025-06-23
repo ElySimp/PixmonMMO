@@ -113,7 +113,8 @@ class User {
                     xp INT DEFAULT 0,
                     gold INT DEFAULT 0,
                     diamonds INT DEFAULT 0,
-                    quest_points INT DEFAULT 10,
+                    quest_points INT DEFAULT 5,
+                    last_daily_main_reward DATETIME NULL,
                     quest_point_cooldown DATETIME DEFAULT NULL,
                     quest_point_last_update DATETIME DEFAULT CURRENT_TIMESTAMP,
                     cooldownEnd DATETIME DEFAULT NULL,
@@ -316,7 +317,7 @@ class User {
             
             // Get the user's stats (now there should be only one record or none)
             const [existingStats] = await db.query(
-                'SELECT level, xp, gold, diamonds, quest_points, quest_point_cooldown, quest_point_last_update, cooldownEnd FROM UserStats WHERE user_id = ?',
+                'SELECT level, xp, gold, diamonds, quest_points, quest_point_cooldown, quest_point_last_update, cooldownEnd, last_daily_main_reward FROM UserStats WHERE user_id = ?',
                 [userId]
             );
             
@@ -331,7 +332,8 @@ class User {
                     quest_points: 10, 
                     quest_point_cooldown: null, 
                     quest_point_last_update: null,
-                    cooldownEnd: null 
+                    cooldownEnd: null ,
+                    last_daily_main_reward: null
                 };
             }
             // const stats = existingStats[0];
@@ -343,7 +345,8 @@ class User {
                 quest_points: existingStats[0].quest_points || 0,
                 quest_point_cooldown: existingStats[0].quest_point_cooldown,
                 quest_point_last_update: existingStats[0].quest_point_last_update,
-                cooldownEnd: existingStats[0].cooldownEnd
+                cooldownEnd: existingStats[0].cooldownEnd,
+                last_daily_main_reward: existingStats[0].last_daily_main_reward
             };
         } catch (error) {
             console.error('Error getting user stats:', error);

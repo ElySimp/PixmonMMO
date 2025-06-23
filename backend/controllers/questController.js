@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const moment = require('moment-timezone');
 const { QuestSystem } = require('../models/QuestSystem');
 
 exports.getAllQuests = async (req, res) => {
@@ -44,9 +45,58 @@ exports.completeQuest = async (req, res) => {
 exports.claimDailyMainReward = async (req, res) => {
     const { userId } = req.params;
     try {
-        await db.query('UPDATE UserStats SET diamonds = diamonds + 5 WHERE user_id = ?', [userId]);
-        await db.query('INSERT INTO UserInventory (item_name, user_id) VALUES (?, ?)', ['Normal Key', userId]);
-        res.json({ success: true, message: 'Claimed 5 diamonds' });
+        const today = moment().tz("Asia/Jakarta").format('YYYY-MM-DD');
+
+        // Cek apakah sudah claim hari ini
+        const [stats] = await db.query(
+            'SELECT last_daily_main_reward FROM UserStats WHERE user_id = ?',
+            [userId]
+        );
+        if (
+            stats.length > 0 &&
+            stats[0].last_daily_main_reward &&
+            moment(stats[0].last_daily_main_reward).tz("Asia/Jakarta").format('YYYY-MM-DD') === today
+        ) {
+            return res.status(400).json({ success: false, message: 'Main reward already claimed today' });
+        }
+
+        // Berikan reward: tambah 5 diamonds & 1 Normal Key, update waktu claim
+        await db.query(
+            'UPDATE UserStats SET diamonds = diamonds + 5, last_daily_main_reward = NOW() WHERE user_id = ?',
+            [userId]
+        );
+        await db.query(
+            'INSERT INTO UserInventory (item_name, user_id) VALUES (?, ?)',
+            ['Normal Key', userId]
+        );
+
+        res.json({ success: true, message: 'Main reward claimed: 5 diamonds & 1 Normal Key' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.claimQuestReward = async (req, res) => {
+    const { userId, questId } = req.params;
+    try {
+        const today = moment().tz("Asia/Jakarta").format('YYYY-MM-DD');
+        const [uq] = await db.query(
+            `SELECT completed, claimed, last_completed FROM UserQuest WHERE user_id = ? AND quest_id = ?`,
+            [userId, questId]
+        );
+        if (uq.length === 0) return res.status(404).json({ success: false, message: 'Quest not found' });
+        if (!uq[0].completed || !uq[0].last_completed || moment(uq[0].last_completed).tz("Asia/Jakarta").format('YYYY-MM-DD') !== today) {
+            return res.status(400).json({ success: false, message: 'Quest not completed today' });
+        }
+        if (uq[0].claimed) {
+            return res.status(400).json({ success: false, message: 'Quest already claimed today' });
+        }
+        await db.query(
+            `UPDATE UserQuest SET claimed = TRUE WHERE user_id = ? AND quest_id = ?`,
+            [userId, questId]
+        );
+        // Berikan reward ke user di sini...
+        res.json({ success: true, message: 'Quest reward claimed' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

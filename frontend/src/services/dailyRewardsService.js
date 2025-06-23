@@ -24,15 +24,23 @@ export const getUserDailyRewards = async (userId) => {
 /**
  * Claim daily reward for a user
  * @param {string} userId - The ID of the user
+ * @param {number} dayCompleted
+ * @param {string} rewardType
+ * @param {number} rewardAmount
  * @returns {Promise<Object>} - The result of the claim operation
  */
-export const claimDailyReward = async (userId) => {
+export const claimDailyReward = async (userId, dayCompleted, rewardType, rewardAmount) => {
   try {
     const response = await fetch(`${API_URL}/users/${userId}/claim-daily-reward`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      body: JSON.stringify({
+        dayCompleted,
+        rewardType,
+        rewardAmount
+      })
     });
     
     if (!response.ok) {

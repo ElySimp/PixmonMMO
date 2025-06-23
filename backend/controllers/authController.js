@@ -116,6 +116,7 @@ exports.login = async (req, res) => {
         await UserProfile.ensureProfileExists(user.id);
 
         await UserQuest.assignDailyQuests(user.id);
+        await UserQuest.completeDailyLoginQuest(user.id);
         
         // Generate token
         const token = generateToken(user);
