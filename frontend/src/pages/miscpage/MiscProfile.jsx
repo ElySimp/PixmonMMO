@@ -9,6 +9,8 @@ import { API_URL, TOKEN_KEY } from '../../utils/config';
 import axios from 'axios';
 import { getUserPets } from '../../services/petsService';
 import { useUserProfile } from '../../context/UserProfileContext';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Preset data
 const PRESET_AVATARS = [
@@ -321,7 +323,7 @@ const MiscProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingStatus, setIsEditingStatus] = useState(false);
   const [customWallpaperUrl, setCustomWallpaperUrl] = useState('');
-  const [isLoaded, setIsLoaded] = useState(true); // Add back isLoaded state
+  const [isLoaded, setIsLoaded] = useState(false); // Mulai dari false, loading dulu
   const [error, setError] = useState(null);
   const [xpValue, setXpValue] = useState(0);
   const [maxXp, setMaxXp] = useState();
@@ -457,8 +459,7 @@ const MiscProfile = () => {
       console.error('API Error:', apiError);
       setError('Failed to load profile data. Please try again later.');
     } finally {
-      // We don't need the timeout anymore as we've set isLoaded to true by default
-      setIsLoading(false);
+      setIsLoaded(true); // Data sudah siap, loading hilang
     }
   };
   
@@ -543,7 +544,14 @@ const MiscProfile = () => {
   
   const handleResetWithDiamond = async () => {
     if (diamonds < RESET_COST) {
-      alert("Not enough diamonds to reset skill points!");
+      toast.error("Not enough diamonds to reset skill points!", {
+        position: 'top-center',
+        autoClose: 2200,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
       return;
     }
     
@@ -570,7 +578,14 @@ const MiscProfile = () => {
       if (response.data && response.data.success) {
         setAllocatedPoints({ hp: 0, damage: 0, agility: 0 });
         setDiamonds(response.data.diamonds);
-        alert(`Reset successful! ${RESET_COST} diamonds spent.`);
+        toast.success(`Reset successful! ${RESET_COST} diamonds spent.`, {
+          position: 'top-center',
+          autoClose: 2200,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
         setSaveError(null);
       } else {
         throw new Error('Invalid server response');
@@ -647,7 +662,14 @@ const MiscProfile = () => {
         // Refresh profile data
         await fetchUserProfile();
         
-        alert('Profile updated successfully!');
+        toast.success('Profile updated successfully!', {
+          position: 'top-center',
+          autoClose: 2200,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       } else {
         throw new Error('Server returned empty response');
       }
@@ -699,7 +721,14 @@ const MiscProfile = () => {
         setSelectedAchievements(achievements);
         setSaveError(null);
         await fetchUserProfile();
-        alert('Achievements updated!');
+        toast.success('Achievements updated!', {
+          position: 'top-center',
+          autoClose: 2200,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       } else {
         throw new Error('Failed to update selected achievements');
       }
@@ -731,13 +760,27 @@ const MiscProfile = () => {
         setShowAvatarSelection(false);
         setSaveError(null);
         await fetchUserProfile();
-        alert('Avatar updated successfully!');
+        toast.success('Avatar updated successfully!', {
+          position: 'top-center',
+          autoClose: 2200,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       } else {
         throw new Error('Failed to update avatar');
       }
     } catch (error) {
       console.error('Error updating avatar:', error);
-      setSaveError('Failed to update avatar. Please try again.');
+      toast.error('Failed to update avatar. Please try again.', {
+        position: 'top-center',
+        autoClose: 2200,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } finally {
       setIsSaving(false);
     }
@@ -763,13 +806,27 @@ const MiscProfile = () => {
         setShowWallpaperSelection(false);
         setSaveError(null);
         await fetchUserProfile();
-        alert('Wallpaper updated successfully!');
+        toast.success('Wallpaper updated successfully!', {
+          position: 'top-center',
+          autoClose: 2200,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       } else {
         throw new Error('Failed to update wallpaper');
       }
     } catch (error) {
       console.error('Error updating wallpaper:', error);
-      setSaveError('Failed to update wallpaper. Please try again.');
+      toast.error('Failed to update wallpaper. Please try again.', {
+        position: 'top-center',
+        autoClose: 2200,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } finally {
       setIsSaving(false);
     }
@@ -822,22 +879,33 @@ const MiscProfile = () => {
         setShowPetSelection(false);
         setSaveError(null);
         await fetchUserProfile();
-        alert('Favorite pet updated!');
+        toast.success('Favorite pet updated!', {
+          position: 'top-center',
+          autoClose: 2200,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       } else {
         throw new Error('Failed to update favorite pet');
       }
     } catch (error) {
       console.error('Error updating favorite pet:', error);
-      setSaveError('Failed to update favorite pet. Please try again.');
+      toast.error('Failed to update favorite pet. Please try again.', {
+        position: 'top-center',
+        autoClose: 2200,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } finally {
       setIsSaving(false);
     }
   };
     // Show loading state when profile data is loading
-  if (profileLoading) {
-    // Make sure isLoaded is false during loading
-    if (isLoaded) setIsLoaded(false);
-    
+  if (profileLoading || !isLoaded) {
     return (
       <div className="profile-loading-container">
         <div className="profile-loading-spinner"></div>
@@ -862,6 +930,18 @@ const MiscProfile = () => {
     <div className="main-container">
       <Sidebar />
       <div className="main-content profile-main-content">
+        <ToastContainer
+          position="top-center"
+          autoClose={2200}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+        />
         <Topbar
           onMenuClick={handleMenuClick}
           onSupportClick={handleSupportClick}

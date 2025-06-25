@@ -558,8 +558,15 @@ exports.updateWallpaper = async (req, res) => {
         if (!presetWallpapers.includes(parseInt(wallpaper_id))) {
             return res.status(400).json({ error: 'Invalid wallpaper ID' });
         }
-        // Set wallpaper_url sesuai format frontend
-        const wallpaperUrl = `/assets/wallpapers/wallpaper${wallpaper_id}.jpg`;
+        // Set wallpaper_url sesuai format frontend (support .jpg/.png)
+        // Bisa mapping dari preset list atau dari tabel Wallpapers jika sudah ada
+        // Untuk sekarang, support .png jika id > 1
+        let wallpaperUrl;
+        if (parseInt(wallpaper_id) === 1) {
+            wallpaperUrl = `/assets/wallpapers/wallpaper1.jpg`;
+        } else {
+            wallpaperUrl = `/assets/wallpapers/wallpaper${wallpaper_id}.png`;
+        }
         // Update via model UserProfile
         const updatedProfile = await UserProfile.update(userId, { wallpaper: wallpaperUrl });
         res.json({
