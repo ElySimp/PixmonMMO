@@ -198,6 +198,7 @@ app.get('/api/users/:userId/:index_id/itemInput', inventoryController.ItemInput)
 app.get('/api/quests', questController.getAllQuests);
 app.post('/api/user/:userId/quest/:questId/complete', questController.completeQuest);
 app.post('/api/user/:userId/claim-daily-main-reward', questController.claimDailyMainReward);
+app.get('/api/server-time', questController.getServerTime);
 
 // User Quest Routes
 app.get('/api/user/:userId/quests', async (req, res) => {

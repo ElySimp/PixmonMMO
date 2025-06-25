@@ -142,3 +142,13 @@ exports.startBountyQuest = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+exports.getServerTime = (req, res) => {
+    const now = moment().tz("Asia/Jakarta");
+    const nextReset = now.clone().hour(7).minute(0).second(0);
+    if (now.isAfter(nextReset)) nextReset.add(1, 'day');
+    res.json({
+        serverTime: now.format(),
+        nextDailyReset: nextReset.format()
+    });
+};

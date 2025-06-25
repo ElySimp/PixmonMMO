@@ -267,57 +267,43 @@ class QuestSystem {
     static async resetDailyQuests() {
         const now = moment().tz("Asia/Jakarta");
         const todayDate = now.format('YYYY-MM-DD');
-
-        // Ambil semua user
-        const [users] = await db.query('SELECT user_id, last_reset FROM UserStats');
+        const [users] = await db.query('SELECT user_id FROM UserStats');
 
         for (const user of users) {
-            // Cek apakah sudah reset hari ini (hanya tanggal, bukan jam)
-            const lastResetDate = user.last_reset ? moment(user.last_reset).tz("Asia/Jakarta").format('YYYY-MM-DD') : null;
+            await db.query(
+                `UPDATE UserQuest uq
+                JOIN Quest q ON uq.quest_id = q.id
+                SET uq.completed = FALSE, uq.claimed = FALSE
+                WHERE uq.user_id = ?
+                AND q.repeat_type = "daily"
+                AND (uq.last_completed IS NULL OR DATE(uq.last_completed) <> ?)`,
+                [user.user_id, todayDate]
+            );
 
-            if (lastResetDate !== todayDate) {
-                // Reset daily quest progress & claimed
-                await db.query(
-                    `UPDATE UserQuest uq
-                    JOIN Quest q ON uq.quest_id = q.id
-                    SET uq.completed = FALSE, uq.claimed = FALSE
-                    WHERE uq.user_id = ? AND q.repeat_type = "daily"`,
-                    [user.user_id]
-                );
+            await db.query(
+                `INSERT INTO UserQuest (user_id, quest_id, completed, claimed)
+                SELECT ?, q.id, FALSE, FALSE
+                FROM Quest q
+                WHERE q.repeat_type = "daily"
+                AND NOT EXISTS (
+                    SELECT 1 FROM UserQuest uq2 WHERE uq2.user_id = ? AND uq2.quest_id = q.id
+                )`,
+                [user.user_id, user.user_id]
+            );
 
-                // Update last_reset ke hari ini jam 07:00:00
-                const resetTime = now.clone().hour(7).minute(0).second(0).format('YYYY-MM-DD HH:mm:ss');
-                await db.query(
-                    'UPDATE UserStats SET last_reset = ? WHERE user_id = ?',
-                    [resetTime, user.user_id]
-                );
-
-                // Tambahkan quest harian baru jika ada
-                await db.query(
-                    `INSERT INTO UserQuest (user_id, quest_id, completed, claimed)
-                    SELECT ?, q.id, FALSE, FALSE
-                    FROM Quest q
-                    WHERE q.repeat_type = "daily"
-                    AND NOT EXISTS (
-                        SELECT 1 FROM UserQuest uq2 WHERE uq2.user_id = ? AND uq2.quest_id = q.id
-                    )`,
-                    [user.user_id, user.user_id]
-                );
-
-                console.log(`✅ Daily quests reset for user ${user.user_id}`);
-            }
+            console.log(`✅ Daily quests reset for user ${user.user_id} at ${now.format()}`);
         }
     }
 
-    static startDailyQuestResetSchedule() {
-        cron.schedule('0 7 * * *', async () => {
-            await QuestSystem.resetDailyQuests();
-        }, {
-            timezone: "Asia/Jakarta"
-        });
-    }
+        static startDailyQuestResetSchedule() {
+            cron.schedule('0 7 * * *', async () => {
+                await QuestSystem.resetDailyQuests();
+            }, {
+                timezone: "Asia/Jakarta"
+            });
+        }
 
-}
+    }
 
 // ✅ Jalankan reset otomatis saat server berjalan
 QuestSystem.startDailyQuestResetSchedule();

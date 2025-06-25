@@ -37,10 +37,12 @@ const MiscQuest = () => {
         const activeTab = tabRefs.current[activeLayer];
         const underline = underlineRef.current;
         if (activeTab && underline) {
-            const rect = activeTab.getBoundingClientRect();
-            const parentRect = activeTab.parentNode.getBoundingClientRect();
-            underline.style.width = `${rect.width}px`;
-            underline.style.left = `${rect.left - parentRect.left}px`;
+            setTimeout(() => {
+                const rect = activeTab.getBoundingClientRect();
+                const parentRect = activeTab.parentNode.getBoundingClientRect();
+                underline.style.width = `${rect.width}px`;
+                underline.style.left = `${rect.left - parentRect.left}px`;
+            }, 50); // delay 50ms
         }
     }, [activeLayer]);
 

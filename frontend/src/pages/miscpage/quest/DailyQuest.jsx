@@ -18,8 +18,16 @@ function DailyQuest() {
     const [playerStats, setPlayerStats] = useState({ level: 1, gold: 0, xp: 0, diamonds: 0, quest_points: 0 });
     const [steps, setSteps] = useState(0);
     const [loading, setLoading] = useState(true); // Tambahkan state loading
+    const [serverTime, setServerTime] = useState('');
+    const [nextReset, setNextReset] = useState('');
 
     // localStorage.setItem('userId', response.data.data.user.id);
+    useEffect(() => {
+        axios.get(`${API_URL}/api/server-time`).then(res => {
+            setServerTime(res.data.serverTime);
+            setNextReset(res.data.nextDailyReset);
+        });
+    }, []);
 
     useEffect(() => {
         setLoading(true);
@@ -134,6 +142,12 @@ function DailyQuest() {
 
     return (
         <div className="quest-container">
+            {/* hanya untuk cek servertime */}
+            {/* <div>
+                Server: {serverTime && new Date(serverTime).toLocaleString()}<br/>
+                Next Reset: {nextReset && new Date(nextReset).toLocaleString()}
+            </div> */}
+
             <div className="quest-progress-container">
                 <div 
                     className="daily-circular-progress" 

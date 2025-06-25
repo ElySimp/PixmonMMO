@@ -28,10 +28,11 @@ function BountyQuest() {
     setShowOverlay(false);
     setSelectedQuest(null);
   };
-
+  
   // Fetch data on mount
   useEffect(() => {
     const fetchData = async () => {
+      const start = Date.now();
       setLoading(true);
       try {
         const userId = localStorage.getItem('userId');
@@ -66,10 +67,13 @@ function BountyQuest() {
           else if (q.completed) claimedMap[q.id] = 'claim';
         });
         setClaimedQuests(claimedMap);
-      } catch (err) {
-        console.error('Error fetching bounty quest data:', err);
-      }
-      setLoading(false);
+      } finally {
+        setLoading(false);
+        console.log('[BountyQuest] Data loaded in', Date.now() - start, 'ms');
+      } 
+      // catch (err) {
+      //   console.error('Error fetching bounty quest data:', err);
+      // }
     };
     fetchData();
   }, []);
@@ -254,10 +258,10 @@ function BountyQuest() {
           <div key={quest.id} className="quest-box">
             <div>
               <div>{quest.name}</div>
-              <div className="quest-description">{quest.description}</div>
+              {/* <div className="quest-description">{quest.description}</div>
               <div className="quest-reward">
                 {quest.gold_reward} Gold, {quest.xp_reward} XP
-              </div>
+              </div> */}
             </div>
             {claimedQuests[quest.id] === 'claim' ? (
               <button className="quest-claim-btn" onClick={() => handleClaimReward(quest.id)}>
@@ -289,23 +293,10 @@ function BountyQuest() {
             <div className="quest-reward">
               Reward: {selectedQuest.gold_reward} Gold, {selectedQuest.xp_reward} XP
             </div>
-            <div style={{margin: '1rem 0'}}>
-              <span style={{fontWeight: 'bold', fontSize: '1.2rem'}}>
-                [ {selectedQuest.progress || 0} / {selectedQuest.target || 15} ]
-              </span>
-              <div className="stats-progress-bar" style={{marginTop: '0.5rem'}}>
-                <div
-                  className="stats-progress-bar-inner"
-                  style={{
-                    width: `${Math.min((selectedQuest.progress || 0) / (selectedQuest.target || 15) * 100, 100)}%`
-                  }}
-                />
-              </div>
-            </div>
             <button
               className="quest-go-btn"
-              onClick={() => {
-                handleTakeQuest(selectedQuest.id);
+              onClick={async () => {
+                await handleTakeQuest(selectedQuest.id);
                 closeOverlay();
               }}
               style={{margin: '1rem 0'}}
