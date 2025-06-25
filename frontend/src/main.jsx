@@ -3,6 +3,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { UserStatsProvider } from './context/UserStatsContext'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import Welcome from './pages/welcome/welcome.jsx'
@@ -27,7 +28,9 @@ import './index.css'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <AuthProvider>        <Routes>
+      <AuthProvider>
+        <UserStatsProvider>
+          <Routes>
           <Route path="/" element={<Welcome />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -47,6 +50,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/support" element={<Support />} />
         </Routes>
         <ToastContainer />
+        </UserStatsProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,

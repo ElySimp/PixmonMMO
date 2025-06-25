@@ -6,6 +6,7 @@ import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from '../../../context/AuthContext';
+import { useUserStats } from '../../../context/UserStatsContext';
 import { API_URL } from '../../../utils/config';
 import adventureStories from '../../../assets/adventure_stories';
 import educationalStories from '../../../assets/educational_stories';
@@ -19,14 +20,23 @@ function getDailyKeyDate() {
   return now.toISOString().slice(0,10).replace(/-/g,'');
 }
 const Adventure = () => {
-  const [xp, setXp] = useState(0);
-  const [gold, setGold] = useState(0);
-  const [diamonds, setDiamonds] = useState(0);
-  const [level, setLevel] = useState(1);
-  const [xpToNextLevel, setXpToNextLevel] = useState(0);
+  // Use the UserStatsContext for instant access to user stats
+  const { 
+    level, 
+    xp, 
+    gold, 
+    diamonds, 
+    xpToNextLevel,
+    cooldownEnd: contextCooldownEnd,
+    isLoading: statsLoading,
+    updateStats,
+    calculateXpCap,
+    checkAndProcessLevelUp
+  } = useUserStats();
+
   const [story, setStory] = useState('Your adventure begins...');
   const [cooldown, setCooldown] = useState(0);
-  const [cooldownEndTime, setCooldownEndTime] = useState(0);
+  const [cooldownEndTime, setCooldownEndTime] = useState(contextCooldownEnd || 0);
   
   // Educational story states
   const [currentEduStory, setCurrentEduStory] = useState(null);
@@ -38,10 +48,7 @@ const Adventure = () => {
   
   const { user } = useAuth(); // Get user from auth context
 
-  // Calculate XP required for level up
-  const calculateXpCap = (playerLevel) => {
-    return Math.floor(50 * Math.pow(playerLevel, 1.4));
-  };
+  // We're now using calculateXpCap from UserStatsContext
 
   // Get a random adventure story from our collection
   const getRandomStory = (foundRewards) => {
@@ -83,82 +90,12 @@ const Adventure = () => {
     };
   }, [cooldownEndTime]);
 
-  // Load user data on component mount
+  // Update cooldown effect from context
   useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        // Check if user is logged in
-        if (!user || !user.id) {
-          console.error('User not logged in');
-          return;
-        }
-        
-        // Fetch user stats from backend
-        const response = await axios.get(`${API_URL}/users/${user.id}/stats`);
-        
-        // Check if we got valid data back
-        if (response.data && typeof response.data === 'object') {
-          const { xp: userXp, gold: userGold, diamonds: userDiamonds, level: userLevel, cooldownEnd } = response.data;
-          
-          console.log('Loaded user stats:', { userXp, userGold, userLevel, cooldownEnd });
-          
-          // Calculate XP needed for next level
-          const xpCap = calculateXpCap(userLevel || 1);
-          
-          // Check if the player should already be at a higher level
-          let adjustedLevel = userLevel || 1;
-          let adjustedXp = userXp || 0;
-          
-          // If XP exceeds the cap for current level, we need to level up
-          if (adjustedXp >= xpCap) {
-            adjustedLevel = adjustedLevel + 1;
-            adjustedXp = 0;
-            
-            console.log(`LEVEL DEBUG - Auto-leveling up on load: Level ${userLevel} → ${adjustedLevel} (XP: ${userXp} exceeds cap ${xpCap})`);
-            
-            // Update the backend with the corrected level
-            try {
-              await axios.post(`${API_URL}/users/${user.id}/update-stats`, {
-                xpDelta: 0, // No XP change
-                goldDelta: 0, // No gold change
-                level: adjustedLevel,
-                resetXp: true, // Reset XP to 0
-              });
-              console.log(`LEVEL DEBUG - Saved auto-level correction to backend`);
-            } catch (error) {
-              console.error('Failed to save level correction:', error);
-            }
-          }
-          
-          // Only update if we got valid numbers back
-          setXp(adjustedXp);
-          setGold(userGold || 0);
-          setDiamonds(userDiamonds || 0);
-          setLevel(adjustedLevel);
-          
-          // Set XP cap for the (potentially updated) level
-          const finalXpCap = calculateXpCap(adjustedLevel);
-          setXpToNextLevel(finalXpCap);
-          
-          // Check if there's an active cooldown
-          if (cooldownEnd) {
-            const cooldownEndTimestamp = new Date(cooldownEnd).getTime();
-            const now = Date.now();
-            
-            if (cooldownEndTimestamp > now) {
-              setCooldownEndTime(cooldownEndTimestamp);
-            }
-          }
-        } else {
-          console.error('Invalid data format from stats API:', response.data);
-        }
-      } catch (error) {
-        console.error('Error loading user data:', error);
-      }
-    };
-    
-    loadUserData();
-  }, [user]); // Re-run when user changes
+    if (contextCooldownEnd) {
+      setCooldownEndTime(contextCooldownEnd);
+    }
+  }, [contextCooldownEnd]);
 
   // Start a new educational story sequence
   const startNewEduStory = () => {
@@ -194,7 +131,11 @@ const Adventure = () => {
     if (isCorrect) {
       // Award 2 diamonds for correct answer
       const diamondReward = 2;
-      setDiamonds(prev => prev + diamondReward);
+      
+      // Use context to update diamonds
+      updateStats({
+        diamondsDelta: diamondReward
+      });
       
       toast.success(`Correct! You earned ${diamondReward} diamonds!`, {
         position: "top-center",
@@ -204,15 +145,6 @@ const Adventure = () => {
         pauseOnHover: true,
         draggable: true,
       });
-      
-      // Update backend with diamond reward
-      try {
-        await axios.post(`${API_URL}/users/${user.id}/update-stats`, {
-          diamondsDelta: diamondReward,
-        });
-      } catch (error) {
-        console.error('Error updating diamonds:', error);
-      }
     } else {
       toast.error("Sorry, that's not correct. Keep learning!", {
         position: "top-center",
@@ -367,22 +299,22 @@ const Adventure = () => {
     
     // Cooldown is already applied at the beginning of handleStep
 
-    // Update XP and calculate if level up
-    let newXp = xp + randomXp;
-    let newLevel = level;
-    let levelUpMessage = '';
+    // Use the context's updateStats method for local and backend updates
+    const updates = {
+      xpDelta: randomXp,
+      goldDelta: randomGold,
+      cooldownEnd: new Date(cooldownEndTimestamp).toISOString()
+    };
+    
+    // Update stats in context (updates local state and sends to backend)
+    updateStats(updates);
     
     // Check if player should level up
-    if (newXp >= currentXpCap) {
-      newLevel = level + 1;
-      levelUpMessage = `Congratulations! You've reached level ${newLevel}!`;
-      
-      // Reset XP to 0 on level up
-      newXp = 0;
-      
-      // Calculate new XP cap
-      const newXpCap = calculateXpCap(newLevel);
-      setXpToNextLevel(newXpCap);
+    const { didLevelUp, newLevel: leveledUpTo } = checkAndProcessLevelUp();
+    let levelUpMessage = '';
+    
+    if (didLevelUp) {
+      levelUpMessage = `Congratulations! You've reached level ${leveledUpTo}!`;
       
       toast.info(levelUpMessage, {
         position: "top-center",
@@ -393,10 +325,6 @@ const Adventure = () => {
         draggable: true,
       });
     }
-    
-    setXp(newXp);
-    setGold(prev => prev + randomGold);
-    setLevel(newLevel);
     
     // Get a random adventure story
     const foundRewards = randomXp > 0 || randomGold > 0;
@@ -429,40 +357,13 @@ const Adventure = () => {
       });
     }
 
-    // Update backend with all stats including cooldown
+    // We don't need to update the backend here - the context handles that for us!
     try {
-      console.log(`LEVEL DEBUG - Current level: ${level}, New level: ${newLevel}`);
-      console.log(`Updating stats for user ${user.id}: XP +${randomXp}, Gold +${randomGold}, Level ${newLevel}, Cooldown until ${new Date(cooldownEndTimestamp).toISOString()}`);
-      console.log('API URL:', API_URL);
-      console.log('User object:', user);
-      
-      // Validate the user ID before sending the request
+      // Validate the user ID before proceeding with achievements
       if (!user || !user.id) {
         console.error('Invalid user ID:', user?.id);
         toast.error('Authentication error: Invalid user ID. Try logging in again.');
         return;
-      }
-      
-      const payload = {
-        xpDelta: randomXp,
-        goldDelta: randomGold,
-        level: newLevel,
-        resetXp: newLevel > level, // Tell the backend to reset XP if we leveled up
-        cooldownEnd: new Date(cooldownEndTimestamp).toISOString()
-      };
-      
-      console.log('Sending payload:', payload);
-      
-      const response = await axios.post(`${API_URL}/users/${user.id}/update-stats`, payload);
-      
-      console.log('Stats updated successfully:', response.data);
-      // Check if level was updated in response
-      console.log(`LEVEL DEBUG - Level in response: ${response.data.level}, Expected: ${newLevel}`);
-      
-      // Check if there was an error in the response
-      if (response.data.error) {
-        console.error('Error in response:', response.data.error);
-        toast.error(`Failed to save progress: ${response.data.error}`);
       }
       
       // Increment total steps for achievements and store in localStorage
@@ -582,8 +483,14 @@ const Adventure = () => {
           onNotificationClick={() => console.log('Notifications clicked')} 
           onEggClick={() => console.log('Egg clicked')} 
         />
-
-        <div className="adventure-grid">
+        
+        {statsLoading ? (
+          <div className="adventure-loading">
+            <div className="loading-spinner"></div>
+            <p>Loading your adventure...</p>
+          </div>
+        ) : (
+          <div className="adventure-grid">
           <div className="adventure-grid-profile">
             <img src={avatarExample} alt="Profile" className="adventure-profile-pic" />
             <div className="adventure-stats">
@@ -644,6 +551,7 @@ const Adventure = () => {
             </button>
           </div>
         </div>
+      )}
       </div>
     </div>
   );
