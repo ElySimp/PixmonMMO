@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import moment from "moment-timezone";
 
 const API_URL = "http://localhost:5000";
 
@@ -39,6 +40,9 @@ function DailyQuest() {
         }
     };
     
+    useEffect(() => {
+        refreshPlayerStats();
+    }, []);
 
     useEffect(() => {
         const userId = localStorage.getItem('userId');
@@ -92,6 +96,15 @@ function DailyQuest() {
         const res = await fetch(`${API_URL}/api/users/${userId}/stats`);
         const data = await res.json();
         setPlayerStats(data.data || data);
+
+        const lastClaim = (data.data || data).last_daily_main_reward;
+        if (lastClaim) {
+            const today = moment().tz("Asia/Jakarta").format('YYYY-MM-DD');
+            const claimedDate = moment(lastClaim).tz("Asia/Jakarta").format('YYYY-MM-DD');
+            setMainRewardClaimed(claimedDate === today);
+        } else {
+            setMainRewardClaimed(false);
+        }
     };
 
     const handleClaimMainReward = async () => {
