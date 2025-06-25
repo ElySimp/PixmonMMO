@@ -8,6 +8,7 @@ import trophyImage from '../../assets/MAIN/trophy.png';
 import { API_URL, TOKEN_KEY } from '../../utils/config';
 import axios from 'axios';
 import { getUserPets } from '../../services/petsService';
+import { useUserProfile } from '../../context/UserProfileContext';
 
 // Preset data
 const PRESET_AVATARS = [
@@ -296,7 +297,21 @@ const MiscProfile = () => {
   const handleChatClick = () => {};
   const handleNotificationClick = () => {};
   const handleEggClick = () => {};
-    // State variables
+  
+  // Get profile data from context
+  const { 
+    avatarUrl: contextAvatarUrl,
+    wallpaper: contextWallpaper,
+    characterName: contextCharacterName,
+    statusMessage: contextStatusMessage,
+    favoritePet: contextFavoritePet,
+    selectedAchievements: contextSelectedAchievements,
+    isLoading: profileLoading,
+    updateUserProfile,
+    fetchUserProfile: refreshUserProfile
+  } = useUserProfile();
+  
+  // Local state variables
   const [wallpaper, setWallpaper] = useState(defaultWallpaper);
   const [avatarUrl, setAvatarUrl] = useState('/dummy1.jpg');
   const [favoritePet, setFavoritePet] = useState('');
@@ -306,8 +321,7 @@ const MiscProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingStatus, setIsEditingStatus] = useState(false);
   const [customWallpaperUrl, setCustomWallpaperUrl] = useState('');
-  const [isLoaded, setIsLoaded] = useState(true); // Start as loaded
-  const [isLoading, setIsLoading] = useState(false); // Start as not loading
+  const [isLoaded, setIsLoaded] = useState(true); // Add back isLoaded state
   const [error, setError] = useState(null);
   const [xpValue, setXpValue] = useState(0);
   const [maxXp, setMaxXp] = useState();
@@ -451,6 +465,34 @@ const MiscProfile = () => {
   useEffect(() => {
     fetchUserProfile();
   }, []);
+  
+  // Sync local state with context
+  useEffect(() => {
+    if (!profileLoading) {
+      setAvatarUrl(contextAvatarUrl);
+      setWallpaper(contextWallpaper);
+      setCharacterName(contextCharacterName);
+      setStatusMessage(contextStatusMessage);
+      setIsLoaded(true); // Update isLoaded when profile finishes loading
+      
+      if (contextFavoritePet) {
+        setFavoritePet(contextFavoritePet.id);
+        setFavoritePetData(contextFavoritePet);
+      }
+      
+      if (contextSelectedAchievements?.length) {
+        setSelectedAchievements(contextSelectedAchievements);
+      }
+    }
+  }, [
+    profileLoading, 
+    contextAvatarUrl, 
+    contextWallpaper, 
+    contextCharacterName, 
+    contextStatusMessage, 
+    contextFavoritePet,
+    contextSelectedAchievements
+  ]);
   
   // Skill points handlers
   const handleStatChange = async (statType, increment) => {
@@ -791,7 +833,18 @@ const MiscProfile = () => {
       setIsSaving(false);
     }
   };
-    // We've removed the loading state check to immediately render the profile
+    // Show loading state when profile data is loading
+  if (profileLoading) {
+    // Make sure isLoaded is false during loading
+    if (isLoaded) setIsLoaded(false);
+    
+    return (
+      <div className="profile-loading-container">
+        <div className="profile-loading-spinner"></div>
+        <p>Loading your profile...</p>
+      </div>
+    );
+  }
   
   // Error state
   if (error) {

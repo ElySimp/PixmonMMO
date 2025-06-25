@@ -1288,3 +1288,30 @@
 .miscprofile-achievement-close-modal-btn:hover {
   background: #0056b3;
 }
+
+.profile-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.profile-loading-spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border-left-color: #4c2882;
+  animation: profile-spin 1s ease-in-out infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes profile-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
