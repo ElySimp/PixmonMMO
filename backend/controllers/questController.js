@@ -32,6 +32,31 @@ exports.getUserQuests = async (req, res) => {
     }
 };
 
+exports.getBountyQuests = async (req, res) => {
+    try {
+        const [quests] = await db.query('SELECT * FROM Quest WHERE repeat_type = "bounty"');
+        res.json(quests);
+    } catch (error) {
+        console.error("Error fetching bounty quests:", error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.getUserBountyQuests = async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const [quests] = await db.query(
+            `SELECT q.id, q.name, q.description, q.xp_reward, q.gold_reward, q.repeat_type, uq.completed, uq.claimed, uq.last_completed
+             FROM UserQuest uq
+             JOIN Quest q ON uq.quest_id = q.id
+             WHERE uq.user_id = ? AND q.repeat_type = "bounty"`,
+            [userId]
+        );
+        res.json({ success: true, data: quests });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
 
 exports.completeQuest = async (req, res) => {
     try {

@@ -169,7 +169,7 @@ class UserQuest {
         }
         // Mark completed dan update completed_at
         await db.query(
-            `UPDATE UserQuest SET completed = TRUE, last_completed = NOW() WHERE user_id = ? AND quest_id = ?`,
+            `UPDATE UserQuest SET completed = TRUE WHERE user_id = ? AND quest_id = ?`,
             [userId, questId]
         );
     }

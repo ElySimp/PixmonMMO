@@ -34,17 +34,22 @@ const MiscQuest = () => {
     }, []);
 
     useEffect(() => {
-        const activeTab = tabRefs.current[activeLayer];
-        const underline = underlineRef.current;
-        if (activeTab && underline) {
-            setTimeout(() => {
+        const updateUnderline = () => {
+            const activeTab = tabRefs.current[activeLayer];
+            const underline = underlineRef.current;
+            if (activeTab && underline) {
                 const rect = activeTab.getBoundingClientRect();
                 const parentRect = activeTab.parentNode.getBoundingClientRect();
                 underline.style.width = `${rect.width}px`;
                 underline.style.left = `${rect.left - parentRect.left}px`;
-            }, 50); // delay 50ms
+            }
+        };
+
+        if (isLoaded) {
+            // Sedikit delay agar DOM benar-benar siap
+            setTimeout(updateUnderline, 10);
         }
-    }, [activeLayer]);
+    }, [activeLayer, isLoaded]);
 
     // Handler notifikasi claim reward
     const handleClaimReward = (msg = "Reward claimed!") => {
@@ -104,7 +109,7 @@ const MiscQuest = () => {
                 {activeLayer === 'daily' && <DailyQuest />}
                 {activeLayer === 'weekly' && <WeeklyQuest />}
                 {activeLayer === 'monthly' && <MonthlyQuest />}
-                {activeLayer === 'bounty' && <BountyQuest />}
+                {activeLayer === 'bounty' && <BountyQuest key={activeLayer} />}
             </div>
         </div>
     );

@@ -32,49 +32,42 @@ function BountyQuest() {
   // Fetch data on mount
   useEffect(() => {
     const fetchData = async () => {
-      const start = Date.now();
-      setLoading(true);
-      try {
-        const userId = localStorage.getItem('userId');
-        // Fetch player stats
-        const statsRes = await axios.get(`${API_URL}/api/users/${userId}/stats`);
-        const statsData = statsRes.data.data || statsRes.data;
-        setQuestPoints(statsData.quest_points || 0);
-        setPlayerStats(statsData);
+    const start = Date.now();
+    setLoading(true);
+    try {
+      const userId = localStorage.getItem('userId');
+      const [statsRes, questRes, userQuestRes] = await Promise.all([
+        axios.get(`${API_URL}/api/users/${userId}/stats`),
+        axios.get(`${API_URL}/api/quests/bounty`),
+        axios.get(`${API_URL}/api/user/${userId}/quests/bounty`)
+      ]);
+      const statsData = statsRes.data.data || statsRes.data;
+      setQuestPoints(statsData.quest_points || 0);
+      setPlayerStats(statsData);
 
-        // Ambil waktu regen berikutnya
-        if (statsData.quest_point_last_update && statsData.quest_points < 10) {
-          const last = new Date(statsData.quest_point_last_update);
-          const next = new Date(last.getTime() + 10 * 60 * 1000);
-          setNextRegen(next);
-        } else {
-          setNextRegen(null);
-        }
+      if (statsData.quest_point_last_update && statsData.quest_points < 10) {
+        const last = new Date(statsData.quest_point_last_update);
+        const next = new Date(last.getTime() + 10 * 60 * 1000);
+        setNextRegen(next);
+      } else {
+        setNextRegen(null);
+      }
 
-        // Fetch all quests, filter bounty
-        const questRes = await axios.get(`${API_URL}/api/quests`);
-        const bounty = Array.isArray(questRes.data)
-          ? questRes.data.filter(q => q.repeat_type === 'bounty')
-          : [];
-        setBountyQuests(bounty);
+      const bounty = Array.isArray(questRes.data) ? questRes.data : [];
+      setBountyQuests(bounty);
 
-        // Fetch user quest status
-        const userQuestRes = await axios.get(`${API_URL}/api/user/${userId}/quests`);
-        const userQuests = Array.isArray(userQuestRes.data) ? userQuestRes.data : (userQuestRes.data.data || []);
-        const claimedMap = {};
-        userQuests.forEach(q => {
-          if (q.claimed) claimedMap[q.id] = 'claimed';
-          else if (q.completed) claimedMap[q.id] = 'claim';
-        });
-        setClaimedQuests(claimedMap);
-      } finally {
-        setLoading(false);
-        console.log('[BountyQuest] Data loaded in', Date.now() - start, 'ms');
-      } 
-      // catch (err) {
-      //   console.error('Error fetching bounty quest data:', err);
-      // }
-    };
+      const userQuests = Array.isArray(userQuestRes.data.data) ? userQuestRes.data.data : [];
+      const claimedMap = {};
+      userQuests.forEach(q => {
+        if (q.claimed) claimedMap[q.id] = 'claimed';
+        else if (q.completed) claimedMap[q.id] = 'claim';
+      });
+      setClaimedQuests(claimedMap);
+    } finally {
+      setLoading(false);
+      console.log('[BountyQuest] Data loaded in', Date.now() - start, 'ms');
+    }
+  };
     fetchData();
   }, []);
 
@@ -256,43 +249,43 @@ function BountyQuest() {
         {bountyQuests.length === 0 && <div>No bounty quests available.</div>}
         {bountyQuests.map((quest) => (
           <div key={quest.id} className="quest-box">
-            <div>
-              <div>{quest.name}</div>
-              {/* <div className="quest-description">{quest.description}</div>
-              <div className="quest-reward">
-                {quest.gold_reward} Gold, {quest.xp_reward} XP
-              </div> */}
-            </div>
-            {claimedQuests[quest.id] === 'claim' ? (
-              <button className="quest-claim-btn" onClick={() => handleClaimReward(quest.id)}>
-                Claim Reward
-              </button>
-            ) : claimedQuests[quest.id] === 'claimed' ? (
-              <button className="quest-claim-btn" disabled>
-                Claimed
-              </button>
-            ) : (
-              <button
-                className="quest-go-btn"
-                onClick={() => openOverlay(quest)}
-                disabled={questPoints <= 0}
-              >
-                {questPoints > 0 ? 'Take Quest' : 'Not Enough Quest Points'}
-              </button>
-            )}
+            <div>{quest.name}</div>
+            <button
+              className="quest-go-btn"
+              onClick={() => openOverlay(quest)}
+            >
+              Info
+            </button>
           </div>
         ))}
       </div>
 
       {/* Quest Overlay */}
       {showOverlay && selectedQuest && (
-        <div className="bounty-overlay" onClick={closeOverlay}>
-          <div className="bounty-overlay-content" onClick={e => e.stopPropagation()}>
-            <h2>{selectedQuest.name}</h2>
-            <p>{selectedQuest.description}</p>
-            <div className="quest-reward">
-              Reward: {selectedQuest.gold_reward} Gold, {selectedQuest.xp_reward} XP
-            </div>
+      <div className="bounty-overlay" onClick={closeOverlay}>
+        <div className="bounty-overlay-content" onClick={e => e.stopPropagation()}>
+          <h2>{selectedQuest.name}</h2>
+          <p>{selectedQuest.description}</p>
+          <div className="quest-reward">
+            Reward: {selectedQuest.gold_reward} Gold, {selectedQuest.xp_reward} XP
+          </div>
+          {/* Tombol dinamis sesuai status quest */}
+          {claimedQuests[selectedQuest.id] === 'claim' ? (
+            <button
+              className="quest-claim-btn"
+              onClick={async () => {
+                await handleClaimReward(selectedQuest.id);
+                closeOverlay();
+              }}
+              style={{margin: '1rem 0'}}
+            >
+              Claim Reward
+            </button>
+          ) : claimedQuests[selectedQuest.id] === 'claimed' ? (
+            <button className="quest-claim-btn" disabled style={{margin: '1rem 0'}}>
+              Claimed
+            </button>
+          ) : (
             <button
               className="quest-go-btn"
               onClick={async () => {
@@ -300,18 +293,20 @@ function BountyQuest() {
                 closeOverlay();
               }}
               style={{margin: '1rem 0'}}
+              disabled={questPoints <= 0}
             >
-              Take Quest
+              {questPoints > 0 ? 'Take Quest' : 'Not Enough Quest Points'}
             </button>
-            <button
-              onClick={closeOverlay}
-              className="quest-close-btn"
-            >
-              Close
-            </button>
-          </div>
+          )}
+          <button
+            onClick={closeOverlay}
+            className="quest-close-btn"
+          >
+            Close
+          </button>
         </div>
-      )}
+      </div>
+    )}
 
     </div>
   );
