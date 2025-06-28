@@ -9,6 +9,10 @@
   flex-direction: column;
 }
 
+body::-webkit-scrollbar {
+  display: none;
+}
+
 .adventure-grid {
   display: grid;
   grid-template-rows: auto auto 1fr;
@@ -38,23 +42,29 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-top: 0.5rem;
+  /* margin-top: 0.5rem; */
 }
 
 .adventure-profile-pic {
-  width: 40px;
-  height: 40px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
-  margin-right: 2rem;
+  margin-right: 3rem;
   margin-left: 1rem;
 }
 
 .adventure-stats {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: start;
   gap: 0.5rem;
   min-width: 200px;
+  font-size: 1.2rem;
+}
+
+.adventure-profile-level, .adventure-profile-currency {
+  display: flex;
+  gap: 0.5rem;
 }
 
 /* XP Bar Styles */
@@ -73,11 +83,11 @@
 .xp-bar-fill {
   height: 100%;
   background: linear-gradient(to right, #4CAF50, #8BC34A);
-  border-radius: 0 0 10px 10px;
+  border-radius: 0 0 0 10px;
   transition: width 0.3s ease;
 }
 
-.xp-text {
+.adventure-xp-text {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -87,6 +97,7 @@
   font-weight: bold;
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.7);
   white-space: nowrap;
+  text-align: center;
 }
 
 .adventure-story {
@@ -273,4 +284,137 @@
 /* Hide the adventure grid when loading */
 .adventure-loading + .adventure-grid {
   display: none;
+}
+
+.adventure-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  margin-top: 2rem;
+  align-items: start;
+}
+
+.adventure-party-column {
+  background-color: #101011;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1.5px solid #232323;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  min-width: 180px;
+  max-width: 260px;
+  width: 100%;
+  transition: min-height 0.2s;
+}
+
+.adventure-party-column h2 {
+  text-align: center;
+  margin-bottom: 0.3rem;
+}
+
+.party-action-btn {
+  width: 100%;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  background: #e0e0e0;
+  color: #333;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+/* party styling */
+.party-profile {
+  background-color: #232323;
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 1rem;
+}
+
+.party-list-items {
+  display: grid;
+  grid-template-rows: repeat(2, auto);
+}
+
+.party-profile-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+.party-profile-level {
+  font-size: 1rem;
+  color: #bdbdbd;
+}
+
+.create-party-button {
+  display: flex;
+  justify-content: space-around;
+  gap: 0.5rem;
+}
+
+.party-add-friend-btn, .party-leave-btn {
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+
+.party-add-friend-btn {
+  background: #4CAF50;
+}
+
+.party-leave-btn {
+  background: #e53935;
+}
+.party-list {
+  list-style: none;
+  padding: 0;
+  width: 100%;
+}
+.party-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #232323;
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  margin-bottom: 0.7rem;
+}
+
+.party-join-view, .party-create-view {
+  width: 100%;
+  max-height: 18.5rem;
+  overflow-y: auto;
+}
+
+.party-join-view::-webkit-scrollbar {
+  display: none;
+}
+
+.party-join-btn {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.party-close-btn {
+  background: #888;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 0.5rem;
 }

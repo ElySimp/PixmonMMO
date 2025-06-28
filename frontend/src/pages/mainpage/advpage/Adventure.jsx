@@ -48,6 +48,17 @@ const Adventure = () => {
   
   const { user } = useAuth(); // Get user from auth context
 
+  // dummy party
+  const [partyView, setPartyView] = useState('default'); 
+  
+  const dummyPartyList = [
+    { id: 1, name: "Party Alpha", members: 3 },
+    { id: 2, name: "Party Beta", members: 2 },
+    { id: 3, name: "Party Gamma", members: 4 },
+    { id: 4, name: "Party Delta", members: 1 },
+    { id: 5, name: "Party Epsilon", members: 5 }
+  ];
+
   // We're now using calculateXpCap from UserStatsContext
 
   // Get a random adventure story from our collection
@@ -483,20 +494,26 @@ const Adventure = () => {
           onNotificationClick={() => console.log('Notifications clicked')} 
           onEggClick={() => console.log('Egg clicked')} 
         />
-        
+
         {statsLoading ? (
           <div className="adventure-loading">
             <div className="loading-spinner"></div>
             <p>Loading your adventure...</p>
           </div>
         ) : (
-          <div className="adventure-grid">
+        <div className="adventure-grid">
           <div className="adventure-grid-profile">
             <img src={avatarExample} alt="Profile" className="adventure-profile-pic" />
             <div className="adventure-stats">
-              <p>Level: {level}</p>
-              <p>Gold: {gold}</p>
-              <p>Diamonds: {diamonds}</p>
+              <div className="adventure-profile-name">{user?.username || "Adventurer"}</div>
+              <div className="adventure-profile-level">
+                <span>Level</span>
+                <span>{level}</span>
+              </div>
+              <div className="adventure-profile-currency">
+                <span>{gold} 🪙</span>
+                <span>{diamonds} 💎</span>
+              </div>
             </div>
           </div>
           
@@ -506,49 +523,93 @@ const Adventure = () => {
               className="xp-bar-fill" 
               style={{ width: `${xpProgressPercentage}%` }}
             ></div>
-            <span className="xp-text">XP: {xp} / {xpToNextLevel}</span>
+            <span className="adventure-xp-text">XP: {xp} / {xpToNextLevel}</span>
           </div>
-          
-          <div className="adventure-grid-actions">
-            <div className="adventure-story">
-              <p>{story}</p>
-              
-              {/* Educational Story Question UI */}
-              {showQuestion && currentEduStory && (
-                <div className="edu-question-container">
-                  {currentEduStory.choices.map((choice, index) => (
-                    <div 
-                      key={index} 
-                      className={`edu-answer-choice ${selectedAnswer === index ? 'selected' : ''} ${answerSubmitted && index === currentEduStory.correctAnswer ? 'correct' : ''} ${answerSubmitted && selectedAnswer === index && selectedAnswer !== currentEduStory.correctAnswer ? 'incorrect' : ''}`}
-                      onClick={() => !answerSubmitted && handleAnswerSelection(index)}
-                    >
-                      <span className="choice-letter">{String.fromCharCode(65 + index)}</span>
-                      <span className="choice-text">{choice}</span>
-                    </div>
-                  ))}
+          <div className="adventure-bottom-grid">
+            {/* Kiri: Party Actions */}
+            <div className="adventure-party-column">
+              {partyView === 'default' && (
+                <>
+                  <button className="party-action-btn" onClick={() => setPartyView('create')}>Create Party</button>
+                  <button className="party-action-btn" onClick={() => setPartyView('join')}>Join Party</button>
+                </>
+              )}
+              {partyView === 'create' && (
+                <div className="party-create-view">
+                  <h2>Your Party</h2>
+                  <div className="party-profile">
+                    <span className="party-profile-name">{user?.username || "Adventurer"}</span>
+                    <span className="party-profile-level">Level {level}</span>
+                  </div>
+                  <div className='create-party-button'>
+                    <button className="party-add-friend-btn">Add Friends</button>
+                    <button className="party-leave-btn" onClick={() => setPartyView('default')}>Leave Party</button>
+                  </div>
                   
-                  {selectedAnswer !== null && !answerSubmitted && (
-                    <button 
-                      className="submit-answer-button"
-                      onClick={submitAnswer}
-                    >
-                      Submit Answer
-                    </button>
-                  )}
+                </div>
+              )}
+              {partyView === 'join' && (
+                <div className="party-join-view">
+                  <h2>Available Parties</h2>
+                  <ul className="party-list">
+                    {dummyPartyList.map(party => (
+                      <li key={party.id} className="party-list-item">
+                        <div className="party-list-items">
+                          <span>{party.name}</span>
+                          <span>{party.members} members</span>
+                        </div>
+                        <button className="party-join-btn">Join</button>
+                      </li>
+                    ))}
+                  </ul>
+                  <button className="party-close-btn" onClick={() => setPartyView('default')}>Close</button>
                 </div>
               )}
             </div>
-            <button 
-              className="adventure-step-button" 
-              onClick={handleStep} 
-              disabled={cooldown > 0}
-            >
-              <div 
-                className="cooldown-fill" 
-                style={{ width: `${cooldownPercentage}%` }}
-              ></div>
-              <span className="button-text">{showQuestion ? 'Submit' : 'Take a Step'}</span>
-            </button>
+
+
+            {/* Kanan: Adventure Content */}
+            <div className="adventure-grid-actions">
+              <div className="adventure-story">
+                <p>{story}</p>
+                
+                {/* Educational Story Question UI */}
+                {showQuestion && currentEduStory && (
+                  <div className="edu-question-container">
+                    {currentEduStory.choices.map((choice, index) => (
+                      <div 
+                        key={index} 
+                        className={`edu-answer-choice ${selectedAnswer === index ? 'selected' : ''} ${answerSubmitted && index === currentEduStory.correctAnswer ? 'correct' : ''} ${answerSubmitted && selectedAnswer === index && selectedAnswer !== currentEduStory.correctAnswer ? 'incorrect' : ''}`}
+                        onClick={() => !answerSubmitted && handleAnswerSelection(index)}
+                      >
+                        <span className="choice-letter">{String.fromCharCode(65 + index)}</span>
+                        <span className="choice-text">{choice}</span>
+                      </div>
+                    ))}
+                    
+                    {selectedAnswer !== null && !answerSubmitted && (
+                      <button 
+                        className="submit-answer-button"
+                        onClick={submitAnswer}
+                      >
+                        Submit Answer
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+              <button 
+                className="adventure-step-button" 
+                onClick={handleStep} 
+                disabled={cooldown > 0}
+              >
+                <div 
+                  className="cooldown-fill" 
+                  style={{ width: `${cooldownPercentage}%` }}
+                ></div>
+                <span className="button-text">{showQuestion ? 'Submit' : 'Take a Step'}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
