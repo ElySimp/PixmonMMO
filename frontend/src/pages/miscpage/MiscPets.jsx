@@ -4,6 +4,7 @@ import Topbar from '../../components/Topbar';
 import Sidebar from '../../components/Sidebar';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { equipPet } from '../../services/petsService';
 // For toast notifications
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -173,11 +174,37 @@ const MiscPets = () => {
           }
         ];
         
-        setPets(mockPets);
+        // Load pets from localStorage if available
+        const savedPets = localStorage.getItem('userPets');
+        let petsToUse = mockPets;
+        
+        if (savedPets) {
+          try {
+            const parsedPets = JSON.parse(savedPets);
+            if (Array.isArray(parsedPets) && parsedPets.length > 0) {
+              petsToUse = parsedPets;
+              console.log('Loaded pets from localStorage:', petsToUse);
+            }
+          } catch (e) {
+            console.error('Error parsing saved pets:', e);
+          }
+        }
+        
+        // Make sure we have consistent equipped/is_equipped property
+        petsToUse = petsToUse.map(pet => ({
+          ...pet,
+          equipped: pet.equipped || pet.is_equipped || false,
+          is_equipped: pet.equipped || pet.is_equipped || false
+        }));
+        
+        // Save to localStorage for persistence
+        localStorage.setItem('userPets', JSON.stringify(petsToUse));
+        
+        setPets(petsToUse);
         
         // Initialize pet statuses with random values for simulation
         const mockStatuses = {};
-        mockPets.forEach(pet => {
+        petsToUse.forEach(pet => {
           mockStatuses[pet.id] = { 
             happiness: Math.floor(Math.random() * 30) + 70, // 70-100%
             hunger: Math.floor(Math.random() * 40) + 10,    // 10-50%
@@ -187,11 +214,14 @@ const MiscPets = () => {
         setPetStatuses(mockStatuses);
         
         // Set initially equipped pet
-        const equippedPet = mockPets.find(pet => pet.equipped);
+        const equippedPet = petsToUse.find(pet => pet.equipped || pet.is_equipped);
         if (equippedPet) {
           setSelectedPet(equippedPet);
-        } else if (mockPets.length > 0) {
-          setSelectedPet(mockPets[0]);
+          
+          // Make sure the equipped pet is saved properly
+          localStorage.setItem('equippedPet', JSON.stringify(equippedPet));
+        } else if (petsToUse.length > 0) {
+          setSelectedPet(petsToUse[0]);
         }
 
       } catch (err) {
@@ -241,17 +271,49 @@ const MiscPets = () => {
   };
 
   // Pet interaction handlers
-  const handleEquipPet = (petId) => {
+  const handleEquipPet = async (petId) => {
     try {
-      setPets(prevPets => 
-        prevPets.map(pet => ({
+      const userId = localStorage.getItem('userId') || CURRENT_USER_ID;
+
+      // Find the complete pet object
+      const petToEquip = pets.find((pet) => pet.id === petId);
+      if (!petToEquip) {
+        throw new Error(`Pet with ID ${petId} not found`);
+      }
+
+      // Update local state first for immediate feedback
+      setPets((prevPets) =>
+        prevPets.map((pet) => ({
           ...pet,
-          equipped: pet.id === petId
+          equipped: pet.id === petId,
+          is_equipped: pet.id === petId, // Set both properties for compatibility
         }))
       );
-      
+
+      // Set selected pet as equipped
+      if (selectedPet && selectedPet.id === petId) {
+        setSelectedPet({
+          ...selectedPet,
+          equipped: true,
+          is_equipped: true,
+        });
+      }
+
       // Get the pet name for the toast
-      const petName = pets.find(pet => pet.id === petId)?.name || 'Pet';
+      const petName = petToEquip.name || 'Pet';
+
+      // Save the complete pet object to localStorage for persistence
+      localStorage.setItem('userPets', JSON.stringify(
+        pets.map(pet => ({
+          ...pet,
+          equipped: pet.id === petId,
+          is_equipped: pet.id === petId
+        }))
+      ));
+
+      // Call the API to update the equipped pet in the database and save to localStorage
+      await equipPet(userId, petId);
+
       toast.success(`${petName} equipped successfully!`, {
         position: "top-right",
         autoClose: 2000,
@@ -260,17 +322,18 @@ const MiscPets = () => {
         pauseOnHover: true,
         draggable: true,
       });
-      
-      // In a real app, you'd make an API call here to update the pet's equipped status
-      // try {
-      //   await axios.put(`/api/users/${CURRENT_USER_ID}/pets/${petId}/equip`);
-      // } catch (error) {
-      //   toast.error('Failed to equip pet. Please try again.');
-      //   console.error('Error equipping pet:', error);
-      // }
     } catch (error) {
       toast.error('Failed to equip pet. Please try again.');
       console.error('Error in handleEquipPet:', error);
+
+      // Revert the local state change if the API call failed
+      setPets((prevPets) =>
+        prevPets.map((pet) => ({
+          ...pet,
+          equipped: pet.id !== petId && pet.equipped,
+          is_equipped: pet.id !== petId && pet.is_equipped,
+        }))
+      );
     }
   };
 
@@ -603,8 +666,8 @@ const MiscPets = () => {
               {filteredPets.length > 0 ? (
                 filteredPets.map((pet, index) => (
                   <div 
-                    key={pet.id} 
-                    className={`pet-card pets-animated-fade ${pet.equipped ? 'equipped' : ''}`}
+                    key={pet.id}
+                    className={`pet-card pets-animated-fade ${pet.is_equipped ? 'equipped' : ''}`}
                     onClick={() => handleSelectPet(pet)}
                     style={{ animationDelay: `${index * 0.05}s` }}
                     aria-label={`${pet.name}, ${pet.rarity} ${pet.role} pet, level ${pet.level}`}
@@ -624,7 +687,7 @@ const MiscPets = () => {
                         <span style={{ color: getRarityColor(pet.rarity) }}>{pet.rarity}</span>
                       </div>
                       
-                      {pet.equipped && (
+                      {pet.is_equipped && (
                         <div className="pet-equipped-badge pulse-animation">
                           <FaChessQueen />
                         </div>
@@ -726,13 +789,16 @@ const MiscPets = () => {
                       >
                         <RiHeartPulseFill /> Heal
                       </button>
-                      <button 
-                        className={`pet-action equip hover-effect ${pet.equipped ? 'active' : ''}`} 
-                        onClick={(e) => { e.stopPropagation(); handleEquipPet(pet.id); }}
-                        aria-pressed={pet.equipped}
-                        aria-label={pet.equipped ? `${pet.name} is equipped` : `Equip ${pet.name}`}
+                      <button
+                        className={`pet-action equip hover-effect ${pet.is_equipped ? 'active' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEquipPet(pet.id);
+                        }}
+                        aria-pressed={pet.is_equipped}
+                        aria-label={pet.is_equipped ? `${pet.name} is equipped` : `Equip ${pet.name}`}
                       >
-                        {pet.equipped ? 'Equipped' : 'Equip'}
+                        {pet.is_equipped ? 'Equipped' : 'Equip'}
                       </button>
                     </div>
                   </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
 import './Adventure.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
@@ -506,13 +506,15 @@ const Adventure = () => {
             <img src={avatarExample} alt="Profile" className="adventure-profile-pic" />
             <div className="adventure-stats">
               <div className="adventure-profile-name">{user?.username || "Adventurer"}</div>
-              <div className="adventure-profile-level">
-                <span>Level</span>
-                <span>{level}</span>
-              </div>
-              <div className="adventure-profile-currency">
-                <span>{gold} 🪙</span>
-                <span>{diamonds} 💎</span>
+              <div className="adventure-profile-row">
+                <div className="adventure-profile-level">
+                  <span>Level</span>
+                  <span>{level}</span>
+                </div>
+                <div className="adventure-profile-currency">
+                  <span>{gold} 🪙</span>
+                  <span>{diamonds} 💎</span>
+                </div>
               </div>
             </div>
           </div>
@@ -597,18 +599,20 @@ const Adventure = () => {
                     )}
                   </div>
                 )}
+                
+                {/* Move button inside the story div for better centering */}
+                <button 
+                  className="adventure-step-button" 
+                  onClick={handleStep} 
+                  disabled={cooldown > 0}
+                >
+                  <div 
+                    className="cooldown-fill" 
+                    style={{ width: `${cooldownPercentage}%` }}
+                  ></div>
+                  <span className="button-text">{showQuestion ? 'Submit' : 'Take a Step'}</span>
+                </button>
               </div>
-              <button 
-                className="adventure-step-button" 
-                onClick={handleStep} 
-                disabled={cooldown > 0}
-              >
-                <div 
-                  className="cooldown-fill" 
-                  style={{ width: `${cooldownPercentage}%` }}
-                ></div>
-                <span className="button-text">{showQuestion ? 'Submit' : 'Take a Step'}</span>
-              </button>
             </div>
           </div>
         </div>

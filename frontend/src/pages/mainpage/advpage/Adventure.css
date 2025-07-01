@@ -1,6 +1,8 @@
 .adventure-container {
   display: flex;
   min-height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
 }
 
 .adventure-content {
@@ -17,73 +19,116 @@ body::-webkit-scrollbar {
   display: grid;
   grid-template-rows: auto auto 1fr;
   gap: 0.5rem;
-  padding: 1.5rem;
+  padding: 1rem;
   box-sizing: border-box;
+  height: calc(100vh - 60px); /* Subtract topbar height */
 }
 
 .adventure-grid-profile {
-    background-color: #101011;
-    border-radius: 12px 12px 0 0;
-    padding: 1.5rem;
-    border: 1.5px solid #232323;
-    border-bottom: none;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: left;
+  background-color: #101011;
+  border-radius: 8px 8px 0 0;
+  padding: 1rem;
+  border: 1px solid #333;
+  border-bottom: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
 }
 
 .adventure-grid-actions {
   background-color: #101011;
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 1.5rem;
-  border: 1.5px solid #232323;
+  border: 1px solid #333;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  /* margin-top: 0.5rem; */
+  justify-content: flex-start;
+  height: 100%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
+
+
 
 .adventure-profile-pic {
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  margin-right: 3rem;
-  margin-left: 1rem;
+  margin-bottom: 0.5rem;
+  align-self: center;
 }
 
 .adventure-stats {
   display: flex;
   flex-direction: column;
-  align-items: start;
-  gap: 0.5rem;
-  min-width: 200px;
+  align-items: center;
+  width: 100%;
+  font-size: 1rem;
+}
+
+.adventure-profile-name {
+  font-weight: 600;
   font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+  color: #4a90e2;
+}
+
+.adventure-profile-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+  gap: 2rem;
+  margin-top: 0.3rem;
 }
 
 .adventure-profile-level, .adventure-profile-currency {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
+}
+
+.adventure-profile-currency span {
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.adventure-profile-level span {
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #ffffff;
+  font-weight: 500;
 }
 
 /* XP Bar Styles */
 .xp-bar-container {
   width: 100%;
-  height: 25px;
+  height: 20px;
   background-color: #232323;
-  border-radius: 0 0 12px 12px;
+  border-radius: 0 0 8px 8px;
   overflow: hidden;
   position: relative;
   margin-top: -0.5rem;
-  border: 1.5px solid #232323;
+  border: 1px solid #333;
   border-top: none;
 }
 
 .xp-bar-fill {
   height: 100%;
-  background: linear-gradient(to right, #4CAF50, #8BC34A);
-  border-radius: 0 0 0 10px;
+  background: linear-gradient(to right, #4a90e2, #8BC34A);
+  border-radius: 0 0 0 8px;
   transition: width 0.3s ease;
 }
 
@@ -93,7 +138,7 @@ body::-webkit-scrollbar {
   left: 50%;
   transform: translate(-50%, -50%);
   color: white;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: bold;
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.7);
   white-space: nowrap;
@@ -101,30 +146,58 @@ body::-webkit-scrollbar {
 }
 
 .adventure-story {
-  margin-bottom: 1rem;
+  flex: 1;
+  overflow-y: auto;
   font-size: 18px;
   text-align: center;
+  width: 100%;
+  padding: 0 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.adventure-story::-webkit-scrollbar {
+  width: 5px;
+}
+
+.adventure-story::-webkit-scrollbar-thumb {
+  background-color: #4a90e2;
+  border-radius: 10px;
+}
+
+.adventure-story::-webkit-scrollbar-track {
+  background-color: #232323;
 }
 
 .adventure-step-button {
   position: relative;
-  padding: 10px 20px;
-  font-size: 16px;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
   background-color: #232323;
   color: #fff;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   overflow: hidden;
-  transition: background-color 0.3s;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  width: 200px;
+  margin: 1.5rem auto 0; /* Center horizontally with top margin */
+  align-self: center;
 }
 
 .adventure-step-button:hover {
   background-color: #3a3a3a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .adventure-step-button:disabled {
   cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .cooldown-fill {
@@ -132,8 +205,8 @@ body::-webkit-scrollbar {
   top: 0;
   left: 0;
   height: 100%;
-  background: linear-gradient(to right, #007bff, #00c6ff);
-  border-radius: 5px;
+  background: linear-gradient(to right, #4a90e2, #00c6ff);
+  border-radius: 4px;
   transition: width 1.2s ease;
   z-index: 0;
 }
@@ -156,20 +229,21 @@ body::-webkit-scrollbar {
   display: flex;
   align-items: center;
   background-color: #232323;
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 10px 15px;
   cursor: pointer;
   transition: all 0.2s ease;
-  border: 2px solid transparent;
+  border: 1px solid #444;
 }
 
 .edu-answer-choice:hover {
   background-color: #333333;
   transform: translateY(-2px);
+  border-color: #4a90e2;
 }
 
 .edu-answer-choice.selected {
-  border-color: #007bff;
+  border-color: #4a90e2;
   background-color: #1f3442;
 }
 
@@ -204,19 +278,21 @@ body::-webkit-scrollbar {
   align-self: center;
   margin-top: 1rem;
   padding: 10px 25px;
-  background-color: #007bff;
+  background-color: #4a90e2;
   border: none;
-  border-radius: 20px;
+  border-radius: 4px;
   color: white;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .submit-answer-button:hover {
-  background-color: #0069d9;
-  transform: scale(1.05);
+  background-color: #3a7bc8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Achievement Toast Styles - kept from previous implementation */
@@ -263,12 +339,12 @@ body::-webkit-scrollbar {
 }
 
 .loading-spinner {
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  width: 36px;
-  height: 36px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
-  border-left-color: #4c2882;
-  animation: spin 1s ease-in-out infinite;
+  border-top: 4px solid #4a90e2;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
   margin-bottom: 1rem;
 }
 
@@ -288,52 +364,78 @@ body::-webkit-scrollbar {
 
 .adventure-bottom-grid {
   display: grid;
-  grid-template-columns: 1fr 3fr;
-  margin-top: 2rem;
-  align-items: start;
+  grid-template-columns: 260px 1fr;
+  gap: 0.75rem;
+  height: calc(100% - 1rem);
 }
 
 .adventure-party-column {
   background-color: #101011;
-  border-radius: 12px;
-  padding: 1.5rem;
-  border: 1.5px solid #232323;
+  border-radius: 8px;
+  padding: 1.25rem;
+  border: 1px solid #333;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   align-items: center;
-  min-width: 180px;
-  max-width: 260px;
   width: 100%;
+  height: 100%;
   transition: min-height 0.2s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .adventure-party-column h2 {
   text-align: center;
   margin-bottom: 0.3rem;
+  color: #4a90e2;
+  font-weight: 600;
+  font-size: 1.5rem;
 }
 
 .party-action-btn {
-  width: 100%;
-  padding: 0.7rem 1.2rem;
-  border-radius: 8px;
+  width: 80%;
+  padding: 0.6rem 1rem;
+  border-radius: 4px;
   border: none;
-  background: #e0e0e0;
-  color: #333;
+  color: #fff;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  margin-bottom: 0.8rem;
+}
+
+.party-action-btn:first-child {
+  background: #4a90e2;
+}
+
+.party-action-btn:first-child:hover {
+  background-color: #3a7bc8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.party-action-btn:last-child {
+  background: #2ecc71;
+}
+
+.party-action-btn:last-child:hover {
+  background-color: #27ae60;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* party styling */
 .party-profile {
   background-color: #232323;
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
   margin-bottom: 1rem;
+  width: 100%;
+  border: 1px solid #444;
 }
 
 .party-list-items {
@@ -344,6 +446,7 @@ body::-webkit-scrollbar {
 .party-profile-name {
   font-size: 1.2rem;
   font-weight: 600;
+  color: #fff;
 }
 .party-profile-level {
   font-size: 1rem;
@@ -354,24 +457,37 @@ body::-webkit-scrollbar {
   display: flex;
   justify-content: space-around;
   gap: 0.5rem;
+  width: 100%;
 }
 
 .party-add-friend-btn, .party-leave-btn {
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 0.5rem;
+  border-radius: 4px;
+  padding: 0.6rem 1rem;
   font-weight: 600;
   cursor: pointer;
   margin-bottom: 0.5rem;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .party-add-friend-btn {
   background: #4CAF50;
 }
 
+.party-add-friend-btn:hover {
+  background: #3d9140;
+  transform: translateY(-2px);
+}
+
 .party-leave-btn {
   background: #e53935;
+}
+
+.party-leave-btn:hover {
+  background: #c62828;
+  transform: translateY(-2px);
 }
 .party-list {
   list-style: none;
@@ -383,15 +499,26 @@ body::-webkit-scrollbar {
   justify-content: space-between;
   align-items: center;
   background: #232323;
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 0.7rem 1rem;
   margin-bottom: 0.7rem;
+  border: 1px solid #444;
+  transition: all 0.2s;
+}
+
+.party-list-item:hover {
+  border-color: #4a90e2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .party-join-view, .party-create-view {
   width: 100%;
-  max-height: 18.5rem;
+  height: 100%;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .party-join-view::-webkit-scrollbar {
@@ -399,22 +526,33 @@ body::-webkit-scrollbar {
 }
 
 .party-join-btn {
-  background: #007bff;
+  background: #4a90e2;
   color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 0.4rem 1rem;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.party-join-btn:hover {
+  background: #3a7bc8;
+  transform: translateY(-2px);
 }
 
 .party-close-btn {
-  background: #888;
+  background: #555;
   color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 0.5rem 1.2rem;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 0.5rem;
+  margin-top: auto;
+  transition: all 0.2s;
+}
+
+.party-close-btn:hover {
+  background: #444;
 }

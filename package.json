@@ -1,7 +1,8 @@
 {
   "name": "pixmonmmo",
   "private": true,
-  "version": "0.0.0",  "scripts": {
+  "version": "0.0.0",
+  "scripts": {
     "frontend": "cd frontend && npm run dev",
     "backend": "node backend/server.js",
     "dev": "node scripts/start-clean.js",
@@ -29,10 +30,11 @@
     "multer": "^2.0.0",
     "mysql2": "^3.14.1",
     "node-cron": "^4.1.0",
-    "node-fetch": "^3.3.2",
+    "node-fetch": "^2.7.0",
     "react-toastify": "^11.0.5",
     "uuid": "^11.1.0"
-  },  "devDependencies": {
+  },
+  "devDependencies": {
     "better-logging": "^5.0.0",
     "chalk": "^4.1.2",
     "concurrently": "^9.1.2",

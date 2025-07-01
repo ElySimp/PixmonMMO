@@ -5,6 +5,7 @@ import Topbar from '../../components/Topbar'
 import Sidebar from '../../components/Sidebar'
 import { useNavigate } from 'react-router-dom'
 import { getUserDailyRewards } from '../../services/dailyRewardsService'
+import { getEquippedPet } from '../../services/petsService'
 import { API_URL } from '../../utils/config'
 
 import peopleIcon from '../../assets/MAIN/people.png';
@@ -22,7 +23,7 @@ import agilityIcon from '../../assets/MAIN/agility.png';
 const MainHome = () => {
   const navigate = useNavigate();
   
-  // State for daily rewards and user stats
+  // State for daily rewards, user stats and equipped pet
   const [dailyRewards, setDailyRewards] = useState(null);
   const [userStats, setUserStats] = useState({
     level: 1,
@@ -30,6 +31,7 @@ const MainHome = () => {
     gold: 0,
     diamonds: 0
   });
+  const [equippedPet, setEquippedPet] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Fetch user data on component mount
@@ -41,7 +43,9 @@ const MainHome = () => {
           console.error('No user ID found');
           setLoading(false);
           return;
-        }        // Fetch daily rewards data
+        }
+        
+        // Fetch daily rewards data
         try {
           const dailyRewardsResponse = await getUserDailyRewards(userId);
           console.log('Daily rewards response:', dailyRewardsResponse);
@@ -62,11 +66,29 @@ const MainHome = () => {
 
         // Fetch user stats
         try {
-          const response = await fetch(`${API_URL}/api/users/${userId}/stats`);
+          // Fixed URL to remove any duplicate "api" path segments
+          const response = await fetch(`${API_URL.replace('/api/api', '/api')}/users/${userId}/stats`);
           const statsData = await response.json();
           setUserStats(statsData.data || statsData);
         } catch (error) {
           console.error('Error fetching user stats:', error);
+        }
+        
+        // Fetch equipped pet
+        try {
+          const equippedPetData = await getEquippedPet(userId);
+          console.log('Equipped pet data:', equippedPetData);
+          
+          // Make sure we have valid equipped pet data
+          if (equippedPetData && (equippedPetData.id || equippedPetData.name)) {
+            setEquippedPet(equippedPetData);
+          } else {
+            console.warn('No valid equipped pet data found');
+            // We'll show placeholder data if no pet is equipped
+          }
+        } catch (error) {
+          console.error('Error fetching equipped pet:', error);
+          // We'll show placeholder data if no pet is equipped
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -111,7 +133,14 @@ const MainHome = () => {
   const handleDailyRewards = () => {
     console.log('Daily Rewards clicked');
     navigate('/daily');
-  };  return (
+  };
+  
+  const handleViewCollection = () => {
+    console.log('View Collection clicked');
+    navigate('/pets');
+  };
+
+  return (
     <div className="mainhome-container">
       <Sidebar 
         profilePic="/dummy.jpg"
@@ -141,25 +170,35 @@ const MainHome = () => {
           <div className="mainhome-pet-card">
             <div className="mainhome-pet-header">
               <div className="mainhome-pet-header-group">
-                <div className="mainhome-rarity-tag">LEGENDARY</div>
+                <div className="mainhome-rarity-tag">{equippedPet?.rarity || 'COMMON'}</div>
                 <img src={pawIcon} alt="Paw" className="mainhome-paw-icon" />
               </div>
               <h3>CURRENT PET</h3>
               <div className="mainhome-pet-header-group">
                 <img src={pawIcon} alt="Paw" className="mainhome-paw-icon" />
-                <div className="mainhome-rarity-tag">LEGENDARY</div>
+                <div className="mainhome-rarity-tag">{equippedPet?.rarity || 'COMMON'}</div>
               </div>
             </div>
 
             <div className="mainhome-pet-content">
               <div className="mainhome-pet-left">
                 <div className="mainhome-pet-image-container">
-                  <img src={logo} alt="Pet" className="mainhome-pet-image" />
-                  <div className="mainhome-pet-level">Level 99999</div>
+                  <img 
+                    src={equippedPet?.image_url || equippedPet?.image || logo} 
+                    alt={equippedPet?.name || 'Pet'} 
+                    className="mainhome-pet-image" 
+                  />
+                  <div className="mainhome-pet-level">
+                    Level {equippedPet?.level || (loading ? '...' : 1)}
+                  </div>
                 </div>
                 <div className="mainhome-pet-info">
-                  <h4 className="mainhome-pet-name">Developer's Shadow Eater</h4>
-                  <span className="mainhome-pet-class">Hidden Class</span>
+                  <h4 className="mainhome-pet-name">
+                    {equippedPet?.name || (loading ? '...' : 'No Pet Equipped')}
+                  </h4>
+                  <span className="mainhome-pet-class">
+                    {equippedPet?.role || (loading ? '...' : 'Select a pet to equip')}
+                  </span>
                 </div>
               </div>
 
@@ -171,9 +210,14 @@ const MainHome = () => {
                       Happiness
                     </div>
                     <div className="mainhome-pet-stat-bar">
-                      <div className="mainhome-pet-stat-fill happiness" style={{ width: '85%' }}></div>
+                      <div 
+                        className="mainhome-pet-stat-fill happiness" 
+                        style={{ width: `${equippedPet?.happiness || 50}%` }}
+                      ></div>
                     </div>
-                    <span className="mainhome-pet-stat-value">85%</span>
+                    <span className="mainhome-pet-stat-value">
+                      {equippedPet?.happiness || 50}%
+                    </span>
                   </div>
                 </div>
 
@@ -184,9 +228,14 @@ const MainHome = () => {
                       Energy
                     </div>
                     <div className="mainhome-pet-stat-bar">
-                      <div className="mainhome-pet-stat-fill energy" style={{ width: '70%' }}></div>
+                      <div 
+                        className="mainhome-pet-stat-fill energy" 
+                        style={{ width: `${equippedPet?.energy || 50}%` }}
+                      ></div>
                     </div>
-                    <span className="mainhome-pet-stat-value">70%</span>
+                    <span className="mainhome-pet-stat-value">
+                      {equippedPet?.energy || 50}%
+                    </span>
                   </div>
                 </div>
 
@@ -197,18 +246,25 @@ const MainHome = () => {
                       Hunger
                     </div>
                     <div className="mainhome-pet-stat-bar">
-                      <div className="mainhome-pet-stat-fill hunger" style={{ width: '95%' }}></div>
+                      <div 
+                        className="mainhome-pet-stat-fill hunger" 
+                        style={{ width: `${equippedPet?.hunger || 50}%` }}
+                      ></div>
                     </div>
-                    <span className="mainhome-pet-stat-value">95%</span>
+                    <span className="mainhome-pet-stat-value">
+                      {equippedPet?.hunger || 50}%
+                    </span>
                   </div>
-                </div>
-
-                <div className="mainhome-combat-stats">
+                </div>                  <div className="mainhome-combat-stats">
                   <div className="mainhome-combat-stat">
                     <img src={healthIcon} alt="Health" className="mainhome-combat-icon" />
                     <div className="mainhome-combat-stat-info">
                       <span className="mainhome-combat-label">Health</span>
-                      <span className="mainhome-combat-value">2,500</span>
+                      <span className="mainhome-combat-value">
+                        {equippedPet?.stats?.HP?.toLocaleString() || 
+                         (typeof equippedPet?.stats?.HP === 'string' ? 
+                           equippedPet?.stats?.HP?.split('/')[0] : '0')}
+                      </span>
                     </div>
                   </div>
 
@@ -216,7 +272,11 @@ const MainHome = () => {
                     <img src={attackIcon} alt="Attack" className="mainhome-combat-icon" />
                     <div className="mainhome-combat-stat-info">
                       <span className="mainhome-combat-label">Attack</span>
-                      <span className="mainhome-combat-value">350</span>
+                      <span className="mainhome-combat-value">
+                        {equippedPet?.stats?.ATK?.toLocaleString() || 
+                         (typeof equippedPet?.stats?.ATK === 'string' ? 
+                           equippedPet?.stats?.ATK?.split('/')[0] : '0')}
+                      </span>
                     </div>
                   </div>
 
@@ -224,7 +284,11 @@ const MainHome = () => {
                     <img src={defenseIcon} alt="Defense" className="mainhome-combat-icon" />
                     <div className="mainhome-combat-stat-info">
                       <span className="mainhome-combat-label">Defense</span>
-                      <span className="mainhome-combat-value">275</span>
+                      <span className="mainhome-combat-value">
+                        {equippedPet?.stats?.DEF_PHY?.toLocaleString() || 
+                         (typeof equippedPet?.stats?.DEF_PHY === 'string' ? 
+                           equippedPet?.stats?.DEF_PHY?.split('/')[0] : '0')}
+                      </span>
                     </div>
                   </div>
 
@@ -232,14 +296,18 @@ const MainHome = () => {
                     <img src={agilityIcon} alt="Agility" className="mainhome-combat-icon" />
                     <div className="mainhome-combat-stat-info">
                       <span className="mainhome-combat-label">Agility</span>
-                      <span className="mainhome-combat-value">180</span>
+                      <span className="mainhome-combat-value">
+                        {equippedPet?.stats?.AGILITY?.toLocaleString() || 
+                         (typeof equippedPet?.stats?.AGILITY === 'string' ? 
+                           equippedPet?.stats?.AGILITY?.split('/')[0] : '0')}
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <button className="mainhome-view-collection">View Collection</button>
+            <button className="mainhome-view-collection" onClick={handleViewCollection}>View Collection</button>
           </div>
 
           <div className="mainhome-notifications-container">

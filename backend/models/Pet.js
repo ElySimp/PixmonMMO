@@ -340,20 +340,18 @@ class Pet {
      */
     static async toggleEquip(userPetId, userId, equipped) {
         try {
-            // If equipping, unequip all other pets first
             if (equipped) {
                 await db.query(
                     'UPDATE UserPets SET is_equipped = FALSE WHERE user_id = ?',
                     [userId]
                 );
             }
-            
-            // Then update the specified pet
+
             await db.query(
                 'UPDATE UserPets SET is_equipped = ? WHERE id = ? AND user_id = ?',
                 [equipped, userPetId, userId]
             );
-            
+
             return true;
         } catch (error) {
             console.error('Error toggling pet equipped status:', error);
@@ -426,6 +424,56 @@ class Pet {
             };
         } catch (error) {
             console.error('Error adding experience to pet:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get the currently equipped pet for a user
+     * @param {Number} userId The user ID
+     * @returns {Object} Equipped pet data
+     */
+    static async getEquippedPet(userId) {
+        try {
+            const [rows] = await db.query(`
+                SELECT up.*, p.name, p.class_type as role, p.rarity, p.image_url,
+                       p.base_hp as HP, p.base_atk as ATK, p.base_def_physical as DEF_PHY,
+                       p.base_def_magical as DEF_MAGE, p.base_mana as MAX_MANA, p.base_agility as AGILITY
+                FROM UserPets up
+                JOIN Pets p ON up.Pets_id = p.id
+                WHERE up.user_id = ? AND up.is_equipped = TRUE
+                LIMIT 1
+            `, [userId]);
+
+            if (rows.length === 0) {
+                return null;
+            }
+
+            const pet = rows[0];
+            
+            // Format the pet data for the frontend
+            return {
+                id: pet.id,
+                name: pet.name,
+                role: pet.role,
+                rarity: pet.rarity,
+                level: pet.current_level || 1,
+                image_url: pet.image_url,
+                happiness: pet.happiness || 50,
+                hunger: pet.hunger || 50,
+                energy: 100 - (pet.hunger || 0), // Calculate energy based on hunger
+                health: pet.health || 100,
+                stats: {
+                    HP: pet.HP || 0,
+                    ATK: pet.ATK || 0,
+                    DEF_PHY: pet.DEF_PHY || 0,
+                    DEF_MAGE: pet.DEF_MAGE || 0,
+                    MAX_MANA: pet.MAX_MANA || 0,
+                    AGILITY: pet.AGILITY || 0
+                }
+            };
+        } catch (error) {
+            console.error('Error fetching equipped pet:', error);
             throw error;
         }
     }

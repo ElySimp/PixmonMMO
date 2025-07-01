@@ -1,5 +1,6 @@
 const db = require('../config/database');
 const { seedPets } = require('../scripts/seedPets');
+const Pet = require('../models/Pet');
 
 // Fungsi murni untuk inisialisasi tabel
 async function createPetsTables() {
@@ -17,7 +18,8 @@ async function createPetsTables() {
             experience INTEGER DEFAULT 0,
             happiness INTEGER DEFAULT 100,
             hunger INTEGER DEFAULT 0,
-            health INTEGER DEFAULT 100
+            health INTEGER DEFAULT 100,
+            is_equipped BOOLEAN DEFAULT FALSE
         )
     `;
     await db.query(createUserPetsTable);
@@ -209,18 +211,20 @@ exports.toggleEquipPet = async (req, res) => {
     try {
         const { userPetId, userId, equipped } = req.body;
         
+        console.log(`Toggle equip pet: userPetId=${userPetId}, userId=${userId}, equipped=${equipped}`);
+        
         // If equipping a new pet, unequip any currently equipped pet
         if (equipped === 'yes') {
             await db.query(
-                'UPDATE UserPets SET equipped = "no" WHERE user_id = ? AND equipped = "yes"',
+                'UPDATE UserPets SET equipped = "no", is_equipped = FALSE WHERE user_id = ? AND (equipped = "yes" OR is_equipped = TRUE)',
                 [userId]
             );
         }
         
         // Update the selected pet
         await db.query(
-            'UPDATE UserPets SET equipped = ? WHERE id = ? AND user_id = ?',
-            [equipped, userPetId, userId]
+            'UPDATE UserPets SET equipped = ?, is_equipped = ? WHERE id = ? AND user_id = ?',
+            [equipped, equipped === 'yes' ? true : false, userPetId, userId]
         );
         
         res.status(200).json({ success: true, message: 'Pet equipped status updated successfully' });
@@ -267,5 +271,43 @@ exports.calculatePetStats = async (req, res) => {
     } catch (error) {
         console.error('Error calculating pet stats:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+exports.equipPet = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { petId } = req.body;
+
+    console.log(`Equipping pet ${petId} for user ${userId}`);
+    
+    // Use the Pet model method to toggle equip status
+    const success = await Pet.toggleEquip(petId, userId, true);
+
+    if (success) {
+      res.status(200).json({ success: true, message: 'Pet equipped successfully' });
+    } else {
+      res.status(400).json({ success: false, message: 'Failed to equip pet' });
+    }
+  } catch (error) {
+    console.error('Error equipping pet:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+exports.getEquippedPet = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const equippedPet = await Pet.getEquippedPet(userId);
+
+        if (!equippedPet) {
+            return res.status(404).json({ success: false, message: 'No equipped pet found' });
+        }
+
+        res.status(200).json({ success: true, data: equippedPet });
+    } catch (error) {
+        console.error('Error fetching equipped pet:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
