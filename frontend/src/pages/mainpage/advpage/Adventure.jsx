@@ -321,7 +321,8 @@ const Adventure = () => {
     updateStats(updates);
     
     // Check if player should level up
-    const { didLevelUp, newLevel: leveledUpTo } = checkAndProcessLevelUp();
+    const levelUpResult = await checkAndProcessLevelUp();
+    const { didLevelUp, newLevel: leveledUpTo } = levelUpResult;
     let levelUpMessage = '';
     
     if (didLevelUp) {
@@ -503,18 +504,23 @@ const Adventure = () => {
         ) : (
         <div className="adventure-grid">
           <div className="adventure-grid-profile">
-            <img src={avatarExample} alt="Profile" className="adventure-profile-pic" />
-            <div className="adventure-stats">
-              <div className="adventure-profile-name">{user?.username || "Adventurer"}</div>
-              <div className="adventure-profile-row">
+            <div className="adventure-profile-left">
+              <div className="avatar-container">
+                <img src={avatarExample} alt="Profile" className="adventure-profile-pic" />
+              </div>
+              <div className="profile-info">
+                <div className="adventure-profile-name">{user?.username || "Adventurer"}</div>
                 <div className="adventure-profile-level">
-                  <span>Level</span>
-                  <span>{level}</span>
+                  <div>Level {level}</div>
                 </div>
-                <div className="adventure-profile-currency">
-                  <span>{gold} 🪙</span>
-                  <span>{diamonds} 💎</span>
-                </div>
+              </div>
+            </div>
+            <div className="adventure-profile-right">
+              <div className="adventure-profile-currency">
+                <span>{gold} 🪙</span>
+              </div>
+              <div className="adventure-profile-currency">
+                <span>{diamonds} 💎</span>
               </div>
             </div>
           </div>
@@ -530,6 +536,7 @@ const Adventure = () => {
           <div className="adventure-bottom-grid">
             {/* Kiri: Party Actions */}
             <div className="adventure-party-column">
+              <div className="section-title">Party Menu</div>
               {partyView === 'default' && (
                 <>
                   <button className="party-action-btn" onClick={() => setPartyView('create')}>Create Party</button>
@@ -572,6 +579,7 @@ const Adventure = () => {
 
             {/* Kanan: Adventure Content */}
             <div className="adventure-grid-actions">
+              <div className="section-title">Adventure Log</div>
               <div className="adventure-story">
                 <p>{story}</p>
                 
