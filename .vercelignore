@@ -1,0 +1,11 @@
+# Ignore files and directories
+.git
+node_modules
+**/node_modules
+**/.DS_Store
+
+# Keep essential files and directories
+!frontend
+!backend
+!package.json
+!vercel.json

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Support.css';
+import './support.css';
 import Sidebar from '../Sidebar';
 import Topbar from '../Topbar';
 
