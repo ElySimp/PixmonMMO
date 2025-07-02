@@ -29,10 +29,12 @@ const app = express();
 // Middleware
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' 
-        ? [process.env.FRONTEND_URL || 'https://your-vercel-app.vercel.app']
-        : 'http://localhost:5173',
+        ? [process.env.FRONTEND_URL || 'https://pixmonmmo.vercel.app']
+        : ['http://localhost:5173', 'http://127.0.0.1:5173'],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    credentials: true
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range']
 }));
 app.use(express.json());
 
@@ -272,7 +274,29 @@ app.get('/api/user/overlay-profile', protect, async (req, res) => {
 
 // Health check route
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'OK', message: 'Server is running' });
+    // Check connection to database
+    const db = require('./config/database');
+    db.query('SELECT 1')
+        .then(() => {
+            res.json({ 
+                status: 'OK', 
+                message: 'Server is running', 
+                database: 'Connected',
+                environment: process.env.NODE_ENV || 'development',
+                serverless: process.env.VERCEL_ENV ? true : false,
+                timestamp: new Date().toISOString()
+            });
+        })
+        .catch(error => {
+            res.status(500).json({ 
+                status: 'WARNING', 
+                message: 'Server is running but database connection failed',
+                error: error.message,
+                environment: process.env.NODE_ENV || 'development',
+                serverless: process.env.VERCEL_ENV ? true : false,
+                timestamp: new Date().toISOString()
+            });
+        });
 });
 
 // Log route registration summary
@@ -327,12 +351,18 @@ if (process.env.NODE_ENV !== 'production' || process.env.VERCEL_ENV === undefine
     try {
       await initializeDatabaseTables();
       logger.serverReady(PORT);
+      
+      // Start ping service to keep the server alive in production (for Render)
+      if (process.env.NODE_ENV === 'production' && !process.env.VERCEL_ENV) {
+        const { startPingService } = require('./utils/pingService');
+        startPingService();
+      }
     } catch (error) {
-      logger.error('Failed to initialize database', 'STARTUP', error);
-      logger.warning('Server is running but database initialization failed', 'STARTUP');
-      // Don't exit process, let server continue to run
+        logger.error('Failed to initialize database', 'STARTUP', error);
+        logger.warning('Server is running but database initialization failed', 'STARTUP');
+        // Don't exit process, let server continue to run
     }
-  });
+});
 } else {
   // In Vercel environment, initialize database on first request
   app.use(async (req, res, next) => {
