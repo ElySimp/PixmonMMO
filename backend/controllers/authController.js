@@ -94,6 +94,13 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
     try {
+        console.log('Login attempt received:', {
+            method: req.method,
+            url: req.originalUrl,
+            body: req.body,
+            headers: req.headers
+        });
+        
         const { username, password } = req.body;
 
         // Validate input

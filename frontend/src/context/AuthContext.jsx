@@ -48,6 +48,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       setLoading(true);
+      console.log(`Making login request to: ${API_URL}/auth/login`);
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -55,18 +56,35 @@ export const AuthProvider = ({ children }) => {
         },
         body: JSON.stringify({ username, password })
       });
-      const data = await response.json();
-      if (response.ok) {
-        setUser(data.data.user);
-        localStorage.setItem(TOKEN_KEY, data.data.token); // gunakan TOKEN_KEY
-        localStorage.setItem('userId', data.data.user.id);
-          // User logged in successfully
+      console.log('Login response status:', response.status);
+      
+      if (!response.ok) {
+        console.error('Login failed with status:', response.status);
+        const errorText = await response.text();
+        console.error('Error response body:', errorText);
         
-        navigate('/main');
-        return { success: true };
-      } else {
-        return { success: false, error: data.message };
+        let errorMessage = 'Login failed';
+        try {
+          // Try to parse as JSON if possible
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || 'Login failed';
+        } catch (e) {
+          // If not JSON, use text as is or default message
+          errorMessage = errorText || 'Login failed';
+        }
+        
+        return { success: false, error: errorMessage };
       }
+      
+      const data = await response.json();
+      console.log('Login successful, setting user data');
+      
+      setUser(data.data.user);
+      localStorage.setItem(TOKEN_KEY, data.data.token);
+      localStorage.setItem('userId', data.data.user.id);
+        
+      navigate('/main');
+      return { success: true };
     } catch (error) {
       console.error('Login error:', error);
       return { success: false, error: 'Server error. Please try again.' };

@@ -28,9 +28,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: process.env.VERCEL_ENV 
-        ? true // Allow any origin when running on Vercel (since frontend and API are on same domain)
-        : ['http://localhost:5173', 'http://127.0.0.1:5173', 'https://pixmonmmo.vercel.app'],
+    origin: '*', // Allow all origins for testing
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'],
