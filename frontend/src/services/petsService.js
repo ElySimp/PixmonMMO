@@ -270,13 +270,8 @@ export const equipPet = async (userId, petId) => {
     localStorage.setItem('equippedPet', JSON.stringify(petToEquip));
     console.log('Saved equipped pet to localStorage:', petToEquip);
 
-    // Simulate a successful API call for now
-    // This will be replaced with the actual API call once the backend is fully set up
-    console.log('DEVELOPMENT MODE: Simulating successful pet equip');
-    return { success: true, message: 'Pet equipped successfully' };
-
-    /* Uncomment this when the backend is ready
-    const response = await fetch(`${API_URL}/api/v2/pets/${userId}/equip`, {
+    // Make the actual API call
+    const response = await fetch(`${API_URL}/v2/pets/${userId}/equip`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -291,7 +286,6 @@ export const equipPet = async (userId, petId) => {
 
     const data = await response.json();
     return data;
-    */
   } catch (error) {
     console.error('Error equipping pet:', error);
     throw error;
@@ -358,7 +352,7 @@ export const getEquippedPet = async (userId) => {
 
     /* Uncomment this when the backend is ready
     const token = getToken();
-    const response = await fetch(`${API_URL}/api/v2/pets/${userId}/equipped`, {
+    const response = await fetch(`${API_URL}/v2/pets/${userId}/equipped`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

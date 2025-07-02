@@ -37,9 +37,9 @@ function BountyQuest() {
     try {
       const userId = localStorage.getItem('userId');
       const [statsRes, questRes, userQuestRes] = await Promise.all([
-        axios.get(`${API_URL}/api/users/${userId}/stats`),
-        axios.get(`${API_URL}/api/quests/bounty`),
-        axios.get(`${API_URL}/api/user/${userId}/quests/bounty`)
+        axios.get(`${API_URL}/users/${userId}/stats`),
+        axios.get(`${API_URL}/quests/bounty`),
+        axios.get(`${API_URL}/user/${userId}/quests/bounty`)
       ]);
       const statsData = statsRes.data.data || statsRes.data;
       setQuestPoints(statsData.quest_points || 0);

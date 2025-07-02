@@ -60,7 +60,7 @@ const MiscShop = () => {
 
   useEffect(() => {
     const userId = localStorage.getItem('userId');
-    fetch(`${API_URL}/api/users/${userId}/stats`)
+    fetch(`${API_URL}/users/${userId}/stats`)
       .then(res => res.json())
       .then(data => {
         setPlayerStats(data.data || data);
