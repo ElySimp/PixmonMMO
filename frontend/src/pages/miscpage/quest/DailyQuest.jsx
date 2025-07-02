@@ -23,7 +23,7 @@ function DailyQuest() {
 
     // localStorage.setItem('userId', response.data.data.user.id);
     useEffect(() => {
-        axios.get(`${API_URL}/api/server-time`).then(res => {
+        axios.get(`${API_URL}/server-time`).then(res => {
             setServerTime(res.data.serverTime);
             setNextReset(res.data.nextDailyReset);
         });
@@ -37,7 +37,7 @@ function DailyQuest() {
     const refreshQuestStatus = async () => {
         try {
             const userId = localStorage.getItem('userId'); // Ambil userId yang sedang login
-            const response = await axios.get(`${API_URL}/api/user/${userId}/quests`);
+            const response = await axios.get(`${API_URL}/user/${userId}/quests`);
             const quests = Array.isArray(response.data) ? response.data : (response.data.data || []);
             const dailyQuests = quests.filter(q => q.repeat_type === "daily");
             setUserQuests(dailyQuests);
@@ -69,7 +69,7 @@ function DailyQuest() {
 
     useEffect(() => {
         const userId = localStorage.getItem('userId');
-        fetch(`${API_URL}/api/users/${userId}/stats`)
+        fetch(`${API_URL}/users/${userId}/stats`)
             .then(res => res.json())
             .then(data => {
                 setPlayerStats(data.data || data);
@@ -89,7 +89,7 @@ function DailyQuest() {
     const handleClaimQuest = async (id) => {
         try {
             const userId = localStorage.getItem('userId');
-            const response = await axios.post(`${API_URL}/api/user/${userId}/quest/${id}/claim`);
+            const response = await axios.post(`${API_URL}/user/${userId}/quest/${id}/claim`);
             if (response.data.success) {
                 await refreshQuestStatus();
                 await refreshPlayerStats();
@@ -101,7 +101,7 @@ function DailyQuest() {
 
     const refreshPlayerStats = async () => {
         const userId = localStorage.getItem('userId');
-        const res = await fetch(`${API_URL}/api/users/${userId}/stats`);
+        const res = await fetch(`${API_URL}/users/${userId}/stats`);
         const data = await res.json();
         setPlayerStats(data.data || data);
 
@@ -117,7 +117,7 @@ function DailyQuest() {
 
     const handleClaimMainReward = async () => {
         const userId = localStorage.getItem('userId');
-        const res = await axios.post(`${API_URL}/api/user/${userId}/claim-daily-main-reward`);
+        const res = await axios.post(`${API_URL}/user/${userId}/claim-daily-main-reward`);
         // setMainRewardClaimed(true);
         await refreshPlayerStats(); // Tambahkan ini!
         toast.success(res.data.message || '🎉 5 Diamonds & 1 Key Claimed!');

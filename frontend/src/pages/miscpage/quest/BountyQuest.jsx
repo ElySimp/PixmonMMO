@@ -95,9 +95,9 @@ function BountyQuest() {
   const handleRestoreQuestPoint = async () => {
     try {
       const userId = localStorage.getItem('userId');
-      await axios.post(`${API_URL}/api/user/${userId}/restore-quest-point`);
+      await axios.post(`${API_URL}/user/${userId}/restore-quest-point`);
       // Refresh stats
-      const statsRes = await axios.get(`${API_URL}/api/users/${userId}/stats`);
+      const statsRes = await axios.get(`${API_URL}/users/${userId}/stats`);
       const statsData = statsRes.data.data || statsRes.data;
       setQuestPoints(statsData.quest_points || 0);
       setPlayerStats(statsData);
@@ -112,17 +112,17 @@ function BountyQuest() {
     if (questPoints > 0) {
       try {
         const userId = localStorage.getItem('userId');
-        await axios.post(`${API_URL}/api/user/${userId}/decrement-quest-point`);
-        await axios.post(`${API_URL}/api/user/${userId}/quest/${questId}/start`);
+        await axios.post(`${API_URL}/user/${userId}/decrement-quest-point`);
+        await axios.post(`${API_URL}/user/${userId}/quest/${questId}/start`);
 
         // Jika quest id 6, lakukan 90% chance langsung complete & claim
         if (questId === 6) {
           const chance = Math.random();
           if (chance <= 0.9) {
             // Tandai quest sebagai completed dulu
-            await axios.post(`${API_URL}/api/user/${userId}/quest/${questId}/complete`);
+            await axios.post(`${API_URL}/user/${userId}/quest/${questId}/complete`);
             // Lalu claim reward
-            await axios.post(`${API_URL}/api/user/${userId}/quest/${questId}/claim`);
+            await axios.post(`${API_URL}/user/${userId}/quest/${questId}/claim`);
             toast.success('Success! You cleared the quest and got the reward!');
           } else {
             toast.error('Failed! You did not clear the quest. QP still deducted.');
@@ -132,12 +132,12 @@ function BountyQuest() {
         }
 
         // Refresh stats & claimedQuests
-        const statsRes = await axios.get(`${API_URL}/api/users/${userId}/stats`);
+        const statsRes = await axios.get(`${API_URL}/users/${userId}/stats`);
         const statsData = statsRes.data.data || statsRes.data;
         setQuestPoints(statsData.quest_points || 0);
         setPlayerStats(statsData);
 
-        const userQuestRes = await axios.get(`${API_URL}/api/user/${userId}/quests`);
+        const userQuestRes = await axios.get(`${API_URL}/user/${userId}/quests`);
         const userQuests = Array.isArray(userQuestRes.data) ? userQuestRes.data : (userQuestRes.data.data || []);
         const claimedMap = {};
         userQuests.forEach(q => {
@@ -156,9 +156,9 @@ function BountyQuest() {
   const handleClaimReward = async (questId) => {
     try {
       const userId = localStorage.getItem('userId');
-      await axios.post(`${API_URL}/api/user/${userId}/quest/${questId}/claim`);
+      await axios.post(`${API_URL}/user/${userId}/quest/${questId}/claim`);
       // Refresh claimedQuests & stats
-      const userQuestRes = await axios.get(`${API_URL}/api/user/${userId}/quests`);
+      const userQuestRes = await axios.get(`${API_URL}/user/${userId}/quests`);
       const userQuests = Array.isArray(userQuestRes.data) ? userQuestRes.data : (userQuestRes.data.data || []);
       const claimedMap = {};
       userQuests.forEach(q => {
@@ -168,7 +168,7 @@ function BountyQuest() {
       setClaimedQuests(claimedMap);
 
       // Refresh stats
-      const statsRes = await axios.get(`${API_URL}/api/users/${userId}/stats`);
+      const statsRes = await axios.get(`${API_URL}/users/${userId}/stats`);
       const statsData = statsRes.data.data || statsRes.data;
       setPlayerStats(statsData);
 

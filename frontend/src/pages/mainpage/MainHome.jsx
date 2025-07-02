@@ -66,8 +66,8 @@ const MainHome = () => {
 
         // Fetch user stats
         try {
-          // Fixed URL to remove any duplicate "api" path segments
-          const response = await fetch(`${API_URL.replace('/api/api', '/api')}/users/${userId}/stats`);
+          // Ensure we're using the correct API URL
+          const response = await fetch(`${API_URL}/users/${userId}/stats`);
           const statsData = await response.json();
           setUserStats(statsData.data || statsData);
         } catch (error) {

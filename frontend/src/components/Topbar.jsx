@@ -51,7 +51,7 @@ function Topbar({
         console.log('Fetching profile for userId:', userId);
         
         // SOLUSI 1: Fetch stats data
-        const statsResponse = await fetch(`${API_URL}/api/users/${userId}/stats`);
+        const statsResponse = await fetch(`${API_URL}/users/${userId}/stats`);
         
         if (!statsResponse.ok) {
           console.error('Failed to fetch stats:', statsResponse.status, statsResponse.statusText);
@@ -69,7 +69,7 @@ function Topbar({
         
         try {
           // Option A: Jika ada endpoint khusus untuk get user profile
-          const userResponse = await fetch(`${API_URL}/api/users/${userId}/profile`);
+          const userResponse = await fetch(`${API_URL}/api/userprofile/${userId}`);
           if (userResponse.ok) {
             const userData = await userResponse.json();
             username = userData.username || userData.data?.username || 'Unknown User';
@@ -153,7 +153,7 @@ function Topbar({
               return;
             }
 
-            const statsResponse = await fetch(`${API_URL}/api/users/${userId}/stats`);
+            const statsResponse = await fetch(`${API_URL}/users/${userId}/stats`);
             
             if (!statsResponse.ok) {
               console.error('Failed to fetch stats:', statsResponse.status);
@@ -167,7 +167,7 @@ function Topbar({
             let username = 'Unknown User';
             
             try {
-              const userResponse = await fetch(`${API_URL}/api/users/${userId}/profile`);
+              const userResponse = await fetch(`${API_URL}/api/userprofile/${userId}`);
               if (userResponse.ok) {
                 const userData = await userResponse.json();
                 username = userData.username || userData.data?.username || 'Unknown User';
