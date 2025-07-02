@@ -196,6 +196,19 @@ class UserProfile {
         return `${timestamp}_${randomString}${ext}`;
     }
 
+    // Get MIME type from filename
+    static getMimeType(filename) {
+        const ext = path.extname(filename).toLowerCase();
+        const mimeTypes = {
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.gif': 'image/gif',
+            '.webp': 'image/webp'
+        };
+        return mimeTypes[ext] || 'application/octet-stream';
+    }
+
     // Save uploaded wallpaper file
     static async saveWallpaperFile(userId, fileBuffer, originalFilename) {
         try {
@@ -204,21 +217,37 @@ class UserProfile {
                 throw new Error('Invalid file type. Only JPG, PNG, and GIF files are allowed.');
             }
 
-            // Create upload directories if they don't exist
-            await this.createUploadDirectories();
-
             // Generate unique filename
             const uniqueFilename = this.generateUniqueFilename(originalFilename);
-            const wallpaperPath = path.join(__dirname, '../uploads/wallpapers', uniqueFilename);
-
-            // Save file to disk
-            await fs.writeFile(wallpaperPath, fileBuffer);
-
-            // Generate URL (adjust based on your server setup)
-            const wallpaperUrl = `/uploads/wallpapers/${uniqueFilename}`;
-
-            console.log(`Wallpaper saved: ${wallpaperUrl}`);
-            return wallpaperUrl;
+            
+            // Check if we're in Vercel serverless environment
+            if (process.env.VERCEL_ENV) {
+                // For Vercel, we'd normally use a cloud storage service like S3 or Cloudinary
+                // For now, we'll simulate it by returning a placeholder URL
+                // TODO: Implement proper cloud storage integration
+                console.log(`[VERCEL] Would save wallpaper to cloud storage: ${uniqueFilename}`);
+                
+                // Return a data URI for testing purposes
+                // NOTE: In production, replace this with actual cloud storage implementation
+                const base64Data = fileBuffer.toString('base64');
+                const mimeType = this.getMimeType(originalFilename);
+                return `data:${mimeType};base64,${base64Data}`;
+            } else {
+                // Local development - save to disk
+                // Create upload directories if they don't exist
+                await this.createUploadDirectories();
+                
+                const wallpaperPath = path.join(__dirname, '../uploads/wallpapers', uniqueFilename);
+                
+                // Save file to disk
+                await fs.writeFile(wallpaperPath, fileBuffer);
+                
+                // Generate URL (adjust based on your server setup)
+                const wallpaperUrl = `/uploads/wallpapers/${uniqueFilename}`;
+                
+                console.log(`Wallpaper saved: ${wallpaperUrl}`);
+                return wallpaperUrl;
+            }
         } catch (error) {
             console.error('Error saving wallpaper file:', error);
             throw error;
@@ -233,21 +262,37 @@ class UserProfile {
                 throw new Error('Invalid file type. Only JPG, PNG, and GIF files are allowed.');
             }
 
-            // Create upload directories if they don't exist
-            await this.createUploadDirectories();
-
             // Generate unique filename
             const uniqueFilename = this.generateUniqueFilename(originalFilename);
-            const avatarPath = path.join(__dirname, '../uploads/avatars', uniqueFilename);
-
-            // Save file to disk
-            await fs.writeFile(avatarPath, fileBuffer);
-
-            // Generate URL (adjust based on your server setup)
-            const avatarUrl = `/uploads/avatars/${uniqueFilename}`;
-
-            console.log(`Avatar saved: ${avatarUrl}`);
-            return avatarUrl;
+            
+            // Check if we're in Vercel serverless environment
+            if (process.env.VERCEL_ENV) {
+                // For Vercel, we'd normally use a cloud storage service like S3 or Cloudinary
+                // For now, we'll simulate it by returning a placeholder URL
+                // TODO: Implement proper cloud storage integration
+                console.log(`[VERCEL] Would save avatar to cloud storage: ${uniqueFilename}`);
+                
+                // Return a data URI for testing purposes
+                // NOTE: In production, replace this with actual cloud storage implementation
+                const base64Data = fileBuffer.toString('base64');
+                const mimeType = this.getMimeType(originalFilename);
+                return `data:${mimeType};base64,${base64Data}`;
+            } else {
+                // Local development - save to disk
+                // Create upload directories if they don't exist
+                await this.createUploadDirectories();
+                
+                const avatarPath = path.join(__dirname, '../uploads/avatars', uniqueFilename);
+                
+                // Save file to disk
+                await fs.writeFile(avatarPath, fileBuffer);
+                
+                // Generate URL (adjust based on your server setup)
+                const avatarUrl = `/uploads/avatars/${uniqueFilename}`;
+                
+                console.log(`Avatar saved: ${avatarUrl}`);
+                return avatarUrl;
+            }
         } catch (error) {
             console.error('Error saving avatar file:', error);
             throw error;
@@ -257,13 +302,17 @@ class UserProfile {
     // Delete old file when updating
     static async deleteOldFile(fileUrl) {
         try {
-            if (!fileUrl || fileUrl.startsWith('http')) {
-                return; // Skip deletion for external URLs
+            // Skip deletion for external URLs, data URIs, or if no URL provided
+            if (!fileUrl || fileUrl.startsWith('http') || fileUrl.startsWith('data:')) {
+                return; 
             }
 
-            const filePath = path.join(__dirname, '..', fileUrl);
-            await fs.unlink(filePath);
-            console.log(`Old file deleted: ${filePath}`);
+            // Only proceed with file deletion in non-Vercel environments
+            if (!process.env.VERCEL_ENV) {
+                const filePath = path.join(__dirname, '..', fileUrl);
+                await fs.unlink(filePath);
+                console.log(`Old file deleted: ${filePath}`);
+            }
         } catch (error) {
             console.log(`Could not delete old file: ${error.message}`);
             // Don't throw error, just log it

@@ -27,7 +27,13 @@ const userProfileRoutes = require('./routes/userProfileRoutes');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production' 
+        ? [process.env.FRONTEND_URL || 'https://your-vercel-app.vercel.app']
+        : 'http://localhost:5173',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    credentials: true
+}));
 app.use(express.json());
 
 // Request logging middleware (development only)
@@ -313,18 +319,37 @@ app.use((err, req, res, next) => {
 // Initialize database on server start
 const PORT = process.env.PORT || 5000;
 
-// Start server
-app.listen(PORT, async () => {
+// For local development
+if (process.env.NODE_ENV !== 'production' || process.env.VERCEL_ENV === undefined) {
+  app.listen(PORT, async () => {
     logger.serverStart(PORT);
     
     try {
-        await initializeDatabaseTables();
-        logger.serverReady(PORT);
+      await initializeDatabaseTables();
+      logger.serverReady(PORT);
     } catch (error) {
-        logger.error('Failed to initialize database', 'STARTUP', error);
-        logger.warning('Server is running but database initialization failed', 'STARTUP');
-        // Don't exit process, let server continue to run
+      logger.error('Failed to initialize database', 'STARTUP', error);
+      logger.warning('Server is running but database initialization failed', 'STARTUP');
+      // Don't exit process, let server continue to run
     }
-});
+  });
+} else {
+  // In Vercel environment, initialize database on first request
+  app.use(async (req, res, next) => {
+    if (!global.dbInitialized) {
+      try {
+        await initializeDatabaseTables();
+        global.dbInitialized = true;
+        logger.serverReady('Serverless');
+      } catch (error) {
+        logger.error('Failed to initialize database in serverless environment', 'STARTUP', error);
+      }
+    }
+    next();
+  });
+}
 
 app.use('/api/userprofile', userProfileRoutes);
+
+// Export for Vercel serverless deployment
+module.exports = app;

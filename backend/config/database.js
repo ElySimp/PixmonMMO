@@ -16,16 +16,22 @@ if (!MYSQL_HOST || !MYSQL_USER || !MYSQL_PASSWORD || !MYSQL_DATABASE) {
     throw new Error('Missing required database configuration. Please check your .env file.');
 }
 
-const pool = mysql.createPool({
+// Optimized configuration for serverless environment
+const config = {
     host: process.env.MYSQL_HOST,
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
     database: process.env.MYSQL_DATABASE,
     port: process.env.MYSQL_PORT,
     waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+    connectionLimit: process.env.NODE_ENV === 'production' ? 1 : 10,
+    queueLimit: 0,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0
+}
+
+// In serverless environments, we should use a smaller connection pool
+const pool = mysql.createPool(config);
 
 // Test connection
 pool.getConnection((err, connection) => {
