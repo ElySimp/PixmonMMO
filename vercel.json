@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "buildCommand": false,
-  "installCommand": false,
+  "buildCommand": null,
+  "installCommand": null,
   "ignoreCommand": true,
   "outputDirectory": "frontend/dist"
 }
