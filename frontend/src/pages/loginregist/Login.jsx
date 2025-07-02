@@ -45,7 +45,7 @@ const Login = ({ openRegister }) => {
         setError(result.error);
       } else {          const userId = result.user?.id || localStorage.getItem('userId');
           try {
-            await axios.post(`${API_URL}/user/${userId}/quest/1/complete`);
+            await axios.post(`${API_URL}/api/user/${userId}/quest/1/complete`);
             console.log('Daily login quest completed!');
           } catch (err) {
             console.error('Failed to complete daily login quest:', err.response?.data || err.message);
