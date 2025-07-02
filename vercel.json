@@ -1,6 +1,7 @@
 {
-  "framework": "vite",
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" }
-  ]
+  "version": 2,
+  "buildCommand": false,
+  "installCommand": false,
+  "ignoreCommand": true,
+  "outputDirectory": "frontend/dist"
 }
