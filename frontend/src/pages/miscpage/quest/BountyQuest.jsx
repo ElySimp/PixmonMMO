@@ -4,7 +4,7 @@ import questIcon from '../../../assets/MAIN/quest.png';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const API_URL = "http://localhost:5000";
+import { API_URL } from '../../../utils/config';
 
 function BountyQuest() {
   const [questPoints, setQuestPoints] = useState(10);

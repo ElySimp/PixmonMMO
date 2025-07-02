@@ -3,7 +3,7 @@ import Topbar from '../../components/Topbar';
 import Sidebar from '../../components/Sidebar';
 import React, { useState, useEffect } from 'react';
 
-const API_URL = "http://localhost:5000";
+import { API_URL } from '../../utils/config';
 
 const MAIN_TABS = [
   { key: 'itemshop', label: 'Item Shop', icon: '🛒' },

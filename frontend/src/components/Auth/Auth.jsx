@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './Auth.css';
-import { TOKEN_KEY } from '../../utils/config';
+import { TOKEN_KEY, API_URL } from '../../utils/config';
 
 const Auth = ({ setIsAuthenticated }) => {
     const [isLogin, setIsLogin] = useState(true);
@@ -65,7 +65,7 @@ const Auth = ({ setIsAuthenticated }) => {
         const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
         
         try {
-            const response = await fetch(`http://localhost:5000${endpoint}`, {
+            const response = await fetch(`${API_URL}${endpoint}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

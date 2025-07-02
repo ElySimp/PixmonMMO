@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import moment from "moment-timezone";
 
-const API_URL = "http://localhost:5000";
+import { API_URL } from '../../../utils/config';
 
 function getDailyKeyDate() {
   const now = new Date();

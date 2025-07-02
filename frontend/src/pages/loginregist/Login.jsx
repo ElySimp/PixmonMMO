@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import axios from 'axios';
 import './Login.css'
 
-const API_URL = "http://localhost:5000";
+import { API_URL } from '../../utils/config';
 
 const Login = ({ openRegister }) => {
   const navigate = useNavigate();

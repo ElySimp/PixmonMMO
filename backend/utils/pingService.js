@@ -1,13 +1,14 @@
 // pingService.js
-// Script untuk menjaga backend tetap aktif dengan mengirim ping secara berkala
+// CATATAN: File ini tidak lagi digunakan untuk deployment di Vercel
+// Script ini hanya diperlukan untuk hosting di platform seperti Render yang memiliki timeout untuk free tier
 
 const https = require('https');
-const logger = require('./utils/logger');
+const logger = require('./logger'); // Fixed path to logger
 
-// URL endpoint yang akan di-ping
+// URL endpoint yang akan di-ping (tidak digunakan di Vercel)
 let backendUrl = process.env.BACKEND_URL;
 
-// Interval ping dalam milidetik (15 menit)
+// Interval ping dalam milidetik (tidak digunakan di Vercel)
 const PING_INTERVAL = 14 * 60 * 1000; // 14 menit
 
 // Fungsi untuk melakukan ping

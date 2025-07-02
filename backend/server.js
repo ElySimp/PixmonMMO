@@ -28,12 +28,12 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
-        ? [process.env.FRONTEND_URL || 'https://pixmonmmo.vercel.app']
-        : ['http://localhost:5173', 'http://127.0.0.1:5173'],
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    origin: process.env.VERCEL_ENV 
+        ? true // Allow any origin when running on Vercel (since frontend and API are on same domain)
+        : ['http://localhost:5173', 'http://127.0.0.1:5173', 'https://pixmonmmo.vercel.app'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'],
     exposedHeaders: ['Content-Range', 'X-Content-Range']
 }));
 app.use(express.json());
@@ -280,10 +280,11 @@ app.get('/api/health', (req, res) => {
         .then(() => {
             res.json({ 
                 status: 'OK', 
-                message: 'Server is running', 
+                message: 'Server is running on Vercel', 
                 database: 'Connected',
                 environment: process.env.NODE_ENV || 'development',
                 serverless: process.env.VERCEL_ENV ? true : false,
+                platform: 'Vercel',
                 timestamp: new Date().toISOString()
             });
         })
@@ -294,6 +295,7 @@ app.get('/api/health', (req, res) => {
                 error: error.message,
                 environment: process.env.NODE_ENV || 'development',
                 serverless: process.env.VERCEL_ENV ? true : false,
+                platform: 'Vercel',
                 timestamp: new Date().toISOString()
             });
         });
@@ -352,11 +354,7 @@ if (process.env.NODE_ENV !== 'production' || process.env.VERCEL_ENV === undefine
       await initializeDatabaseTables();
       logger.serverReady(PORT);
       
-      // Start ping service to keep the server alive in production (for Render)
-      if (process.env.NODE_ENV === 'production' && !process.env.VERCEL_ENV) {
-        const { startPingService } = require('./utils/pingService');
-        startPingService();
-      }
+      // No need for ping service on Vercel - serverless functions don't need to be kept alive
     } catch (error) {
         logger.error('Failed to initialize database', 'STARTUP', error);
         logger.warning('Server is running but database initialization failed', 'STARTUP');

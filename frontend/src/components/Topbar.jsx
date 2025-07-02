@@ -4,7 +4,7 @@ import './Topbar.css';
 import chatIcon from '../assets/MAIN/chat.png';
 import notificationIcon from '../assets/MAIN/notification.png';
 const profileImage = '/dummy1.jpg'; 
-const API_URL = "http://localhost:5000";
+import { API_URL } from '../utils/config';
 
 function Topbar({ 
   onMenuClick, 
