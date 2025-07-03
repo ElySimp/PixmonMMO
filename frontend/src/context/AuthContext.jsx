@@ -24,7 +24,8 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async (token) => {
     try {
-      const response = await fetch(`${API_URL}/api/auth/me`, {
+      // API_URL sudah termasuk '/api' di config.js
+      const response = await fetch(`${API_URL}/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -48,8 +49,14 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       setLoading(true);
-      console.log(`Making login request to: ${API_URL}/api/auth/login`);
-      const response = await fetch(`${API_URL}/api/auth/login`, {
+      
+      // API_URL sudah termasuk '/api' di config.js
+      const apiPath = `${API_URL}/auth/login`;
+      
+      console.log(`Making login request to: ${apiPath}`);
+      // Untuk debugging
+      console.log(`Full URL: ${window.location.origin}${apiPath}`);
+      const response = await fetch(apiPath, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -96,7 +103,9 @@ export const AuthProvider = ({ children }) => {
   const register = async (username, email, password) => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/auth/register`, {
+      // API_URL sudah termasuk '/api' di config.js
+      const apiPath = `${API_URL}/auth/register`;
+      const response = await fetch(apiPath, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

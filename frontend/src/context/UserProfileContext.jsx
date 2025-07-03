@@ -49,7 +49,7 @@ export const UserProfileProvider = ({ children }) => {
       setProfileData(prev => ({ ...prev, isLoading: true }));
       
       // Fetch user profile data
-      const response = await axios.get(`${API_URL}/api/userprofile/${userId}`, {
+      const response = await axios.get(`${API_URL}/userprofile/${userId}`, {
         headers: { 'Cache-Control': 'no-cache' }
       });
       

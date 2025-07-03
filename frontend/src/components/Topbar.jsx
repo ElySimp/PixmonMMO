@@ -69,14 +69,14 @@ function Topbar({
         
         try {
           // Option A: Jika ada endpoint khusus untuk get user profile
-          const userResponse = await fetch(`${API_URL}/api/userprofile/${userId}`);
+          const userResponse = await fetch(`${API_URL}/userprofile/${userId}`);
           if (userResponse.ok) {
             const userData = await userResponse.json();
             username = userData.username || userData.data?.username || 'Unknown User';
             console.log('User profile response:', userData);
           } else {
             // Option B: Jika menggunakan endpoint userlogin
-            const loginResponse = await fetch(`${API_URL}/api/userlogin/${userId}`);
+            const loginResponse = await fetch(`${API_URL}/userlogin/${userId}`);
             if (loginResponse.ok) {
               const loginData = await loginResponse.json();
               username = loginData.username || loginData.data?.username || 'Unknown User';
@@ -167,12 +167,12 @@ function Topbar({
             let username = 'Unknown User';
             
             try {
-              const userResponse = await fetch(`${API_URL}/api/userprofile/${userId}`);
+              const userResponse = await fetch(`${API_URL}/userprofile/${userId}`);
               if (userResponse.ok) {
                 const userData = await userResponse.json();
                 username = userData.username || userData.data?.username || 'Unknown User';
               } else {
-                const loginResponse = await fetch(`${API_URL}/api/userlogin/${userId}`);
+                const loginResponse = await fetch(`${API_URL}/userlogin/${userId}`);
                 if (loginResponse.ok) {
                   const loginData = await loginResponse.json();
                   username = loginData.username || loginData.data?.username || 'Unknown User';

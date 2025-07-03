@@ -1,6 +1,6 @@
 // API Configuration
-// Use environment variable for API URL if available, fallback to relative path for production, or localhost for development
-export const API_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
+// Use relative path for both development and production to work with Vercel's proxy
+export const API_URL = '/api';
 
 // Auth Configuration
-export const TOKEN_KEY = 'pixmon_auth_token'; 
+export const TOKEN_KEY = 'pixmon_auth_token';
