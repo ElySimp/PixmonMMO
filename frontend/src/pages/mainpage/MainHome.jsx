@@ -143,7 +143,7 @@ const MainHome = () => {
   return (
     <div className="mainhome-container">
       <Sidebar 
-        profilePic="/dummy.jpg"
+        profilePic={`${window.location.origin}/dummy.jpg`}
       />
       
       <div className="mainhome-content">

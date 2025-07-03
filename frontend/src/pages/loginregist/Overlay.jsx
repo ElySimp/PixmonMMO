@@ -10,10 +10,10 @@ const Overlay = ({ isOpen, onClose, children }) => {
         </button>
         <div className="overlay-container">
           <div className="overlay-container-left">
-            <img src="dummy1.jpg" alt="" />
-            <img src="dummy2.jpg" alt="" />
-            <img src="dummy3.jpg" alt="" />
-            <img src="dummy4.jpg" alt="" />
+            <img src="/dummy1.jpg" alt="" />
+            <img src="/dummy2.jpg" alt="" />
+            <img src="/dummy3.jpg" alt="" />
+            <img src="/dummy4.jpg" alt="" />
           </div>
           <div className="overlay-container-right">
             {children}

@@ -222,7 +222,7 @@ const MainAchievement = () => {
         {/* Animated achievement unlock notification that appears when an achievement is unlocked */}
         <div className="mainachievement-notification" style={{ display: 'none' }}>
           <div className="mainachievement-notification-icon">
-            <img src="/achievements/default_achievement.png" alt="Achievement" />
+            <img src="/assets/achievements/pixball.png" alt="Achievement" />
           </div>
           <div className="mainachievement-notification-content">
             <h3>Achievement Unlocked!</h3>

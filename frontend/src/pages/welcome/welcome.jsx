@@ -24,7 +24,7 @@ function Welcome() {
   return (
     <>
         <div className='header'>
-            <img src="logo(sampel).png" alt="logo" />
+            <img src="/logo(sampel).png" alt="logo" />
             <div className='buttons'>
                 <button className='button' onClick={openRegister}>Create an Account</button>
                 <button className='button' onClick={openLogin}>Log In</button>
@@ -36,10 +36,10 @@ function Welcome() {
         <Overlay isOpen={isRegisterOpen} onClose={closeRegister}>
           <Register openLogin={openLogin} />
         </Overlay>
-        <img src="background.jpg" alt="background" className='background-home' />
+        <img src="/background.jpg" alt="background" className='background-home' />
         
         <div className='hero'>
-            <img src="dummy.jpg" alt="" />
+            <img src="/dummy.jpg" alt="" />
             <h1>Pixmon</h1>
             <h2>Let The Adventure Begin!</h2>
         </div>
