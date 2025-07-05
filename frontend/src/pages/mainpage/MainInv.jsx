@@ -55,45 +55,7 @@ async function getIndexInventory() {
     const res = await fetch(`${API_URL}/inventoryIndex`);
     const data = await res.json();
     if (data.success) {
-      console.log("API_URL:", API_URL);
-      console.log("Inventory Index Example Item:", data.inventoryIndex?.[0]);
-      console.log("Inventory Index Example Path:", data.inventoryIndex?.[0]?.path);
-      
-      // Normalize item paths for Vercel deployment
-      const processedInventoryIndex = data.inventoryIndex.map(item => {
-        if (item.path) {
-          // Handle various path formats
-          if (item.path.startsWith('http')) {
-            // Absolute URLs stay as is
-            // item.path remains unchanged
-          } 
-          else if (item.path.includes('public/assets/items/')) {
-            // Legacy SQL paths with public prefix
-            const filename = item.path.split('/').pop();
-            item.path = `/items/${filename}`;
-          }
-          else if (item.path.includes('assets/items/')) {
-            // Legacy paths with assets prefix
-            const filename = item.path.split('/').pop();
-            item.path = `/items/${filename}`;
-          }
-          else if (!item.path.startsWith('/')) {
-            // Relative paths without leading slash
-            if (item.path.includes('/')) {
-              // Has subdirectories but no leading slash
-              item.path = `/${item.path}`;
-            } else {
-              // Just the filename
-              item.path = `/items/${item.path}`;
-            }
-          }
-          
-          console.log(`Path for item ${item.item_name}: ${item.path}`);
-        }
-        return item;
-      });
-      
-      return processedInventoryIndex;
+      return data.inventoryIndex; // ← Just return raw data with no path manipulation
     }
     return [];
   } catch (error) {
@@ -101,6 +63,7 @@ async function getIndexInventory() {
     return [];
   }
 }
+
 
 const MainInv = () => {
   const { user, loading: authLoading } = useAuth();
