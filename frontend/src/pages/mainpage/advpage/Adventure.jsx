@@ -492,7 +492,11 @@ const Adventure = () => {
         rtl={false}
         pauseOnFocusLoss={false}
         draggable
-        pauseOnHover
+        pauseOnHover={false}
+        limit={5}
+        toastClassName="adventure-toast"
+        containerId="adventure-toast-container"
+        enableMultiContainer={true}
       />
       <Sidebar profilePic="/dummy.jpg" />
       <div className="adventure-content">

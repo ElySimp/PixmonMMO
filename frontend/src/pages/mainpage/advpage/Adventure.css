@@ -662,15 +662,18 @@ body::-webkit-scrollbar {
   background-color: #2a4c7d;
   color: white;
   text-align: center;
-  padding: 5px 0;
-  margin-bottom: 8px;
-  border-radius: 5px;
+  padding: 3px 0;
+  margin-bottom: 5px;
+  border-radius: 4px;
   font-weight: bold;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  width: 80%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .event-story-banner span {
-  font-size: 0.9em;
+  font-size: 0.75em;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
@@ -679,24 +682,27 @@ body::-webkit-scrollbar {
 .edu-question-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-gap: 8px;
-  margin: 10px 0;
-  max-height: 250px;
+  grid-gap: 6px;
+  margin: 8px 0;
+  max-height: 220px;
   overflow-y: auto;
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Style for each answer choice */
 .edu-answer-choice {
-  background-color: #1e293b;
+  background-color: #101011;
   border: 1px solid #2d3748;
-  border-radius: 6px;
-  padding: 8px 10px;
+  border-radius: 5px;
+  padding: 6px 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   margin-bottom: 0;
-  font-size: 0.95em;
+  font-size: 0.85em;
 }
 
 .edu-answer-choice:hover {
@@ -720,20 +726,20 @@ body::-webkit-scrollbar {
 
 .choice-letter {
   display: inline-block;
-  width: 20px;
-  height: 20px;
-  line-height: 20px;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
   text-align: center;
   background-color: rgba(0, 0, 0, 0.3);
   border-radius: 50%;
-  margin-right: 8px;
+  margin-right: 6px;
   font-weight: bold;
-  font-size: 0.9em;
+  font-size: 0.8em;
 }
 
 .choice-text {
   flex: 1;
-  font-size: 0.95em;
+  font-size: 0.85em;
 }
 
 /* Submit answer button */
@@ -742,15 +748,23 @@ body::-webkit-scrollbar {
   background-color: #3182ce;
   color: white;
   border: none;
-  border-radius: 6px;
-  padding: 8px;
-  margin-top: 8px;
+  border-radius: 5px;
+  padding: 6px;
+  margin-top: 6px;
   cursor: pointer;
   font-weight: bold;
   transition: background-color 0.2s;
-  font-size: 0.95em;
+  font-size: 0.85em;
+  width: 70%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .submit-answer-button:hover {
   background-color: #2b6cb0;
+}
+
+/* Custom toast styling for Adventure page */
+.adventure-toast {
+  font-size: 0.9em !important;
 }

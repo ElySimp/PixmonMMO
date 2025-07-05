@@ -674,19 +674,6 @@ const MiscPets = () => {
                     tabIndex={0}
                   >
                     <div className="pet-card-header">
-                      <div 
-                        className="pet-role"
-                        style={{ color: getRarityColor(pet.rarity) }}
-                      >
-                        {getRoleIcon(pet.role)}
-                        <span>{pet.role}</span>
-                      </div>
-                      
-                      <div className="pet-rarity">
-                        <FaStar className="rarity-icon" style={{ color: getRarityColor(pet.rarity) }} />
-                        <span style={{ color: getRarityColor(pet.rarity) }}>{pet.rarity}</span>
-                      </div>
-                      
                       {pet.is_equipped && (
                         <div className="pet-equipped-badge pulse-animation">
                           <FaChessQueen />
@@ -706,100 +693,31 @@ const MiscPets = () => {
                       
                       <div className="pet-info">
                         <h3 className="pet-name">{pet.name}</h3>
-                        
-                        <div className="pet-status-bars">
-                          <div className="pet-status">
-                            <div className="status-label">
-                              <RiHeartPulseFill className="status-icon health" />
-                              <span>Health</span>
-                            </div>
-                            <div className="status-bar">
-                              <div 
-                                className="status-fill health"
-                                style={{ width: `${petStatuses[pet.id]?.health || 0}%` }}
-                              ></div>
-                            </div>
-                            <span className="status-value">{petStatuses[pet.id]?.health || 0}%</span>
-                          </div>
-                          
-                          <div className="pet-status">
-                            <div className="status-label">
-                              <GiFoodChain className="status-icon hunger" />
-                              <span>Hunger</span>
-                            </div>
-                            <div className="status-bar">
-                              <div 
-                                className="status-fill hunger"
-                                style={{ width: `${petStatuses[pet.id]?.hunger || 0}%` }}
-                              ></div>
-                            </div>
-                            <span className="status-value">{petStatuses[pet.id]?.hunger || 0}%</span>
-                          </div>
-                          
-                          <div className="pet-status">
-                            <div className="status-label">
-                              <GiHeartPlus className="status-icon happiness" />
-                              <span>Happiness</span>
-                            </div>
-                            <div className="status-bar">
-                              <div 
-                                className="status-fill happiness"
-                                style={{ width: `${petStatuses[pet.id]?.happiness || 0}%` }}
-                              ></div>
-                            </div>
-                            <span className="status-value">{petStatuses[pet.id]?.happiness || 0}%</span>
-                          </div>
-                        </div>
-                        
-                        <div className="pet-stats-summary">
-                          {Object.entries(pet.stats)
-                            .filter(([key]) => ['ATK', 'HP', 'AGILITY'].includes(key))
-                            .map(([key, value]) => (
-                              <div className="pet-stat" key={key}>
-                                <div className="stat-icon-wrapper">
-                                  {getStatIcon(key)}
-                                </div>
-                                <div className="stat-value">{value}</div>
-                              </div>
-                            ))
-                          }
-                        </div>
                       </div>
                     </div>
                     
-                    <div className="pet-card-actions">
-                      <button 
-                        className="pet-action feed hover-effect" 
-                        onClick={(e) => { e.stopPropagation(); feedPet(pet.id); }}
-                        aria-label={`Feed ${pet.name}`}
+                    <div className="pet-card-footer">
+                      <div 
+                        className="pet-class"
+                        style={{ color: getRarityColor(pet.rarity) }}
                       >
-                        <GiFoodChain /> Feed
-                      </button>
-                      <button 
-                        className="pet-action play hover-effect" 
-                        onClick={(e) => { e.stopPropagation(); playWithPet(pet.id); }}
-                        aria-label={`Play with ${pet.name}`}
-                      >
-                        <RiGamepadLine /> Play
-                      </button>
-                      <button 
-                        className="pet-action heal hover-effect" 
-                        onClick={(e) => { e.stopPropagation(); healPet(pet.id); }}
-                        aria-label={`Heal ${pet.name}`}
-                      >
-                        <RiHeartPulseFill /> Heal
-                      </button>
-                      <button
-                        className={`pet-action equip hover-effect ${pet.is_equipped ? 'active' : ''}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEquipPet(pet.id);
-                        }}
-                        aria-pressed={pet.is_equipped}
-                        aria-label={pet.is_equipped ? `${pet.name} is equipped` : `Equip ${pet.name}`}
-                      >
-                        {pet.is_equipped ? 'Equipped' : 'Equip'}
-                      </button>
+                        {getRoleIcon(pet.role)}
+                        <span>{pet.role}</span>
+                      </div>
+                      
+                      <div className="pet-card-actions">
+                        <button 
+                          className={`pet-action equip hover-effect ${pet.is_equipped ? 'active' : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEquipPet(pet.id);
+                          }}
+                          aria-pressed={pet.is_equipped}
+                          aria-label={pet.is_equipped ? `${pet.name} is equipped` : `Equip ${pet.name}`}
+                        >
+                          {pet.is_equipped ? 'Equipped' : 'Equip'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))
