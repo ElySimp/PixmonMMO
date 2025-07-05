@@ -214,7 +214,9 @@ body::-webkit-scrollbar {
   margin-bottom: 1.5rem;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   color: #f0f0f0;
-  font-size: 1rem;
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
 }
 
 .adventure-story::-webkit-scrollbar {
@@ -653,4 +655,102 @@ body::-webkit-scrollbar {
 
 .adventure-grid-actions .section-title {
   margin-top: 0.5rem;
+}
+
+/* Event Stories Banner */
+.event-story-banner {
+  background-color: #2a4c7d;
+  color: white;
+  text-align: center;
+  padding: 5px 0;
+  margin-bottom: 8px;
+  border-radius: 5px;
+  font-weight: bold;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.event-story-banner span {
+  font-size: 0.9em;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Educational Question Container with Grid Layout */
+.edu-question-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 8px;
+  margin: 10px 0;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+/* Style for each answer choice */
+.edu-answer-choice {
+  background-color: #1e293b;
+  border: 1px solid #2d3748;
+  border-radius: 6px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+  font-size: 0.95em;
+}
+
+.edu-answer-choice:hover {
+  background-color: #2d3748;
+}
+
+.edu-answer-choice.selected {
+  background-color: #3b5998;
+  border-color: #4267B2;
+}
+
+.edu-answer-choice.correct {
+  background-color: #2d803b;
+  border-color: #38a169;
+}
+
+.edu-answer-choice.incorrect {
+  background-color: #9b2c2c;
+  border-color: #c53030;
+}
+
+.choice-letter {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
+  margin-right: 8px;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.choice-text {
+  flex: 1;
+  font-size: 0.95em;
+}
+
+/* Submit answer button */
+.submit-answer-button {
+  grid-column: 1 / -1;
+  background-color: #3182ce;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px;
+  margin-top: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+  font-size: 0.95em;
+}
+
+.submit-answer-button:hover {
+  background-color: #2b6cb0;
 }

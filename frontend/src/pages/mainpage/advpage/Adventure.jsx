@@ -121,8 +121,8 @@ const Adventure = () => {
     setSelectedAnswer(null);
     setAnswerSubmitted(false);
     
-    // Display first sentence with EVENT STORIES header
-    setStory(`EVENT STORIES\n${story.sentences[0]}`);
+    // Just set the story text without EVENT STORIES prefix
+    setStory(story.sentences[0]);
   };
   
   // Handle answer selection for educational stories
@@ -266,13 +266,13 @@ const Adventure = () => {
       // If we've reached the end of the sentences, show the question
       if (nextIndex >= currentEduStory.sentences.length) {
         setShowQuestion(true);
-        setStory(`EVENT STORIES\n${currentEduStory.question}`);
+        setStory(currentEduStory.question);
         return;
       }
       
-      // Show the next sentence
+      // Show the next sentence without EVENT STORIES prefix
       setCurrentSentenceIndex(nextIndex);
-      setStory(`EVENT STORIES\n${currentEduStory.sentences[nextIndex]}`);
+      setStory(currentEduStory.sentences[nextIndex]);
       return;
     }
     
@@ -483,7 +483,17 @@ const Adventure = () => {
 
   return (
     <div className="adventure-container">
-      <ToastContainer />
+      <ToastContainer 
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss={false}
+        draggable
+        pauseOnHover
+      />
       <Sidebar profilePic="/dummy.jpg" />
       <div className="adventure-content">
         <Topbar 
@@ -581,6 +591,12 @@ const Adventure = () => {
             <div className="adventure-grid-actions">
               <div className="section-title">Adventure Log</div>
               <div className="adventure-story">
+                {/* Add EVENT STORIES banner when in educational story mode */}
+                {inEduStoryMode && (
+                  <div className="event-story-banner">
+                    <span>EVENT STORIES</span>
+                  </div>
+                )}
                 <p>{story}</p>
                 
                 {/* Educational Story Question UI */}
@@ -597,6 +613,7 @@ const Adventure = () => {
                       </div>
                     ))}
                     
+                    {/* Submit button appears below the choices and only when an answer is selected */}
                     {selectedAnswer !== null && !answerSubmitted && (
                       <button 
                         className="submit-answer-button"
@@ -608,18 +625,20 @@ const Adventure = () => {
                   </div>
                 )}
                 
-                {/* Move button inside the story div for better centering */}
-                <button 
-                  className="adventure-step-button" 
-                  onClick={handleStep} 
-                  disabled={cooldown > 0}
-                >
-                  <div 
-                    className="cooldown-fill" 
-                    style={{ width: `${cooldownPercentage}%` }}
-                  ></div>
-                  <span className="button-text">{showQuestion ? 'Submit' : 'Take a Step'}</span>
-                </button>
+                {/* Only show Take a Step button when not answering questions or after submission */}
+                {(!showQuestion || answerSubmitted) && (
+                  <button 
+                    className="adventure-step-button" 
+                    onClick={handleStep} 
+                    disabled={cooldown > 0}
+                  >
+                    <div 
+                      className="cooldown-fill" 
+                      style={{ width: `${cooldownPercentage}%` }}
+                    ></div>
+                    <span className="button-text">Take a Step</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
