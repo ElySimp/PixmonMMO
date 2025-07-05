@@ -31,7 +31,10 @@ async function getIndexInventory() {
   try {
     const res = await fetch(`${API_URL}/inventoryIndex`);
     const data = await res.json();
-    if (data.success) return data.inventoryIndex;
+    if (data.success) {
+      console.log("MiscGacha - Inventory Index Example Path:", data.inventoryIndex?.[0]?.path);
+      return data.inventoryIndex;
+    }
     return [];
   } catch (error) {
     console.error("Error fetching inventory index:", error);
@@ -48,7 +51,13 @@ const MiscGacha = () => {
 
   useEffect(() => {
     if (authLoading) return;
-    getIndexInventory().then(setInventoryIndex).catch(() => setInventoryIndex([]));
+    getIndexInventory()
+      .then(data => {
+        console.log("Received inventory data:", data);
+        console.log("Example image path:", data?.[0]?.path);
+        setInventoryIndex(data);
+      })
+      .catch(() => setInventoryIndex([]));
   }, [authLoading]);
 
   useEffect(() => {
@@ -107,7 +116,7 @@ const MiscGacha = () => {
 
   return (
     <div className="miscGacha-Container">
-      <Sidebar profilePic="/dummy.jpg" />
+      <Sidebar profilePic="dummy.jpg" />
       <div className="miscgacha-secContent">
         <Topbar
           onMenuClick={() => console.log('Menu clicked')}
@@ -147,7 +156,13 @@ const MiscGacha = () => {
             }}
           >
             <img
-              src={item.path || '/default.png'}
+              src={item.path ? 
+                (item.path.startsWith('http') ? 
+                  item.path : 
+                  item.path.startsWith('/') ?
+                    item.path :
+                    `/${item.path}`
+                ) : 'default.png'}
               alt={item.item_name}
               className="gacha-result-img"
             />

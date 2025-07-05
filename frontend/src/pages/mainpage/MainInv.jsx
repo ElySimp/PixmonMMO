@@ -54,7 +54,47 @@ async function getIndexInventory() {
   try {
     const res = await fetch(`${API_URL}/inventoryIndex`);
     const data = await res.json();
-    if (data.success) return data.inventoryIndex;
+    if (data.success) {
+      console.log("API_URL:", API_URL);
+      console.log("Inventory Index Example Item:", data.inventoryIndex?.[0]);
+      console.log("Inventory Index Example Path:", data.inventoryIndex?.[0]?.path);
+      
+      // Normalize item paths for Vercel deployment
+      const processedInventoryIndex = data.inventoryIndex.map(item => {
+        if (item.path) {
+          // Handle various path formats
+          if (item.path.startsWith('http')) {
+            // Absolute URLs stay as is
+            // item.path remains unchanged
+          } 
+          else if (item.path.includes('public/assets/items/')) {
+            // Legacy SQL paths with public prefix
+            const filename = item.path.split('/').pop();
+            item.path = `/items/${filename}`;
+          }
+          else if (item.path.includes('assets/items/')) {
+            // Legacy paths with assets prefix
+            const filename = item.path.split('/').pop();
+            item.path = `/items/${filename}`;
+          }
+          else if (!item.path.startsWith('/')) {
+            // Relative paths without leading slash
+            if (item.path.includes('/')) {
+              // Has subdirectories but no leading slash
+              item.path = `/${item.path}`;
+            } else {
+              // Just the filename
+              item.path = `/items/${item.path}`;
+            }
+          }
+          
+          console.log(`Path for item ${item.item_name}: ${item.path}`);
+        }
+        return item;
+      });
+      
+      return processedInventoryIndex;
+    }
     return [];
   } catch (error) {
     console.error("Error fetching inventory index:", error);
@@ -112,8 +152,31 @@ const MainInv = () => {
   useEffect(() => {
     if (authLoading || !user?.id) return;
     getInventoryCount(user.id).then(setCount).catch(() => setCount(0));
-    getInventoryData(user.id).then(setInventory).catch(() => setInventory([]));
+    getInventoryData(user.id).then((data) => {
+      setInventory(data);
+      // Debug inventory data
+      if (data && data.length > 0) {
+        console.log("First inventory item:", data[0]);
+      }
+    }).catch(() => setInventory([]));
   }, [user, authLoading]);
+
+  // Add debug effect for inventory and inventoryIndex
+  useEffect(() => {
+    if (inventory.length > 0 && inventoryIndex.length > 0) {
+      console.log("Inventory items count:", inventory.length);
+      console.log("Inventory index count:", inventoryIndex.length);
+      
+      // Check a sample item path
+      const sampleItem = inventory[0];
+      if (sampleItem && sampleItem.index_id) {
+        const indexItem = inventoryIndex[sampleItem.index_id - 1];
+        console.log("Sample inventory item:", sampleItem);
+        console.log("Corresponding index item:", indexItem);
+        console.log("Image path to load:", indexItem?.path);
+      }
+    }
+  }, [inventory, inventoryIndex]);
 
   const InventoryItem = ({ item }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -155,7 +218,28 @@ const MainInv = () => {
           style={{ border: `2px solid ${rarityColors[rarity - 1]}` }}
           onClick={() => setIsOpen(true)}
         >
-          <img src={inventoryIndex[item.index_id - 1].path} alt="fix this shet" />  
+          <img 
+            src={inventoryIndex[item.index_id - 1]?.path || ''}
+            alt="fix this shet" 
+            onError={(e) => {
+              console.error("Image failed to load:", e.target.src);
+              
+              // Try fallback paths
+              if (e.target.src) {
+                const currentSrc = e.target.src;
+                const pathParts = currentSrc.split('/');
+                const filename = pathParts[pathParts.length - 1];
+                
+                if (!currentSrc.includes('/items/')) {
+                  console.log("Trying fallback path with /items/ prefix");
+                  e.target.src = `/items/${filename}`;
+                  return;
+                }
+              }
+              
+              e.target.onerror = null;
+            }}
+          />  
           <div className="maininv-amt">x{item.amount}</div>
         </div>
 
@@ -163,7 +247,29 @@ const MainInv = () => {
           <div className="maininv-centered-box" onClick={() => setIsOpen(false)}>
             <div className="maininv-box-content" onClick={e => e.stopPropagation()}>
               <h3 className="overlay-name">{item.item_name}</h3>
-              <img className="maininv-img" src={inventoryIndex[item.index_id - 1].path} alt="fix this shet" />
+              <img 
+                className="maininv-img" 
+                src={inventoryIndex[item.index_id - 1]?.path || ''}
+                alt="fix this shet" 
+                onError={(e) => {
+                  console.error("Modal image failed to load:", e.target.src);
+                  
+                  // Try fallback paths
+                  if (e.target.src) {
+                    const currentSrc = e.target.src;
+                    const pathParts = currentSrc.split('/');
+                    const filename = pathParts[pathParts.length - 1];
+                    
+                    if (!currentSrc.includes('/items/')) {
+                      console.log("Trying fallback path with /items/ prefix");
+                      e.target.src = `/items/${filename}`;
+                      return;
+                    }
+                  }
+                  
+                  e.target.onerror = null;
+                }}
+              />
               <div className="maininv-item-stats">{statLabel}: {effect}%</div>
               <div className="maininv-description">{description}</div>
               <div className="maininv-buttons">
@@ -185,7 +291,7 @@ const MainInv = () => {
 
   return (
     <div className="maininv-invCont">
-      <Sidebar profilePic="/dummy.jpg" />
+      <Sidebar profilePic="dummy.jpg" />
       <div className="maininv-invContent">
         <Topbar
           onMenuClick={() => console.log('Menu clicked')}

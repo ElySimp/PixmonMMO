@@ -189,6 +189,9 @@
   pointer-events: none;
   width: 65%;
   height: 65%;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
 }
 
 .maininv-amt {
@@ -242,13 +245,18 @@
   width: 55%;
   height: 55%;
   margin-bottom: 1rem;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
 }
 
 .maininv-img {
   width: 120%;
   height: 120%;
+  max-width: 100%;
   border-radius: 10px;
   margin-bottom: 1rem;
+  object-fit: contain;
 }
 .overlay-name {
   font-size: 1.5rem;
