@@ -69,6 +69,18 @@ exports.completeQuest = async (req, res) => {
 
 exports.claimDailyMainReward = async (req, res) => {
     const { userId } = req.params;
+    const items = [
+            {
+                item_id: 9,
+                item_name:"Steel Key", 
+                description:"A key to open up a metal chest",
+                item_type:"key",
+                item_stats: {
+                    key_level: 1
+                },
+                rarity:2
+            }
+        ];
     try {
         const today = moment().tz("Asia/Jakarta").format('YYYY-MM-DD');
 
@@ -90,10 +102,38 @@ exports.claimDailyMainReward = async (req, res) => {
             'UPDATE UserStats SET diamonds = diamonds + 5, last_daily_main_reward = NOW() WHERE user_id = ?',
             [userId]
         );
-        await db.query(
-            'INSERT INTO UserInventory (item_name, user_id) VALUES (?, ?)',
-            ['Normal Key', userId]
-        );
+   
+
+        const [rows] = await db.query(
+                'SELECT COUNT(*) AS count FROM UserInventory WHERE user_id = ? AND index_id = 9',
+                [userId]
+      );
+
+        if (rows[0].count === 0) {
+            await db.query(`
+                INSERT INTO UserInventory 
+                    (item_name, index_id, user_id, item_type, amount, item_stats, rarity)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                `,
+                [
+                    items[0].item_name,
+                    items[0].item_id,
+                    userId,
+                    items[0].item_type,
+                    1,
+                    items[0].item_stats ? JSON.stringify(items[0].item_stats) : null,
+                    items[0].rarity
+                ]
+            );
+        } else {
+            await db.query(`
+                UPDATE UserInventory 
+                SET amount = amount + 1
+                WHERE user_id = ? AND index_id = 9
+                `,
+                [userId]
+            );
+        }
 
         res.json({ success: true, message: 'Main reward claimed: 5 diamonds & 1 Normal Key' });
     } catch (error) {
