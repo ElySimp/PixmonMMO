@@ -3,324 +3,519 @@ import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
 import './PetsHouse.css';
 import { useNavigate } from 'react-router-dom';
-import { getAllPets, addPetToUser, getPetSkillsByRole, calculatePetStats } from '../../../services/petsService';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { getUserPets, getEquippedPet, updatePetStatus } from '../../../services/petsService';
+import { getUserInventory, useInventoryItem } from '../../../services/inventoryService';
+import { toast } from 'react-toastify';
 
 const PetsHouse = () => {
-  const [availablePets, setAvailablePets] = useState([]);
-  const [petSkills, setPetSkills] = useState({});
+  // State for pet data
+  const [currentPet, setCurrentPet] = useState(null);
+  const [foodItems, setFoodItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedRole, setSelectedRole] = useState('all');
-  const [selectedRarity, setSelectedRarity] = useState('all');
-  const [adoptingPet, setAdoptingPet] = useState(null);
-  const [nickname, setNickname] = useState('');
-  const [selectedPet, setSelectedPet] = useState(null);
+  const [playingCooldown, setPlayingCooldown] = useState(false);
+  const [remainingCooldown, setRemainingCooldown] = useState(0);
+  const [showFoodMenu, setShowFoodMenu] = useState(false);
+  const [petStats, setPetStats] = useState({});
+  
   const navigate = useNavigate();
-
+  
+  // Load pet and inventory data on component mount
   useEffect(() => {
-    const fetchPets = async () => {
-      try {
-        setLoading(true);
-        const petsData = await getAllPets();
-        setAvailablePets(petsData);
-        
-        // Fetch skills for each role
-        const roles = ['mage', 'warrior', 'healer', 'assassin'];
-        const skillsObj = {};
-        
-        for (const role of roles) {
-          const roleSkills = await getPetSkillsByRole(role);
-          skillsObj[role] = roleSkills;
+    fetchPetData();
+  }, []);
+  
+  // Countdown timer for play button cooldown
+  useEffect(() => {
+    let interval;
+    
+    if (playingCooldown && remainingCooldown > 0) {
+      interval = setInterval(() => {
+        setRemainingCooldown(prev => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            setPlayingCooldown(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [playingCooldown, remainingCooldown]);
+
+  // Health regeneration effect, hunger increases and happiness decreases over time
+  useEffect(() => {
+    let statsInterval;
+    
+    if (currentPet) {
+      // Every 10 seconds, update pet stats (faster for testing purposes)
+      statsInterval = setInterval(() => {
+        // Regenerate health if pet is well-fed (hunger high) and happy
+        if (currentPet.hunger > 70 && currentPet.happiness > 50 && currentPet.health < 100) {
+          updatePetStats(1, 0, 0); // +1 health, no change to hunger or happiness
         }
         
-        setPetSkills(skillsObj);
-      } catch (error) {
-        console.error('Failed to fetch pets:', error);
-        toast.error('Failed to load available pets');
-      } finally {
-        setLoading(false);
-      }
+        // Increase hunger over time (hunger = 100 means full, 0 means starving)
+        if (currentPet.hunger > 0) {
+          updatePetStats(0, -2, 0); // No change to health, -2 hunger (getting hungrier), no change to happiness
+        }
+        
+        // Decrease happiness over time for testing - MARK: ADJUST THIS TIMING FOR PRODUCTION
+        if (currentPet.happiness > 0) {
+          updatePetStats(0, 0, -3); // No change to health, no change to hunger, -3 happiness (faster for testing)
+        }
+        
+        // Decrease health if very hungry
+        if (currentPet.hunger < 20 && currentPet.health > 0) {
+          updatePetStats(-1, 0, 0); // -1 health, no change to hunger, no change to happiness
+        }
+      }, 10000); // 10 seconds - MARK: INCREASE THIS TO 30000 OR 60000 FOR PRODUCTION
+    }
+    
+    return () => {
+      if (statsInterval) clearInterval(statsInterval);
     };
+  }, [currentPet]);
 
-    fetchPets();
-  }, []);
-
-  const filteredPets = availablePets.filter(pet => {
-    if (selectedRole !== 'all' && pet.role !== selectedRole) return false;
-    if (selectedRarity !== 'all' && pet.rarity !== selectedRarity) return false;
-    return true;
-  });
-
-  const handleAdoptPet = async (petId) => {
+  // Fetch pet and inventory data
+  const fetchPetData = async () => {
     try {
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
-        toast.error('You must be logged in to adopt a pet');
+      setLoading(true);
+      
+      // Get user data from local storage or use a default mock ID
+      let userId = 1; // Default mock user ID
+      try {
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if (userData && userData.id) {
+          userId = userData.id;
+        }
+      } catch (error) {
+        console.warn('Using default user ID for development');
+      }
+      
+      // Fetch user's equipped pet
+      const equippedPet = await getEquippedPet(userId).catch(() => {
+        // If API fails, use mock data
+        return {
+          id: 5,
+          name: "Frostweaver",
+          nickname: "Frosty",
+          current_level: 3,
+          role: "mage",
+          class_type: "Mage",
+          health: 75,
+          hunger: 60,
+          happiness: 85,
+          avatar_url: "/dummy1.png",
+          current_hp: 100,
+          current_mana: 50,
+          current_atk: 30,
+          current_def_phy: 15,
+          current_def_magic: 45,
+          current_agility: 20
+        };
+      });
+      
+      // Ensure pet stats are integers, not strings, and are within valid range (0-100)
+      if (equippedPet) {
+        equippedPet.health = Math.min(100, Math.max(0, parseInt(equippedPet.health) || 0));
+        equippedPet.hunger = Math.min(100, Math.max(0, parseInt(equippedPet.hunger) || 0));
+        equippedPet.happiness = Math.min(100, Math.max(0, parseInt(equippedPet.happiness) || 0));
+      }
+      
+      if (!equippedPet) {
+        toast.info('You don\'t have a pet equipped. Please equip a pet first.');
+        setLoading(false);
         return;
       }
-
-      await addPetToUser({
-        userId,
-        petId,
-        nickname: nickname || ''
+      
+      // Fetch user's inventory for food items
+      const inventory = await getUserInventory(userId).catch(() => {
+        // If API fails, use mock food data
+        return [
+          { index_id: 1, item_name: 'Apple', item_type: 'food', amount: 5, pet_hunger: 15, pet_happiness: 10 },
+          { index_id: 2, item_name: 'Cookie', item_type: 'food', amount: 3, pet_hunger: 10, pet_happiness: 15 },
+          { index_id: 3, item_name: 'Steak', item_type: 'food', amount: 2, pet_hunger: 25, pet_happiness: 5 }
+        ];
       });
-
-      toast.success('Pet adopted successfully!');
-      setAdoptingPet(null);
-      setNickname('');
+      
+      // Filter out food items from inventory
+      const foodItems = Array.isArray(inventory) 
+        ? inventory.filter(item => item.item_type === 'food' || item.item_type === 'Food')
+        : [];
+      
+      // Calculate additional pet stats
+      const petStats = {
+        attackPower: equippedPet.current_atk || 0,
+        defense: equippedPet.current_def_phy || 0,
+        magicDefense: equippedPet.current_def_magic || 0,
+        agility: equippedPet.current_agility || 0,
+        experience: equippedPet.experience || 0,
+        nextLevelExp: (equippedPet.current_level || 1) * 100,
+      };
+      
+      setCurrentPet(equippedPet);
+      setFoodItems(foodItems);
+      setPetStats(petStats);
+      setLoading(false);
     } catch (error) {
-      console.error('Failed to adopt pet:', error);
-      toast.error('Failed to adopt pet');
+      console.error('Error fetching pet data:', error);
+      setLoading(false);
+      toast.error('Failed to load pet data');
     }
+  };
+
+  // Helper function to update pet stats both locally and in the database
+  const updatePetStats = async (healthChange, hungerChange, happinessChange) => {
+    if (!currentPet) return;
+    
+    // Convert current values to numbers if they're strings and calculate new values
+    const currentHealth = parseInt(currentPet.health) || 0;
+    const currentHunger = parseInt(currentPet.hunger) || 0;
+    const currentHappiness = parseInt(currentPet.happiness) || 0;
+    
+    const newHealth = Math.min(100, Math.max(0, currentHealth + healthChange));
+    const newHunger = Math.min(100, Math.max(0, currentHunger + hungerChange));
+    const newHappiness = Math.min(100, Math.max(0, currentHappiness + happinessChange));
+    
+    // Only update if something changed
+    if (newHealth === currentHealth && newHunger === currentHunger && newHappiness === currentHappiness) {
+      return;
+    }
+    
+    // Update local state immediately for responsive UI
+    setCurrentPet(prev => ({
+      ...prev,
+      health: newHealth,
+      hunger: newHunger,
+      happiness: newHappiness
+    }));
+    
+    // Try to update in the database (but don't block UI on failure)
+    try {
+      await updatePetStatus(currentPet.id, {
+        health: newHealth,
+        hunger: newHunger,
+        happiness: newHappiness
+      });
+      
+      console.log('Pet stats updated in database');
+    } catch (error) {
+      console.error('Failed to update pet stats in database:', error);
+      // No need to show error toast as we've already updated the UI
+    }
+  };
+  
+  // Handle feeding the pet
+  const handleFeedPet = async (foodItem) => {
+    if (!foodItem || !currentPet) return;
+    
+    try {
+      // Calculate health, hunger and happiness changes
+      const hungerChange = (foodItem.pet_hunger || 10); // Increase hunger (positive = more full)
+      const happinessChange = foodItem.pet_happiness || 5; // Increase happiness
+      const healthChange = hungerChange > 20 ? 5 : 0; // Bonus health for very nutritious food
+      
+      // Update pet stats
+      await updatePetStats(healthChange, hungerChange, happinessChange);
+      
+      // Update food item in inventory
+      try {
+        await useInventoryItem(foodItem.index_id, 1); // Use 1 unit of this item
+        
+        // Update local food items state
+        setFoodItems(prev => {
+          const updated = prev.map(item => {
+            if (item.index_id === foodItem.item_id) {
+              return { ...item, amount: item.amount - 1 };
+            }
+            return item;
+          }).filter(item => item.amount > 0); // Remove items with 0 quantity
+          
+          return updated;
+        });
+      } catch (error) {
+        console.error('Error using inventory item:', error);
+      }
+      
+      toast.success(`Fed ${currentPet.nickname || currentPet.name} with ${foodItem.item_name}!`);
+    } catch (error) {
+      console.error('Error feeding pet:', error);
+      toast.error('Failed to feed pet');
+    }
+  };
+  
+  // Handle playing with the pet
+  const handlePlayWithPet = async () => {
+    try {
+      if (playingCooldown) {
+        toast.info(`Play button on cooldown: ${remainingCooldown} seconds remaining`);
+        return;
+      }
+      
+      // Random happiness increase between 20-30%
+      const happinessIncrease = Math.floor(Math.random() * 11) + 20; // 20-30
+      
+      // Update pet stats (allowing API call to fail gracefully)
+      // Playing makes pet happier but hungrier (-5 hunger means getting hungrier)
+      await updatePetStats(0, -5, happinessIncrease);
+      
+      // Set cooldown
+      setPlayingCooldown(true);
+      setRemainingCooldown(30); // 30 seconds (reduced for testing)
+      
+      toast.success(`Played with ${currentPet.nickname || currentPet.name}! Happiness increased by ${happinessIncrease}%`);
+    } catch (error) {
+      console.error('Error playing with pet:', error);
+      // Don't show error toast in development to avoid annoying users
+      // Instead, try to continue with local state changes
+      setCurrentPet(prev => {
+        if (!prev) return null;
+        
+        // Apply happiness increase and hunger decrease locally
+        const newHappiness = Math.min(100, Math.max(0, prev.happiness + 25));
+        const newHunger = Math.min(100, Math.max(0, prev.hunger - 5)); // Hunger decreases (gets hungrier)
+        
+        return {
+          ...prev,
+          happiness: newHappiness,
+          hunger: newHunger
+        };
+      });
+    }
+  };
+
+  // Calculate color for stat bars
+  const getStatColor = (value) => {
+    if (value <= 25) return '#ff5252'; // Red for low values
+    if (value <= 50) return '#FFC107'; // Yellow for medium values
+    if (value <= 75) return '#4CAF50'; // Green for good values
+    return '#2ECC71'; // Bright green for excellent values
   };
 
   const handleBackToMiscPets = () => {
     navigate('/misc-pets');
   };
 
-  const getRarityColor = (rarity) => {
-    switch(rarity.toLowerCase()) {
-      case 'common': return '#aaa';
-      case 'uncommon': return '#4CAF50';
-      case 'rare': return '#2196F3';
-      case 'epic': return '#9C27B0';
-      case 'legendary': return '#FF9800';
-      default: return '#fff';
-    }
-  };
-
-  const getRoleIcon = (role) => {
-    switch(role.toLowerCase()) {
-      case 'mage': return '🧙‍♂️';
-      case 'warrior': return '🛡️';
-      case 'healer': return '💚';
-      case 'assassin': return '🗡️';
-      default: return '❓';
-    }
-  };
-
-  const handleSelectPet = async (pet) => {
-    try {
-      // Calculate level 1 and level 10 stats for comparison
-      const level1Stats = await calculatePetStats(pet.id, 1);
-      const level10Stats = await calculatePetStats(pet.id, 10);
-      
-      setSelectedPet({
-        ...pet,
-        level1Stats: level1Stats.stats,
-        level10Stats: level10Stats.stats,
-        skills: petSkills[pet.role] || []
-      });
-    } catch (error) {
-      console.error('Failed to calculate pet stats:', error);
-      toast.error('Failed to load pet details');
-    }
-  };
+  if (loading) {
+    return (
+      <div className="petshouse-main-container">
+        <Sidebar profilePic="/dummy.jpg" />
+        <div className="petshouse-main-content">
+          <Topbar />
+          <div className="petshouse-loading-container">
+            <div className="petshouse-loading-spinner"></div>
+            <p>Loading pet data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!currentPet) {
+    return (
+      <div className="petshouse-main-container">
+        <Sidebar profilePic="/dummy.jpg" />
+        <div className="petshouse-main-content">
+          <Topbar />
+          <div className="petshouse-header">
+            <button className="petshouse-back-button" onClick={handleBackToMiscPets}>
+              ← Back to My Pets
+            </button>
+            <h1>Pet House</h1>
+          </div>
+          <div className="petshouse-content">
+            <div className="petshouse-no-pet-message">
+              <h2>No Pet Equipped</h2>
+              <p>You need to equip a pet before you can interact with it in the Pet House.</p>
+              <button className="petshouse-back-button" onClick={handleBackToMiscPets}>
+                Go to My Pets
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="pets-house-container">
+    <div className="petshouse-main-container">
       <Sidebar profilePic="/dummy.jpg" />
-      <div className="pets-house-content">
+      <div className="petshouse-main-content">
         <Topbar />
-        <ToastContainer position="top-right" autoClose={3000} />
 
         <div className="petshouse-header">
-          <button className="back-button" onClick={handleBackToMiscPets}>
+          <button className="petshouse-back-button" onClick={handleBackToMiscPets}>
             ← Back to My Pets
           </button>
           <h1>Pet House</h1>
         </div>
 
-        {/* Filters */}
-        <div className="filter-header">
-          <h2>Filter Pets</h2>
-          <div className="filter-section">
-            <div className="filter-group">
-              <h3>Class:</h3>
-              <div className="filter-buttons">
-                <button
-                  onClick={() => setSelectedRole('all')}
-                  className={`filter-btn ${selectedRole === 'all' ? 'active' : ''}`}
-                >
-                  All Classes
-                </button>
-                {['mage', 'warrior', 'healer', 'assassin'].map((role) => (
-                  <button
-                    key={role}
-                    onClick={() => setSelectedRole(role)}
-                    className={`filter-btn ${selectedRole === role ? 'active' : ''}`}
-                  >
-                    {role.charAt(0).toUpperCase() + role.slice(1)} {getRoleIcon(role)}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            <div className="filter-group">
-              <h3>Rarity:</h3>
-              <div className="filter-buttons">
-                <button
-                  onClick={() => setSelectedRarity('all')}
-                  className={`filter-btn ${selectedRarity === 'all' ? 'active' : ''}`}
-                >
-                  All Rarities
-                </button>
-                {['common', 'uncommon', 'rare', 'epic', 'legendary'].map((rarity) => (
-                  <button
-                    key={rarity}
-                    onClick={() => setSelectedRarity(rarity)}
-                    className={`filter-btn ${selectedRarity === rarity ? 'active' : ''}`}
-                    style={{borderColor: getRarityColor(rarity)}}
-                  >
-                    {rarity.charAt(0).toUpperCase() + rarity.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="loading">Loading pets...</div>
-        ) : (
-          <>
-            {/* Pet Grid */}
-            <div className="pets-grid">
-              {filteredPets.length === 0 ? (
-                <div className="no-pets">No pets match your filters.</div>
-              ) : (
-                filteredPets.map((pet) => (
-                  <div 
-                    className={`pet-card ${selectedPet?.id === pet.id ? 'selected' : ''}`} 
-                    key={pet.id}
-                    style={{borderColor: getRarityColor(pet.rarity)}}
-                    onClick={() => handleSelectPet(pet)}
-                  >
-                    <div className="pet-card-header">
-                      <span className="pet-role">{getRoleIcon(pet.role)}</span>
-                      <h3 className="pet-name">{pet.name}</h3>
-                      <span className="pet-rarity" style={{color: getRarityColor(pet.rarity)}}>
-                        {pet.rarity.charAt(0).toUpperCase() + pet.rarity.slice(1)}
-                      </span>
-                    </div>
-                    
-                    <div className="pet-stats">
-                      <div className="stat">
-                        <span className="stat-label">ATK</span>
-                        <span className="stat-value">{pet.atk}</span>
-                      </div>
-                      <div className="stat">
-                        <span className="stat-label">HP</span>
-                        <span className="stat-value">{pet.hp}</span>
-                      </div>
-                      <div className="stat">
-                        <span className="stat-label">DEF</span>
-                        <span className="stat-value">{pet.def_phy}/{pet.def_magic}</span>
-                      </div>
-                      <div className="stat">
-                        <span className="stat-label">MANA</span>
-                        <span className="stat-value">{pet.max_mana}</span>
-                      </div>
-                      <div className="stat">
-                        <span className="stat-label">AGI</span>
-                        <span className="stat-value">{pet.agility}</span>
-                      </div>
-                    </div>
-                    
-                    <button 
-                      className="adopt-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setAdoptingPet(pet);
+        <div className="petshouse-content">
+          <div className="petshouse-compact-layout">
+            <div className="petshouse-compact-column">
+              <div className="petshouse-details-card">
+                <div className="petshouse-avatar-container">
+                  <div className="petshouse-avatar">
+                    <img 
+                      src={currentPet.avatar_url || `/dummy1.png`} 
+                      alt={currentPet.name}
+                      onError={(e) => {
+                        e.target.onerror = null; 
+                        e.target.src = "/dummy1.png";
                       }}
-                    >
-                      Adopt Pet
-                    </button>
+                    />
+                    <div className="petshouse-level">Level {currentPet.current_level || 1}</div>
                   </div>
-                ))
-              )}
-            </div>
-            
-            {/* Pet Details Section */}
-            {selectedPet && (
-              <div className="pet-details">
-                <h2>{selectedPet.name} Details</h2>
-                <div className="pet-info">
-                  <div className="pet-passive">
-                    <h3>Passive Skill</h3>
-                    <p>{selectedPet.passive_skill}</p>
-                  </div>
+                </div>
+                
+                <div className="petshouse-info">
+                  <h2 className="petshouse-name">{currentPet.nickname || currentPet.name}</h2>
+                  <p className="petshouse-class">{currentPet.role || currentPet.class_type}</p>
                   
-                  <div className="pet-growth">
-                    <h3>Stats Growth (Level 1 → 10)</h3>
-                    <div className="growth-stats">
-                      <div className="growth-stat">
-                        <span>HP: {selectedPet.level1Stats.hp} → {selectedPet.level10Stats.hp}</span>
-                        <div className="growth-bar">
-                          <div className="growth-fill" style={{width: '100%'}}></div>
-                        </div>
+                  <div className="petshouse-stats">
+                    <div className="petshouse-stat">
+                      <span className="petshouse-stat-label">Health</span>
+                      <div className="petshouse-stat-bar">
+                        <div 
+                          className="petshouse-stat-fill health" 
+                          style={{ 
+                            width: `${currentPet.health}%`,
+                            backgroundColor: getStatColor(currentPet.health)
+                          }}
+                        ></div>
                       </div>
-                      <div className="growth-stat">
-                        <span>ATK: {selectedPet.level1Stats.atk} → {selectedPet.level10Stats.atk}</span>
-                        <div className="growth-bar">
-                          <div className="growth-fill" style={{width: '100%'}}></div>
-                        </div>
+                      <span className="petshouse-stat-value">{parseInt(currentPet.health) || 0}%</span>
+                    </div>
+                    
+                    <div className="petshouse-stat">
+                      <span className="petshouse-stat-label">Hunger</span>
+                      <div className="petshouse-stat-bar">
+                        <div 
+                          className="petshouse-stat-fill hunger" 
+                          style={{ 
+                            width: `${currentPet.hunger}%`,
+                            backgroundColor: getStatColor(currentPet.hunger)
+                          }}
+                        ></div>
                       </div>
-                      <div className="growth-stat">
-                        <span>DEF: {selectedPet.level1Stats.def_phy}/{selectedPet.level1Stats.def_magic} → {selectedPet.level10Stats.def_phy}/{selectedPet.level10Stats.def_magic}</span>
-                        <div className="growth-bar">
-                          <div className="growth-fill" style={{width: '100%'}}></div>
-                        </div>
+                      <span className="petshouse-stat-value">{parseInt(currentPet.hunger) || 0}%</span>
+                    </div>
+                    
+                    <div className="petshouse-stat">
+                      <span className="petshouse-stat-label">Happiness</span>
+                      <div className="petshouse-stat-bar">
+                        <div 
+                          className="petshouse-stat-fill happiness" 
+                          style={{ 
+                            width: `${currentPet.happiness}%`,
+                            backgroundColor: getStatColor(currentPet.happiness)
+                          }}
+                        ></div>
                       </div>
+                      <span className="petshouse-stat-value">{parseInt(currentPet.happiness) || 0}%</span>
                     </div>
                   </div>
-                  
-                  <div className="pet-skills">
-                    <h3>Active Skills</h3>
-                    <div className="skills-list">
-                      {selectedPet.skills.filter(skill => skill.skill_type === 'active').map(skill => (
-                        <div className="skill-item" key={skill.id}>
-                          <h4>{skill.name}</h4>
-                          <p>{skill.description}</p>
-                          <div className="skill-details">
-                            <span>Mana: {skill.mana_cost}</span>
-                            <span>Cooldown: {skill.cooldown} turns</span>
-                            {skill.damage > 0 && <span>Damage: {skill.damage}</span>}
-                            {skill.healing > 0 && <span>Healing: {skill.healing}%</span>}
-                          </div>
+
+                  <div className="petshouse-status-message">
+                    {currentPet.hunger <= 20 && (
+                      <p className="petshouse-status-warning">Your pet is very hungry! Feed it soon.</p>
+                    )}
+                    {currentPet.happiness <= 20 && (
+                      <p className="petshouse-status-warning">Your pet is unhappy! Play with it to cheer it up.</p>
+                    )}
+                    {currentPet.health <= 20 && (
+                      <p className="petshouse-status-warning">Your pet's health is low! Make sure it's fed and happy.</p>
+                    )}
+                    {currentPet.hunger > 70 && currentPet.happiness > 70 && currentPet.health > 70 && (
+                      <p className="petshouse-status-good">Your pet is doing great! Keep it up!</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="petshouse-actions">
+                <button 
+                  className={`petshouse-action-button ${playingCooldown ? 'cooldown' : ''}`}
+                  onClick={handlePlayWithPet}
+                  disabled={playingCooldown}
+                >
+                  {playingCooldown 
+                    ? `Play (${remainingCooldown}s)` 
+                    : 'Play with Pet'}
+                </button>
+                
+                <button 
+                  className="petshouse-action-button"
+                  onClick={() => setShowFoodMenu(!showFoodMenu)}
+                >
+                  {showFoodMenu ? 'Hide Food Menu' : 'Feed Pet'}
+                </button>
+              </div>
+            </div>
+            
+            <div className="petshouse-compact-column">
+              <div className="petshouse-info-card">
+                <h3>Pet Stats</h3>
+                <div className="petshouse-info-grid">
+                  <div className="petshouse-info-item">
+                    <span className="petshouse-info-label">Attack Power</span>
+                    <span className="petshouse-info-value">{petStats.attackPower || currentPet.current_atk || 0}</span>
+                  </div>
+                  <div className="petshouse-info-item">
+                    <span className="petshouse-info-label">Physical Defense</span>
+                    <span className="petshouse-info-value">{petStats.defense || currentPet.current_def_phy || 0}</span>
+                  </div>
+                  <div className="petshouse-info-item">
+                    <span className="petshouse-info-label">Magic Defense</span>
+                    <span className="petshouse-info-value">{petStats.magicDefense || currentPet.current_def_magic || 0}</span>
+                  </div>
+                  <div className="petshouse-info-item">
+                    <span className="petshouse-info-label">Agility</span>
+                    <span className="petshouse-info-value">{petStats.agility || currentPet.current_agility || 0}</span>
+                  </div>
+                  <div className="petshouse-info-item">
+                    <span className="petshouse-info-label">Experience</span>
+                    <span className="petshouse-info-value">
+                      {petStats.experience || 0} / {petStats.nextLevelExp || 100}
+                    </span>
+                  </div>
+                  <div className="petshouse-info-item">
+                    <span className="petshouse-info-label">Mana</span>
+                    <span className="petshouse-info-value">{currentPet.current_mana || 0}</span>
+                  </div>
+                </div>
+              </div>
+              
+              {showFoodMenu && (
+                <div className="petshouse-food-menu">
+                  <h3>Available Food</h3>
+                  {foodItems.length === 0 ? (
+                    <p className="petshouse-no-food-message">You don't have any food items.</p>
+                  ) : (
+                    <div className="petshouse-food-items-grid">
+                      {foodItems.map((food) => (
+                        <div className="petshouse-food-item" key={food.index_id}>
+                          <div className="petshouse-food-item-name">{food.item_name}</div>
+                          <div className="petshouse-food-item-qty">Qty: {food.amount}</div>
+                          <button 
+                            className="petshouse-food-use-button"
+                            onClick={() => handleFeedPet(food)}
+                          >
+                            Use
+                          </button>
                         </div>
                       ))}
                     </div>
-                  </div>
+                  )}
                 </div>
-              </div>
-            )}
-            
-            {/* Adopt Pet Modal */}
-            {adoptingPet && (
-              <div className="adopt-modal-overlay">
-                <div className="adopt-modal">
-                  <h2>Adopt {adoptingPet.name}</h2>
-                  <p>Would you like to give your new pet a nickname?</p>
-                  <input
-                    type="text"
-                    placeholder="Enter nickname (optional)"
-                    value={nickname}
-                    onChange={(e) => setNickname(e.target.value)}
-                    className="nickname-input"
-                  />
-                  <div className="modal-buttons">
-                    <button className="cancel-btn" onClick={() => setAdoptingPet(null)}>Cancel</button>
-                    <button className="confirm-btn" onClick={() => handleAdoptPet(adoptingPet.id)}>
-                      Confirm Adoption
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-        )}
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

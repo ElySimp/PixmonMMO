@@ -24,6 +24,9 @@ const { protect } = require('./middleware/auth');
 const checkAndFixDuplicateStats = require('./scripts/maintenance/check-and-fix-stats');
 const userProfileRoutes = require('./routes/userProfileRoutes');
 
+// Import pet status service
+const { startPetStatusService } = require('./scripts/maintenance/pet-status-service');
+
 const app = express();
 
 // Middleware
@@ -198,6 +201,7 @@ app.get('/api/users/:userId/NormalObtain', inventoryController.NormalKeyObtain);
 app.get('/api/users/:userId/MythicalObtain', inventoryController.MythicalKeyObtain);
 app.get('/api/users/:userId/:index_id/ItemUse', inventoryController.ItemUsage);
 app.get('/api/users/:userId/:index_id/itemInput', inventoryController.ItemInput);
+app.post('/api/inventory/use-item', protect, inventoryController.useInventoryItem);
 
 
 // Quest Routes
@@ -351,6 +355,10 @@ if (process.env.NODE_ENV !== 'production' || process.env.VERCEL_ENV === undefine
     try {
       await initializeDatabaseTables();
       logger.serverReady(PORT);
+      
+      // Start pet status background service
+      startPetStatusService();
+      logger.info('Pet status background service started', 'STARTUP');
       
       // No need for ping service on Vercel - serverless functions don't need to be kept alive
     } catch (error) {

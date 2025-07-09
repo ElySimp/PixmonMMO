@@ -147,8 +147,8 @@ exports.addPetToUser = async (req, res) => {
         
         // Insert the pet into user's collection
         await db.query(`
-            INSERT INTO UserPets (user_id, Pets_id, current_level, current_hp, current_mana, nickname)
-            VALUES (?, ?, 1, ?, ?, ?)
+            INSERT INTO UserPets (user_id, Pets_id, current_level, current_hp, current_mana, nickname, happiness, hunger, health)
+            VALUES (?, ?, 1, ?, ?, ?, 100, 0, 100)
         `, [
             userId, 
             petId, 
@@ -309,5 +309,192 @@ exports.getEquippedPet = async (req, res) => {
     } catch (error) {
         console.error('Error fetching equipped pet:', error);
         res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+// Handle playing with pets and manage cooldowns
+exports.playWithPet = async (req, res) => {
+    try {
+        const { userPetId } = req.params;
+        
+        // Get the current pet data
+        const [petRows] = await db.query(
+            'SELECT id, happiness, last_played_at FROM UserPets WHERE id = ?',
+            [userPetId]
+        );
+        
+        if (petRows.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Pet not found' 
+            });
+        }
+        
+        const pet = petRows[0];
+        const now = new Date();
+        
+        // Check if there's a cooldown (60 seconds cooldown)
+        if (pet.last_played_at) {
+            const lastPlayedAt = new Date(pet.last_played_at);
+            const cooldownTimeMs = 60 * 1000; // 60 seconds in milliseconds
+            const timeSinceLastPlayed = now - lastPlayedAt;
+            
+            if (timeSinceLastPlayed < cooldownTimeMs) {
+                const remainingCooldownSecs = Math.ceil((cooldownTimeMs - timeSinceLastPlayed) / 1000);
+                
+                return res.status(429).json({
+                    success: false,
+                    message: 'Play action on cooldown',
+                    cooldown: {
+                        remainingSeconds: remainingCooldownSecs,
+                        totalCooldownSeconds: 60
+                    }
+                });
+            }
+        }
+        
+        // Generate a random happiness increase between 20-30%
+        const happinessIncrease = Math.floor(Math.random() * 11) + 20; // 20-30
+        
+        // Calculate new happiness ensuring it doesn't exceed 100
+        const newHappiness = Math.min(100, Math.max(0, pet.happiness + happinessIncrease));
+        
+        // Playing with pet reduces hunger by 5%
+        // We'll get the current hunger first
+        const [hungerResult] = await db.query(
+            'SELECT hunger FROM UserPets WHERE id = ?',
+            [userPetId]
+        );
+        
+        // Calculate new hunger value (decrease by 5, but ensure it doesn't go below 0)
+        const currentHunger = hungerResult[0].hunger;
+        const newHunger = Math.max(0, currentHunger - 5);
+        
+        // Update pet's happiness, hunger and last_played_at timestamp
+        await db.query(
+            'UPDATE UserPets SET happiness = ?, hunger = ?, last_played_at = ? WHERE id = ?',
+            [newHappiness, newHunger, now, userPetId]
+        );
+        
+        res.status(200).json({
+            success: true,
+            message: 'Played with pet successfully',
+            update: {
+                happiness: newHappiness,
+                happinessIncrease: happinessIncrease,
+                hunger: newHunger,
+                lastPlayedAt: now,
+                cooldownSeconds: 60
+            }
+        });
+    } catch (error) {
+        console.error('Error playing with pet:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Server error', 
+            error: error.message 
+        });
+    }
+};
+
+// Get pet's raw stats (not percentage values)
+exports.getPetRawStats = async (req, res) => {
+    try {
+        const { userPetId } = req.params;
+        
+        // Get pet data including calculated and raw stats
+        const [petRows] = await db.query(`
+            SELECT 
+                up.id,
+                up.nickname,
+                p.name,
+                p.class_type,
+                p.role,
+                up.current_level,
+                up.current_hp,
+                up.current_atk,
+                up.current_def_phy,
+                up.current_def_magic,
+                up.current_mana,
+                up.current_agility,
+                up.health,
+                up.hunger,
+                up.happiness,
+                up.is_equipped,
+                p.base_hp,
+                p.base_atk,
+                p.base_def_physical,
+                p.base_def_magical,
+                p.base_mana,
+                p.base_agility,
+                p.image_url
+            FROM UserPets up
+            JOIN Pets p ON up.Pets_id = p.id
+            WHERE up.id = ?
+        `, [userPetId]);
+        
+        if (petRows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Pet not found'
+            });
+        }
+        
+        const pet = petRows[0];
+        
+        // Calculate actual health, hunger and happiness values 
+        // (if you want to show actual numbers instead of percentages)
+        const maxHealth = 100; // Base max health for all pets
+        const maxHunger = 100; // Base max hunger for all pets
+        const maxHappiness = 100; // Base max happiness for all pets
+        
+        // Calculate actual current values
+        const actualHealth = pet.health;
+        const actualHunger = pet.hunger; // 0 means starving, 100 means full
+        const actualHappiness = pet.happiness;
+        
+        res.status(200).json({
+            success: true,
+            pet: {
+                id: pet.id,
+                name: pet.name,
+                nickname: pet.nickname,
+                level: pet.current_level,
+                classType: pet.class_type || pet.role,
+                
+                // Battle stats
+                hp: pet.current_hp,
+                atk: pet.current_atk,
+                defPhysical: pet.current_def_phy,
+                defMagical: pet.current_def_magic,
+                mana: pet.current_mana,
+                agility: pet.current_agility,
+                
+                // Status values
+                healthValue: actualHealth,
+                hungerValue: actualHunger,
+                happinessValue: actualHappiness,
+                
+                // Status percentages 
+                healthPercent: actualHealth,
+                hungerPercent: actualHunger,
+                happinessPercent: actualHappiness,
+                
+                // Max values
+                maxHealth: maxHealth,
+                maxHunger: maxHunger,
+                maxHappiness: maxHappiness,
+                
+                isEquipped: Boolean(pet.is_equipped),
+                imageUrl: pet.image_url
+            }
+        });
+    } catch (error) {
+        console.error('Error getting pet raw stats:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to get pet stats',
+            error: error.message
+        });
     }
 };

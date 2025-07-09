@@ -27,10 +27,16 @@ router.post('/add-to-user', protect, petsController.addPetToUser);
 // Update pet status (happiness, hunger, health)
 router.patch('/status/:userPetId', protect, petsController.updatePetStatus);
 
+// Play with pet (includes cooldown)
+router.post('/play/:userPetId', protect, petsController.playWithPet);
+
 // Toggle pet equipped status
 router.patch('/equip', protect, petsController.toggleEquipPet);
 
 // Calculate pet stats at a specific level
 router.get('/stats/:petId/:level', protect, petsController.calculatePetStats);
+
+// Get pet's raw stats (not percentage values)
+router.get('/raw-stats/:userPetId', protect, petsController.getPetRawStats);
 
 module.exports = router;

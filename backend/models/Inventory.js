@@ -3,7 +3,15 @@ const db = require('../config/database');
 class Inventory {
     static async createIndexInvtable() {
         const sql = `
-            CREATE TABLE IF NOT EXISTS IndexInventory  (
+            CREAT                item_name:"Chonklette", 
+                description:"Chonklette's diet? All the snacks!",
+                item_type:"food",
+                item_stats: {
+                    hunger_value: 35,
+                    happiness_value: 25,
+                    health_value: 15
+                },
+                rarity:3  IF NOT EXISTS IndexInventory  (
                 index_id INT(11) NOT NULL PRIMARY KEY,
                 item_name VARCHAR(100) DEFAULT NULL,
                 description VARCHAR(100) DEFAULT NULL,
@@ -112,7 +120,9 @@ class Inventory {
                 description:"Yall accidentally made this",
                 item_type:"food",
                 item_stats: {
-                    hunger_value: 40
+                    hunger_value: 40,
+                    happiness_value: 15,
+                    health_value: 10
                 },
                 rarity:2 
             },
@@ -122,7 +132,9 @@ class Inventory {
                 description:"A melted marshmallow cool right",
                 item_type:"food",
                 item_stats: {
-                    hunger_value: 25
+                    hunger_value: 25,
+                    happiness_value: 20,
+                    health_value: 5
                 },
                 rarity:3 
             },
@@ -132,7 +144,9 @@ class Inventory {
                 description:"Say cheese",
                 item_type:"food",
                 item_stats: {
-                    hunger_value: 20
+                    hunger_value: 20,
+                    happiness_value: 10,
+                    health_value: 8
                 },
                 rarity:2 
             },
@@ -152,7 +166,9 @@ class Inventory {
                 description:"Just a sizzled food what do you expect",
                 item_type:"food",
                 item_stats: {
-                    hunger_value: 30
+                    hunger_value: 30,
+                    happiness_value: 8,
+                    health_value: 12
                 },
                 rarity:1 
             },

@@ -10,10 +10,10 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 // Default pet images - modify these to match your asset paths
-import defaultMageImg from '../../assets/mix pets/dummy1.jpg';
+import defaultMageImg from '../../assets/mix pets/dummy1.png';
 import defaultWarriorImg from '../../assets/mix pets/dummy.jpg';
 import defaultAssassinImg from '../../assets/mix pets/dummy3.jpg';
-import defaultHealerImg from '../../assets/mix pets/dummy2.jpg';
+import defaultHealerImg from '../../assets/mix pets/dummy2.png';
 
 // Icons
 import { FaSearch, FaCrown, FaInfoCircle, FaPaw, FaStar, FaSort, FaChessQueen } from 'react-icons/fa';
