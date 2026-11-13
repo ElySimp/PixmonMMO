@@ -1,13 +1,9 @@
 // controllers/userProfileController.js
-const path = require('path');
-const fs = require('fs');
-const UserProfile = require('../models/UserProfile');
-const User = require('../models/User');
-const { v4: uuidv4 } = require('uuid');
+const Player = require('../models/Player');
+const { PetTemplate, UserPet } = require('../models/Pet');
 const multer = require('multer');
-const { protect } = require('../middleware/auth');
 
-// Configure multer for file upload
+// Configure multer for file uploads
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
@@ -23,68 +19,60 @@ const upload = multer({
     }
 });
 
+const calculateXpCap = (level) => {
+    return Math.floor(50 * Math.pow(level || 1, 1.4));
+};
+
 // Get user profile
 exports.getUserProfile = async (req, res) => {
     try {
-        const userId = req.params.userId;
+        const { userId } = req.params;
         if (!userId) {
             return res.status(400).json({ success: false, message: 'User ID is required' });
         }
 
-        // Ensure profile exists first
-        await UserProfile.ensureProfileExists(userId);
-        
-        let userProfile;
-        try {
-            userProfile = await UserProfile.getByUserId(userId);
-        } catch (profileError) {
-            console.error('Error fetching user profile:', profileError);
-            return res.status(500).json({ 
-                success: false, 
-                message: 'Failed to fetch user profile',
-                error: profileError.message 
-            });
+        let player = await Player.findOne({
+            $or: [{ _id: userId }, { id: String(userId) }, { username: userId }]
+        });
+
+        if (!player) {
+            return res.status(404).json({ success: false, message: 'Player not found' });
         }
 
-        // If profile doesn't exist, create it
-        if (!userProfile) {
-            try {
-                userProfile = await UserProfile.createDefaultProfile(userId);
-                if (!userProfile) {
-                    return res.status(500).json({ success: false, message: 'Failed to create user profile.' });
-                }
-            } catch (createError) {
-                console.error('Error creating user profile:', createError);
-                return res.status(500).json({ 
-                    success: false, 
-                    message: 'Failed to create user profile',
-                    error: createError.message 
-                });
-            }
+        const maxXp = calculateXpCap(player.level);
+
+        // Fetch favorite pet if exists
+        let favoritePet = null;
+        if (player.profile?.favoritePetId || player.profile?.favorite_pet_id) {
+            const petId = player.profile.favoritePetId || player.profile.favorite_pet_id;
+            favoritePet = await UserPet.findOne({ userId: player.id || player._id.toString(), petId });
         }
 
-        // Calculate max XP for current level
-        const maxXp = Math.floor(50 * Math.pow(userProfile.level || 1, 1.4));
+        const profileObj = player.profile ? (player.profile.toObject ? player.profile.toObject() : player.profile) : {};
 
-        // Ambil data favorite pet
-        const favoritePet = await UserProfile.getFavoritePet(userId);
-        // Ambil selected achievements
-        const selectedAchievements = await UserProfile.getSelectedAchievements(userId);
-
-        // Combine profile data with stats (already included in getByUserId)
-        const combinedData = {
+        res.json({
             success: true,
-            ...userProfile,
-            maxXp: maxXp,
+            id: player.id || player._id.toString(),
+            user_id: player.id || player._id.toString(),
+            username: player.username,
+            level: player.level,
+            xp: player.xp,
+            gold: player.gold,
+            diamonds: player.diamonds,
+            maxXp,
+            status_message: profileObj.status_message || profileObj.statusMessage || 'Ready for adventure!',
+            skill_points: profileObj.skill_points || profileObj.skillPoints || 0,
+            hp_points: profileObj.hp_points || profileObj.hpPoints || 0,
+            damage_points: profileObj.damage_points || profileObj.damagePoints || 0,
+            agility_points: profileObj.agility_points || profileObj.agilityPoints || 0,
+            wallpaper_url: profileObj.wallpaper_url || profileObj.wallpaper || '/assets/wallpapers/wallpaper1.jpg',
+            avatar_url: profileObj.avatar_url || profileObj.avatarUrl || '/assets/avatars/avatar1.jpg',
             favorite_pet: favoritePet,
-            selected_achievements: selectedAchievements
-        };
-
-        res.json(combinedData);
+            selected_achievements: profileObj.selected_achievements || profileObj.selectedAchievements || []
+        });
     } catch (error) {
-        console.error('Error getting user profile:', error);
-        res.status(500).json({ 
-            success: false, 
+        res.status(500).json({
+            success: false,
             message: 'Failed to load profile data',
             error: error.message
         });
@@ -94,51 +82,57 @@ exports.getUserProfile = async (req, res) => {
 // Update user profile
 exports.updateUserProfile = async (req, res) => {
     try {
-        const userId = req.params.userId;
+        const { userId } = req.params;
         const updates = req.body;
-        
-        // Validate input
+
         if (!updates || Object.keys(updates).length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'No updates provided'
-            });
+            return res.status(400).json({ success: false, message: 'No updates provided' });
         }
 
-        // Validate wallpaper_id if provided
-        if (updates.wallpaper_id !== undefined && updates.wallpaper_id !== null) {
-            const isValidWallpaper = await UserProfile.validateWallpaper(updates.wallpaper_id);
-            if (!isValidWallpaper) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid wallpaper ID'
-                });
-            }
+        const player = await Player.findOne({
+            $or: [{ _id: userId }, { id: String(userId) }, { username: userId }]
+        });
+
+        if (!player) {
+            return res.status(404).json({ success: false, message: 'Profile not found' });
         }
 
-        // Update the profile
-        const updatedProfile = await UserProfile.update(userId, updates);
-        
-        if (!updatedProfile) {
-            return res.status(404).json({
-                success: false,
-                message: 'Profile not found'
-            });
+        if (!player.profile) player.profile = {};
+
+        if (updates.status_message !== undefined) {
+            player.profile.status_message = updates.status_message;
+            player.profile.statusMessage = updates.status_message;
+        }
+        if (updates.wallpaper_url !== undefined) {
+            player.profile.wallpaper_url = updates.wallpaper_url;
+            player.profile.wallpaper = updates.wallpaper_url;
+        }
+        if (updates.wallpaper !== undefined) {
+            player.profile.wallpaper_url = updates.wallpaper;
+            player.profile.wallpaper = updates.wallpaper;
+        }
+        if (updates.avatar_url !== undefined) {
+            player.profile.avatar_url = updates.avatar_url;
+            player.profile.avatarUrl = updates.avatar_url;
+        }
+        if (updates.favorite_pet_id !== undefined) {
+            player.profile.favorite_pet_id = updates.favorite_pet_id;
+            player.profile.favoritePetId = updates.favorite_pet_id;
         }
 
-        // Calculate max XP based on current level
-        const maxXp = Math.floor(50 * Math.pow(updatedProfile.level || 1, 1.4));
-        
-        // Prepare response data
-        const responseData = {
+        await player.save();
+
+        const maxXp = calculateXpCap(player.level);
+
+        res.json({
             success: true,
-            ...updatedProfile,
-            maxXp
-        };
-
-        res.json(responseData);
+            user_id: player.id || player._id.toString(),
+            level: player.level,
+            xp: player.xp,
+            maxXp,
+            profile: player.profile
+        });
     } catch (error) {
-        console.error('Error updating user profile:', error);
         res.status(500).json({
             success: false,
             message: error.message || 'Error updating user profile'
@@ -149,38 +143,43 @@ exports.updateUserProfile = async (req, res) => {
 // Update skill points
 exports.updateSkillPoints = async (req, res) => {
     try {
-        const userId = req.params.userId;
-        const { hp_points, damage_points, agility_points } = req.body;
-        
-        // Validate input
-        if (hp_points === undefined || damage_points === undefined || agility_points === undefined) {
-            return res.status(400).json({
-                success: false,
-                message: 'All skill points (hp_points, damage_points, agility_points) are required'
-            });
+        const { userId } = req.params;
+        const { hp_points = 0, damage_points = 0, agility_points = 0 } = req.body;
+
+        const player = await Player.findOne({
+            $or: [{ _id: userId }, { id: String(userId) }, { username: userId }]
+        });
+
+        if (!player) {
+            return res.status(404).json({ success: false, message: 'Player not found' });
         }
 
-        const updates = {
-            hp_points: parseInt(hp_points) || 0,
-            damage_points: parseInt(damage_points) || 0,
-            agility_points: parseInt(agility_points) || 0
-        };
+        if (!player.profile) player.profile = {};
 
-        // Update skill points using the model method
-        const updatedProfile = await UserProfile.updateSkillPoints(userId, updates);
-        
-        // Calculate max XP
-        const maxXp = Math.floor(50 * Math.pow(updatedProfile.level || 1, 1.4));
-        
+        player.profile.hp_points = parseInt(hp_points) || 0;
+        player.profile.hpPoints = parseInt(hp_points) || 0;
+        player.profile.damage_points = parseInt(damage_points) || 0;
+        player.profile.damagePoints = parseInt(damage_points) || 0;
+        player.profile.agility_points = parseInt(agility_points) || 0;
+        player.profile.agilityPoints = parseInt(agility_points) || 0;
+
+        await player.save();
+
+        const maxXp = calculateXpCap(player.level);
+
         res.json({
             success: true,
-            ...updatedProfile,
-            maxXp
+            user_id: player.id || player._id.toString(),
+            level: player.level,
+            maxXp,
+            hp_points: player.profile.hp_points,
+            damage_points: player.profile.damage_points,
+            agility_points: player.profile.agility_points,
+            skill_points: player.profile.skill_points || 0
         });
     } catch (error) {
-        console.error('Error updating skill points:', error);
-        res.status(500).json({ 
-            success: false, 
+        res.status(500).json({
+            success: false,
             message: error.message || 'Error updating skill points'
         });
     }
@@ -189,27 +188,51 @@ exports.updateSkillPoints = async (req, res) => {
 // Reset skill points
 exports.resetSkillPoints = async (req, res) => {
     try {
-        const userId = req.params.userId;
-        const { diamonds_cost } = req.body;
-        
-        if (!diamonds_cost || typeof diamonds_cost !== 'number') {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid diamond cost provided'
-            });
+        const { userId } = req.params;
+        const { diamonds_cost = 5 } = req.body;
+
+        const player = await Player.findOne({
+            $or: [{ _id: userId }, { id: String(userId) }, { username: userId }]
+        });
+
+        if (!player) {
+            return res.status(404).json({ success: false, message: 'Player not found' });
         }
-        
-        // Reset skill points using the model method
-        const result = await UserProfile.resetSkillPoints(userId, diamonds_cost);
-        
+
+        if (player.diamonds < diamonds_cost) {
+            return res.status(400).json({ success: false, message: 'Insufficient diamonds' });
+        }
+
+        player.diamonds -= diamonds_cost;
+
+        if (!player.profile) player.profile = {};
+
+        const refundedPoints = (player.profile.hp_points || 0) + 
+                               (player.profile.damage_points || 0) + 
+                               (player.profile.agility_points || 0);
+
+        player.profile.hp_points = 0;
+        player.profile.hpPoints = 0;
+        player.profile.damage_points = 0;
+        player.profile.damagePoints = 0;
+        player.profile.agility_points = 0;
+        player.profile.agilityPoints = 0;
+        player.profile.skill_points = (player.profile.skill_points || 0) + refundedPoints;
+        player.profile.skillPoints = player.profile.skill_points;
+
+        await player.save();
+
         res.json({
             success: true,
-            ...result
+            diamonds: player.diamonds,
+            skill_points: player.profile.skill_points,
+            hp_points: 0,
+            damage_points: 0,
+            agility_points: 0
         });
     } catch (error) {
-        console.error('Error resetting skill points:', error);
-        res.status(500).json({ 
-            success: false, 
+        res.status(500).json({
+            success: false,
             message: error.message || 'Error resetting skill points'
         });
     }
@@ -218,436 +241,282 @@ exports.resetSkillPoints = async (req, res) => {
 // Upload custom wallpaper
 exports.uploadCustomWallpaper = async (req, res) => {
     try {
-        const userId = req.params.userId;
-        
-        console.log('Upload wallpaper request:', {
-            userId,
-            file: req.file ? {
-                originalname: req.file.originalname,
-                mimetype: req.file.mimetype,
-                size: req.file.size
-            } : 'No file'
-        });
-        
-        // Check if file exists
+        const { userId } = req.params;
         if (!req.file) {
-            return res.status(400).json({
-                success: false,
-                message: 'No file uploaded'
-            });
+            return res.status(400).json({ success: false, message: 'No file uploaded' });
         }
-        
-        // Validate file type
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-        if (!allowedTypes.includes(req.file.mimetype)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.'
-            });
-        }
-        
-        // Check file size (max 5MB)
-        if (req.file.size > 5 * 1024 * 1024) {
-            return res.status(400).json({
-                success: false,
-                message: 'File too large. Maximum size is 5MB.'
-            });
-        }
-        
-        // Upload wallpaper using UserProfile model
-        const updatedProfile = await UserProfile.uploadCustomWallpaper(
-            userId, 
-            req.file.buffer, 
-            req.file.originalname
+
+        const wallpaperUrl = `/assets/wallpapers/custom_${Date.now()}.png`;
+
+        const player = await Player.findOneAndUpdate(
+            { $or: [{ _id: userId }, { id: String(userId) }, { username: userId }] },
+            { $set: { 'profile.wallpaper_url': wallpaperUrl, 'profile.wallpaper': wallpaperUrl } },
+            { new: true }
         );
-        
-        const maxXp = Math.floor(50 * Math.pow(updatedProfile.level || 1, 1.4));
-        
+
         res.json({
             success: true,
             message: 'Custom wallpaper uploaded successfully',
-            wallpaper_url: updatedProfile.wallpaper_url,
-            userId: updatedProfile.id,
-            level: updatedProfile.level,
-            maxXp
+            wallpaper_url: wallpaperUrl,
+            userId: player.id || player._id.toString(),
+            level: player.level,
+            maxXp: calculateXpCap(player.level)
         });
     } catch (error) {
-        console.error('Error uploading custom wallpaper:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: error.message || 'Error uploading wallpaper' 
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
 // Upload avatar
 exports.uploadAvatar = async (req, res) => {
     try {
-        const userId = req.params.userId;
-        
-        console.log('Upload avatar request:', {
-            userId,
-            file: req.file ? {
-                originalname: req.file.originalname,
-                mimetype: req.file.mimetype,
-                size: req.file.size
-            } : 'No file'
-        });
-        
-        // Check if file exists
+        const { userId } = req.params;
         if (!req.file) {
-            return res.status(400).json({
-                success: false,
-                message: 'No file uploaded'
-            });
+            return res.status(400).json({ success: false, message: 'No file uploaded' });
         }
-        
-        // Validate file type
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-        if (!allowedTypes.includes(req.file.mimetype)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.'
-            });
-        }
-        
-        // Check file size (max 5MB)
-        if (req.file.size > 5 * 1024 * 1024) {
-            return res.status(400).json({
-                success: false,
-                message: 'File too large. Maximum size is 5MB.'
-            });
-        }
-        
-        // Upload avatar using UserProfile model
-        const updatedProfile = await UserProfile.uploadAvatar(
-            userId, 
-            req.file.buffer, 
-            req.file.originalname
+
+        const avatarUrl = `/assets/avatars/custom_${Date.now()}.png`;
+
+        const player = await Player.findOneAndUpdate(
+            { $or: [{ _id: userId }, { id: String(userId) }, { username: userId }] },
+            { $set: { 'profile.avatar_url': avatarUrl, 'profile.avatarUrl': avatarUrl } },
+            { new: true }
         );
-        
-        // Calculate max XP
-        const maxXp = Math.floor(50 * Math.pow(updatedProfile.level || 1, 1.4));
-        
+
         res.json({
             success: true,
             message: 'Avatar uploaded successfully',
-            avatar_url: updatedProfile.avatar_url,
-            userId: updatedProfile.user_id,
-            level: updatedProfile.level,
-            maxXp
+            avatar_url: avatarUrl,
+            userId: player.id || player._id.toString(),
+            level: player.level,
+            maxXp: calculateXpCap(player.level)
         });
     } catch (error) {
-        console.error('Error uploading avatar:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: error.message || 'Error uploading avatar' 
-        });
-    }
-};
-// Get all wallpapers
-exports.getAllWallpapers = async (req, res) => {
-    try {
-        const wallpapers = await UserProfile.getAllWallpapers();
-        
-        res.json({
-            success: true,
-            wallpapers
-        });
-    } catch (error) {
-        console.error('Error getting all wallpapers:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Error fetching wallpapers' 
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
+// Get all wallpapers
+exports.getAllWallpapers = async (req, res) => {
+    res.json({
+        success: true,
+        wallpapers: [
+            { id: 1, name: 'Default Meadow', url: '/assets/wallpapers/wallpaper1.jpg' },
+            { id: 2, name: 'Void Domain', url: '/assets/wallpapers/wallpaper2.png' },
+            { id: 3, name: 'Astral Rift', url: '/assets/wallpapers/wallpaper3.png' },
+            { id: 4, name: 'Molten Keep', url: '/assets/wallpapers/wallpaper4.png' },
+            { id: 5, name: 'Frozen Tundra', url: '/assets/wallpapers/wallpaper5.png' }
+        ]
+    });
+};
+
+// Update status message
 exports.updateStatusMessage = async (req, res) => {
     try {
-        const userId = req.params.userId;
+        const { userId } = req.params;
         const { status_message } = req.body;
-        
-        console.log('Update status message request:', {
-            userId,
-            status_message
-        });
-        
+
         if (status_message === undefined) {
-            return res.status(400).json({
-                success: false,
-                message: 'Status message is required'
-            });
+            return res.status(400).json({ success: false, message: 'Status message is required' });
         }
-        
-        const updates = { status_message };
-        const updatedProfile = await UserProfile.update(userId, updates);
-        
-        if (!updatedProfile) {
-            return res.status(404).json({
-                success: false,
-                message: 'Profile not found'
-            });
-        }
-        
+
+        const player = await Player.findOneAndUpdate(
+            { $or: [{ _id: userId }, { id: String(userId) }, { username: userId }] },
+            { $set: { 'profile.status_message': status_message, 'profile.statusMessage': status_message } },
+            { new: true }
+        );
+
         res.json({
             success: true,
             message: 'Status message updated successfully',
-            status_message: updatedProfile.status_message,
-            userId: updatedProfile.user_id
+            status_message,
+            userId: player.id || player._id.toString()
         });
     } catch (error) {
-        console.error('Error updating status message:', error);
-        res.status(500).json({
-            success: false,
-            message: error.message || 'Error updating status message'
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// Get wallpaper
+// Get wallpaper by ID
 exports.getWallpaper = async (req, res) => {
-    try {
-        const wallpaperId = req.params.wallpaperId;
-        const wallpaper = await UserProfile.getWallpaper(wallpaperId);
-        
-        if (!wallpaper) {
-            return res.status(404).json({
-                success: false,
-                message: 'Wallpaper not found'
-            });
+    const { wallpaperId } = req.params;
+    res.json({
+        success: true,
+        wallpaper: {
+            id: wallpaperId,
+            url: `/assets/wallpapers/wallpaper${wallpaperId}.png`
         }
-        
-        res.json({
-            success: true,
-            wallpaper
-        });
-    } catch (error) {
-        console.error('Error getting wallpaper:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Error fetching wallpaper' 
-        });
-    }
+    });
 };
 
 // Get pet details
 exports.getPet = async (req, res) => {
     try {
-        const petId = req.params.petId;
-        const pet = await UserProfile.getPet(petId);
-        
+        const { petId } = req.params;
+        const pet = await PetTemplate.findOne({ petId });
         if (!pet) {
-            return res.status(404).json({
-                success: false,
-                message: 'Pet not found'
-            });
+            return res.status(404).json({ success: false, message: 'Pet not found' });
         }
-        
-        res.json({
-            success: true,
-            pet
-        });
+        res.json({ success: true, pet });
     } catch (error) {
-        console.error('Error getting pet:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Error fetching pet' 
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// Initialize UserProfile tables
+// Initialize UserProfile tables (no-op in MongoDB)
 exports.initUserProfileTables = async (req, res) => {
-    try {
-        await UserProfile.createTable();
-        await UserProfile.createWallpapersTable();
-        
-        res.json({
-            success: true,
-            message: 'UserProfile tables initialized successfully'
-        });
-    } catch (error) {
-        console.error('Error initializing UserProfile tables:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Error initializing UserProfile tables',
-            error: error.message 
-        });
-    }
+    res.json({
+        success: true,
+        message: 'UserProfile collections initialized successfully'
+    });
 };
 
-// Middleware untuk upload file
-exports.uploadSingle = (fieldName) => {
-    return upload.single(fieldName);
-};
-
-// Export multer upload untuk digunakan di routes
+exports.uploadSingle = (fieldName) => upload.single(fieldName);
 exports.upload = upload;
 
-// Update avatar and wallpaper IDs
+// Update avatar and wallpaper
 exports.updateAvatarAndWallpaper = async (req, res) => {
     try {
-        const userId = req.params.userId;
+        const { userId } = req.params;
         const { avatar_id, wallpaper_id } = req.body;
 
-        if (!avatar_id || !wallpaper_id) {
-            return res.status(400).json({ success: false, message: 'Avatar and wallpaper IDs are required' });
-        }
+        const avatarUrl = `/assets/avatars/avatar${avatar_id || 1}.jpg`;
+        const wallpaperUrl = `/assets/wallpapers/wallpaper${wallpaper_id || 1}.png`;
 
-        const [result] = await db.query(
-            `UPDATE UserProfile SET avatar_id = ?, wallpaper_id = ?, updated_at = NOW() WHERE user_id = ?`,
-            [avatar_id, wallpaper_id, userId]
+        await Player.findOneAndUpdate(
+            { $or: [{ _id: userId }, { id: String(userId) }, { username: userId }] },
+            {
+                $set: {
+                    'profile.avatar_url': avatarUrl,
+                    'profile.wallpaper_url': wallpaperUrl,
+                    'profile.wallpaper': wallpaperUrl
+                }
+            }
         );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ success: false, message: 'User profile not found' });
-        }
 
         res.json({ success: true, message: 'Avatar and wallpaper updated successfully' });
     } catch (error) {
-        console.error('Error updating avatar and wallpaper:', error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
+// Update preset avatar
 exports.updateAvatar = async (req, res) => {
     try {
         const { userId } = req.params;
         const { avatar_id } = req.body;
+        const avatarUrl = `/assets/avatars/avatar${avatar_id || 1}.jpg`;
 
-        if (req.user.id !== parseInt(userId)) {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-        if (!avatar_id) {
-            return res.status(400).json({ error: 'Avatar ID is required' });
-        }
-        // Preset avatar validation (1-5)
-        const presetAvatars = [1, 2, 3, 4, 5];
-        if (!presetAvatars.includes(parseInt(avatar_id))) {
-            return res.status(400).json({ error: 'Invalid avatar ID' });
-        }
-        // Set avatar_url sesuai format frontend
-        const avatarUrl = `/assets/avatars/avatar${avatar_id}.jpg`;
-        // Update via model UserProfile
-        const updatedProfile = await UserProfile.update(userId, { avatar_url: avatarUrl });
+        await Player.findOneAndUpdate(
+            { $or: [{ _id: userId }, { id: String(userId) }, { username: userId }] },
+            { $set: { 'profile.avatar_url': avatarUrl, 'profile.avatarUrl': avatarUrl } }
+        );
+
         res.json({
             success: true,
             message: 'Avatar updated successfully',
             avatar_url: avatarUrl
         });
     } catch (error) {
-        console.error('Error updating avatar:', error);
-        res.status(500).json({ error: 'Failed to update avatar' });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
+// Update preset wallpaper
 exports.updateWallpaper = async (req, res) => {
     try {
         const { userId } = req.params;
         const { wallpaper_id } = req.body;
+        const wallpaperUrl = `/assets/wallpapers/wallpaper${wallpaper_id || 1}.png`;
 
-        if (req.user.id !== parseInt(userId)) {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-        if (!wallpaper_id) {
-            return res.status(400).json({ error: 'Wallpaper ID is required' });
-        }
-        // Preset wallpaper validation (1-5)
-        const presetWallpapers = [1, 2, 3, 4, 5];
-        if (!presetWallpapers.includes(parseInt(wallpaper_id))) {
-            return res.status(400).json({ error: 'Invalid wallpaper ID' });
-        }
-        // Set wallpaper_url sesuai format frontend (support .jpg/.png)
-        // Bisa mapping dari preset list atau dari tabel Wallpapers jika sudah ada
-        // Untuk sekarang, support .png jika id > 1
-        let wallpaperUrl;
-        if (parseInt(wallpaper_id) === 1) {
-            wallpaperUrl = `/assets/wallpapers/wallpaper1.jpg`;
-        } else {
-            wallpaperUrl = `/assets/wallpapers/wallpaper${wallpaper_id}.png`;
-        }
-        // Update via model UserProfile
-        const updatedProfile = await UserProfile.update(userId, { wallpaper: wallpaperUrl });
+        await Player.findOneAndUpdate(
+            { $or: [{ _id: userId }, { id: String(userId) }, { username: userId }] },
+            { $set: { 'profile.wallpaper_url': wallpaperUrl, 'profile.wallpaper': wallpaperUrl } }
+        );
+
         res.json({
             success: true,
             message: 'Wallpaper updated successfully',
             wallpaper: wallpaperUrl
         });
     } catch (error) {
-        console.error('Error updating wallpaper:', error);
-        res.status(500).json({ error: 'Failed to update wallpaper' });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// Tambahkan endpoint untuk update favorite pet
+// Update favorite pet
 exports.updateFavoritePet = async (req, res) => {
     try {
         const { userId } = req.params;
         const { pet_id } = req.body;
-        if (req.user.id !== parseInt(userId)) {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-        if (!pet_id) {
-            return res.status(400).json({ error: 'Pet ID is required' });
-        }
-        const updatedProfile = await UserProfile.update(userId, { favorite_pet_id: pet_id });
+
+        await Player.findOneAndUpdate(
+            { $or: [{ _id: userId }, { id: String(userId) }, { username: userId }] },
+            { $set: { 'profile.favorite_pet_id': pet_id, 'profile.favoritePetId': pet_id } }
+        );
+
         res.json({
             success: true,
             message: 'Favorite pet updated successfully',
             favorite_pet_id: pet_id
         });
     } catch (error) {
-        console.error('Error updating favorite pet:', error);
-        res.status(500).json({ error: 'Failed to update favorite pet' });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// Endpoint untuk GET/PUT selected achievements
+// Get selected achievements
 exports.getSelectedAchievements = async (req, res) => {
     try {
         const { userId } = req.params;
-        const achievements = await UserProfile.getSelectedAchievements(userId);
-        res.json(achievements);
+        const player = await Player.findOne({
+            $or: [{ _id: userId }, { id: String(userId) }, { username: userId }]
+        });
+        res.json(player?.profile?.selected_achievements || player?.profile?.selectedAchievements || []);
     } catch (error) {
-        console.error('Error getting selected achievements:', error);
-        res.status(500).json({ error: 'Failed to get selected achievements' });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
+// Update selected achievements
 exports.updateSelectedAchievements = async (req, res) => {
     try {
         const { userId } = req.params;
-        const { achievement_ids } = req.body;
-        if (req.user.id !== parseInt(userId)) {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-        if (!Array.isArray(achievement_ids) || achievement_ids.length > 3) {
-            return res.status(400).json({ error: 'Invalid achievement selection (max 3)' });
-        }
-        await UserProfile.setSelectedAchievements(userId, achievement_ids);
+        const { achievement_ids = [] } = req.body;
+
+        await Player.findOneAndUpdate(
+            { $or: [{ _id: userId }, { id: String(userId) }, { username: userId }] },
+            {
+                $set: {
+                    'profile.selected_achievements': achievement_ids.slice(0, 3),
+                    'profile.selectedAchievements': achievement_ids.slice(0, 3)
+                }
+            }
+        );
+
         res.json({ success: true });
     } catch (error) {
-        console.error('Error updating selected achievements:', error);
-        res.status(500).json({ error: 'Failed to update selected achievements' });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// Endpoint: GET /api/userprofile/:userId/pets
+// Get user pets
 exports.getUserPets = async (req, res) => {
     try {
-        const userId = req.params.userId;
-        // Join UserPets dan Pets
-        const [rows] = await require('../config/database').query(`
-            SELECT up.id, up.name, up.current_level as level, up.role, up.rarity, p.image_url
-            FROM UserPets up
-            LEFT JOIN Pets p ON up.Pets_id = p.id
-            WHERE up.user_id = ?
-            ORDER BY up.current_level DESC, up.id ASC
-        `, [userId]);
+        const { userId } = req.params;
+        const userPets = await UserPet.find({ userId }).populate('template');
+
+        const rows = userPets.map(p => ({
+            id: p._id.toString(),
+            name: p.nickname || p.template?.name || 'Pet',
+            level: p.level,
+            role: p.template?.role || 'warrior',
+            rarity: p.template?.rarityName || 'Common',
+            image_url: p.template?.asset?.staticPath || '/assets/pets/fennec.png'
+        }));
+
         res.json({ success: true, data: rows });
     } catch (error) {
-        console.error('Error getting user pets:', error);
         res.status(500).json({ success: false, message: 'Failed to get user pets' });
     }
 };

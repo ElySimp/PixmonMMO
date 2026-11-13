@@ -1,314 +1,268 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import './MainInv.css';
 import Topbar from '../../components/Topbar';
 import Sidebar from '../../components/Sidebar';
-import potion from '../../assets/inv_asset/potion.png';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from '../../context/AuthContext';
-import { API_URL } from '../../utils/config';
+import { API_URL, TOKEN_KEY } from '../../utils/config';
+import { getRarityInfo } from '../../utils/rarity';
 
-const USAGE_TYPES = ['All', 'Consumables', 'Equip', 'Gacha'];
-const EQUIP_CATEGORIES = ['All', 'Weapon', 'Armor', 'Accessory']; // Placeholder values
-const ITEM_TYPES = ['All', 'Potion', 'Food', 'Key'];
-
-const emptyInventoryStyle = {
-  textAlign: 'center',
-  padding: '20px',
-  color: '#777',
-  fontSize: '16px'
-};
-
-async function itemUse(userId, index_id) {
-  try {
-    await fetch(`${API_URL}/users/${userId}/${index_id}/ItemUse`);
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-async function getInventoryCount(userId) {
-  try {
-    const res = await fetch(`${API_URL}/users/${userId}/inventoryCount`);
-    const data = await res.json();
-    if (data.success) return data.count;
-    throw new Error('Failed to get inventory count');
-  } catch (e) {
-    console.error(e);
-    return 0;
-  }
-}
-
-async function getInventoryData(userId) {
-  try {
-    const res = await fetch(`${API_URL}/users/${userId}/inventoryGet`);
-    const data = await res.json();
-    if (data.success) return data.inventory;
-    throw new Error('Failed to get inventory data');
-  } catch (e) {
-    console.error(e);
-    return [];
-  }
-}
-
-async function getIndexInventory() {
-  try {
-    const res = await fetch(`${API_URL}/inventoryIndex`);
-    const data = await res.json();
-    if (data.success) {
-      return data.inventoryIndex; // ← Just return raw data with no path manipulation
-    }
-    return [];
-  } catch (error) {
-    console.error("Error fetching inventory index:", error);
-    return [];
-  }
-}
-
+const USAGE_TYPES = ['All', 'Equip', 'Consumables', 'Materials'];
 
 const MainInv = () => {
   const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
-  const [count, setCount] = useState(0);
   const [inventory, setInventory] = useState([]);
-  const [inventoryIndex, setInventoryIndex] = useState([]);
-  const [selectedType, setSelectedType] = useState('All');
   const [selectedUsage, setSelectedUsage] = useState('All');
-  const [equipCategory, setEquipCategory] = useState('All');
-  const [showInventory, setShowInventory] = useState(true);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const reloadInventory = async () => {
-    if (user && user.id) {
-      const [newInventory, newCount] = await Promise.all([
-        getInventoryData(user.id),
-        getInventoryCount(user.id)
-      ]);
-      setInventory(newInventory);
-      setCount(newCount);
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    };
+  };
+
+  const fetchInventory = async () => {
+    const userId = user?.id || localStorage.getItem('userId');
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_URL}/users/${userId}/inventoryGet`, {
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.inventory)) {
+        setInventory(data.inventory);
+        if (!selectedItem && data.inventory.length > 0) {
+          setSelectedItem(data.inventory[0]);
+        }
+      }
+    } catch (err) {
+      toast.error('Failed to load inventory');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleTypeChange = (e) => {
-    setShowInventory(false);
-    setSelectedType(e.target.value);
-    setTimeout(() => setShowInventory(true), 0);
-  };
-
-  const handleUsageChange = (e) => {
-    const value = e.target.value;
-    setShowInventory(false);
-    setSelectedUsage(value);
-    if (value !== 'Equip') setEquipCategory('All');
-    setTimeout(() => setShowInventory(true), 0);
-  };
-
-  const handleEquipCategoryChange = (e) => {
-    setShowInventory(false);
-    setEquipCategory(e.target.value);
-    setTimeout(() => setShowInventory(true), 0);
-  };
-
   useEffect(() => {
-    if (authLoading) return;
-    getIndexInventory().then(setInventoryIndex).catch(() => setInventoryIndex([]));
-  }, [authLoading]);
-
-  useEffect(() => {
-    if (authLoading || !user?.id) return;
-    getInventoryCount(user.id).then(setCount).catch(() => setCount(0));
-    getInventoryData(user.id).then((data) => {
-      setInventory(data);
-      // Debug inventory data
-      if (data && data.length > 0) {
-        console.log("First inventory item:", data[0]);
-      }
-    }).catch(() => setInventory([]));
+    if (!authLoading) {
+      fetchInventory();
+    }
   }, [user, authLoading]);
 
-  // Add debug effect for inventory and inventoryIndex
-  useEffect(() => {
-    if (inventory.length > 0 && inventoryIndex.length > 0) {
-      console.log("Inventory items count:", inventory.length);
-      console.log("Inventory index count:", inventoryIndex.length);
-      
-      // Check a sample item path
-      const sampleItem = inventory[0];
-      if (sampleItem && sampleItem.index_id) {
-        const indexItem = inventoryIndex[sampleItem.index_id - 1];
-        console.log("Sample inventory item:", sampleItem);
-        console.log("Corresponding index item:", indexItem);
-        console.log("Image path to load:", indexItem?.path);
+  const handleEquipToggle = async (item) => {
+    try {
+      setActionLoading(true);
+      const res = await fetch(`${API_URL}/inventory/equip`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ itemId: item.itemId || item.index_id })
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        toast.error(data.message || 'Could not equip item');
+        return;
       }
+
+      toast.success(data.message);
+      await fetchInventory();
+    } catch (err) {
+      toast.error('Error updating equipment');
+    } finally {
+      setActionLoading(false);
     }
-  }, [inventory, inventoryIndex]);
-
-  const InventoryItem = ({ item }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const itemData = inventoryIndex[item.index_id - 1] || {};
-    const { rarity = 1, description = 'No description available', item_category = 'none' } = itemData;
-
-    const usageType =
-      item.item_type === 'potion' || item.item_type === 'food' ? 'Consumables'
-      : item.item_type === 'key' ? 'Gacha'
-      : 'Equip';
-
-    if ((selectedType !== 'All' && selectedType.toLowerCase() !== item.item_type) ||
-        (selectedUsage !== 'All' && selectedUsage !== usageType)) {
-      return null;
-    }
-
-    if (selectedUsage === 'Equip' && equipCategory !== 'All') {
-      console.warn('Equip filtering is currently skipped — waiting for backend data structure.');
-    }
-
-    const handleUse = async () => {
-      await itemUse(user.id, item.index_id);
-      setIsOpen(false);
-      await reloadInventory();
-    };
-
-    const effect = item.item_stats?.health_regen || item.item_stats?.hunger_value || item.item_stats?.mana_regen || 0;
-    const statLabel = item.item_stats?.health_regen ? 'Health Regen'
-      : item.item_stats?.hunger_value ? 'Hunger Value'
-      : item.item_stats?.mana_regen ? 'Mana Regen'
-      : 'No Effect';
-
-    const rarityColors = ['gray', 'green', 'blue', 'gold'];
-
-    return (
-      <div className="maininv-item-container">
-        <div
-          className="maininv-inventory-items"
-          style={{ border: `2px solid ${rarityColors[rarity - 1]}` }}
-          onClick={() => setIsOpen(true)}
-        >
-          <img 
-            src={inventoryIndex[item.index_id - 1]?.path || ''}
-            alt="fix this shet" 
-            onError={(e) => {
-              console.error("Image failed to load:", e.target.src);
-              
-              // Try fallback paths
-              if (e.target.src) {
-                const currentSrc = e.target.src;
-                const pathParts = currentSrc.split('/');
-                const filename = pathParts[pathParts.length - 1];
-                
-                if (!currentSrc.includes('/items/')) {
-                  console.log("Trying fallback path with /items/ prefix");
-                  e.target.src = `/items/${filename}`;
-                  return;
-                }
-              }
-              
-              e.target.onerror = null;
-            }}
-          />  
-          <div className="maininv-amt">x{item.amount}</div>
-        </div>
-
-        {isOpen && (
-          <div className="maininv-centered-box" onClick={() => setIsOpen(false)}>
-            <div className="maininv-box-content" onClick={e => e.stopPropagation()}>
-              <h3 className="overlay-name">{item.item_name}</h3>
-              <img 
-                className="maininv-img" 
-                src={inventoryIndex[item.index_id - 1]?.path || ''}
-                alt="fix this shet" 
-                onError={(e) => {
-                  console.error("Modal image failed to load:", e.target.src);
-                  
-                  // Try fallback paths
-                  if (e.target.src) {
-                    const currentSrc = e.target.src;
-                    const pathParts = currentSrc.split('/');
-                    const filename = pathParts[pathParts.length - 1];
-                    
-                    if (!currentSrc.includes('/items/')) {
-                      console.log("Trying fallback path with /items/ prefix");
-                      e.target.src = `/items/${filename}`;
-                      return;
-                    }
-                  }
-                  
-                  e.target.onerror = null;
-                }}
-              />
-              <div className="maininv-item-stats">{statLabel}: {effect}%</div>
-              <div className="maininv-description">{description}</div>
-              <div className="maininv-buttons">
-                <button className="maininv-use-btn" onClick={handleUse}>Use</button>
-                <button className="maininv-close-btn" onClick={() => setIsOpen(false)}>Close</button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
   };
 
-  const MainInvCreation = () => (
-    inventory.map((item, index) => (
-      <InventoryItem key={item.id || index} item={item} />
-    ))
-  );
+  const handleUseItem = async (item) => {
+    const userId = user?.id || localStorage.getItem('userId');
+    if (!userId) return;
+
+    try {
+      setActionLoading(true);
+      const res = await fetch(`${API_URL}/users/${userId}/${item.itemId || item.index_id}/ItemUse`, {
+        headers: getAuthHeaders()
+      });
+      if (!res.ok) {
+        toast.error('Failed to use item');
+        return;
+      }
+      toast.success(`Used ${item.name || item.item_name}`);
+      await fetchInventory();
+    } catch (err) {
+      toast.error('Error using item');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const isEquippable = (type) => ['weapon', 'armor', 'accessory', 'tool'].includes(String(type).toLowerCase());
+
+  const getItemIcon = (type) => {
+    switch (String(type).toLowerCase()) {
+      case 'weapon': return '⚔️';
+      case 'armor': return '🛡️';
+      case 'accessory': return '💍';
+      case 'tool': return '⛏️';
+      case 'potion':
+      case 'consumable': return '🧪';
+      case 'key': return '🗝️';
+      default: return '📦';
+    }
+  };
+
+  const equippedItems = inventory.filter((i) => i.isEquipped);
+  const totalBonusAtk = equippedItems.reduce((sum, i) => sum + (i.item_stats?.atk || 0), 0);
+  const totalBonusDef = equippedItems.reduce((sum, i) => sum + (i.item_stats?.defPhy || 0), 0);
+
+  const filteredInventory = inventory.filter((item) => {
+    const type = String(item.item_type || '').toLowerCase();
+    if (selectedUsage === 'All') return true;
+    if (selectedUsage === 'Equip') return isEquippable(type);
+    if (selectedUsage === 'Consumables') return ['potion', 'consumable', 'food'].includes(type);
+    if (selectedUsage === 'Materials') return !isEquippable(type) && !['potion', 'consumable', 'food'].includes(type);
+    return true;
+  });
 
   return (
-    <div className="maininv-invCont">
-      <Sidebar profilePic="dummy.jpg" />
-      <div className="maininv-invContent">
-        <Topbar
-          onMenuClick={() => console.log('Menu clicked')}
-          onSupportClick={() => navigate('/support')}
-          onFriendsClick={() => console.log('Friends clicked')}
-          onSearch={(value) => console.log('Search:', value)}
-          onChatClick={() => console.log('Chat clicked')}
-          onNotificationClick={() => console.log('Notifications clicked')}
-          onEggClick={() => console.log('Egg clicked')}
-        />
-        <div className="maininv-Inventory-Data-Container">
-          <div className="maininv-sortingSquare">
-            <div className="maininv-innerSort">Filter by Type</div>
-              <select value={selectedType} onChange={handleTypeChange}>
-                {ITEM_TYPES.map(type => (
-                  <option  className = "maininv-option" key={type} value={type}>{type}</option>
-                ))}
-              </select>
-              <br></br>
-              <br></br>
-              <div className="maininv-innerSort">Filter by Usage</div>
-              <select value={selectedUsage} onChange={handleUsageChange}>
-                {USAGE_TYPES.map(type => (
-                  <option className = "maininv-option" key={type} value={type}>{type}</option>
-                ))}
-              </select>
-              <br></br>
-              <br></br>
-              {selectedUsage === 'Equip' && (
-                <>
-                  <div className="maininv-innerSort">Equip Category</div>
-                  <select className="maininv-option" value={equipCategory} onChange={handleEquipCategoryChange}>
-                    {EQUIP_CATEGORIES.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-              </>
-            )}
+    <div className="inv-page-container">
+      <Sidebar profilePic={user?.profilePic} username={user?.username} />
+      <div className="inv-page-content">
+        <Topbar />
+        <ToastContainer position="top-right" autoClose={2500} theme="dark" />
+
+        <div className="inv-main-layout">
+          {/* Equipped Gear Summary Banner */}
+          <div className="inv-equipped-banner">
+            <div className="inv-equipped-info">
+              <h2>🎒 Adventurer Inventory</h2>
+              <p>Equip gear to boost your combat stats in dungeons. Tier 9 & 10 relics feature animated sprites.</p>
+            </div>
+            <div className="inv-gear-bonuses">
+              <div className="gear-bonus-pill">⚔️ Gear ATK: <b>+{totalBonusAtk}</b></div>
+              <div className="gear-bonus-pill">🛡️ Gear DEF: <b>+{totalBonusDef}</b></div>
+              <div className="gear-bonus-pill">📦 Items: <b>{inventory.length}</b></div>
+            </div>
           </div>
 
-          <div style={{ flex: 1 }}>
-            <div className="maininv-inventory-Info">
-              <label className="maininv-inv-word">Inventory</label>
-              <div className="maininv-inventory-capacity">
-                Capacity : {count} / 100 
-              </div>
+          {/* Filter Tabs */}
+          <div className="inv-filter-bar">
+            {USAGE_TYPES.map((tab) => (
+              <button
+                key={tab}
+                className={`inv-filter-btn ${selectedUsage === tab ? 'active' : ''}`}
+                onClick={() => setSelectedUsage(tab)}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {/* Two-column Grid: Items Grid + Details Inspector */}
+          <div className="inv-workspace">
+            <div className="inv-grid-panel">
+              {loading ? (
+                <div className="inv-empty-state">Loading inventory...</div>
+              ) : filteredInventory.length === 0 ? (
+                <div className="inv-empty-state">
+                  No items found in this category. Explore dungeons or visit the Shop!
+                </div>
+              ) : (
+                <div className="inv-items-grid">
+                  {filteredInventory.map((item) => {
+                    const rarity = getRarityInfo(item.rarityTier || item.rarityName || 1);
+                    const isSelected = selectedItem?.id === item.id;
+                    return (
+                      <div
+                        key={item.id}
+                        className={`inv-item-slot ${isSelected ? 'selected' : ''} ${item.isEquipped ? 'equipped' : ''}`}
+                        style={{
+                          borderColor: isSelected ? '#fff' : rarity.border,
+                          background: rarity.bg
+                        }}
+                        onClick={() => setSelectedItem(item)}
+                      >
+                        {item.isEquipped && <span className="inv-equipped-badge">E</span>}
+                        <span className="inv-amount-badge">x{item.amount}</span>
+                        <span className={`inv-slot-icon ${rarity.animationClass || ''}`}>
+                          {getItemIcon(item.item_type)}
+                        </span>
+                        <span className="inv-slot-name" style={{ color: rarity.color }}>
+                          {item.name || item.item_name}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
-            <div className="maininv-actual-inventory">
-              {showInventory && (inventory.length > 0 ? (
-                <MainInvCreation />
+            {/* Item Inspector Panel */}
+            <div className="inv-inspector-panel">
+              {selectedItem ? (
+                (() => {
+                  const rarity = getRarityInfo(selectedItem.rarityTier || selectedItem.rarityName || 1);
+                  const equippable = isEquippable(selectedItem.item_type);
+                  return (
+                    <div className="inv-inspector-card" style={{ borderColor: rarity.border }}>
+                      <div className="inspector-icon-wrap" style={{ background: rarity.bg, borderColor: rarity.border }}>
+                        <span className={`inspector-icon ${rarity.animationClass || ''}`}>
+                          {getItemIcon(selectedItem.item_type)}
+                        </span>
+                      </div>
+
+                      <h3 style={{ color: rarity.color }}>{selectedItem.name || selectedItem.item_name}</h3>
+                      <div className="inspector-rarity-pill" style={{ color: rarity.color, borderColor: rarity.border }}>
+                        Tier {rarity.tier}: {rarity.name}
+                      </div>
+
+                      {rarity.animated && (
+                        <div className="inspector-anim-tag">✨ {rarity.frames}-Frame Looping Spritesheet</div>
+                      )}
+
+                      <p className="inspector-desc">{selectedItem.description || 'A mysterious item from the world of Pixmon.'}</p>
+
+                      {selectedItem.item_stats && Object.keys(selectedItem.item_stats).length > 0 && (
+                        <div className="inspector-stats-box">
+                          {selectedItem.item_stats.atk > 0 && <div>⚔️ ATK: +{selectedItem.item_stats.atk}</div>}
+                          {selectedItem.item_stats.defPhy > 0 && <div>🛡️ DEF: +{selectedItem.item_stats.defPhy}</div>}
+                          {selectedItem.item_stats.hp > 0 && <div>❤️ HP: +{selectedItem.item_stats.hp}</div>}
+                        </div>
+                      )}
+
+                      <div className="inspector-actions">
+                        {equippable ? (
+                          <button
+                            className={`inspector-btn ${selectedItem.isEquipped ? 'btn-unequip' : 'btn-equip'}`}
+                            onClick={() => handleEquipToggle(selectedItem)}
+                            disabled={actionLoading}
+                          >
+                            {selectedItem.isEquipped ? 'Unequip Gear' : 'Equip Gear'}
+                          </button>
+                        ) : (
+                          <button
+                            className="inspector-btn btn-use"
+                            onClick={() => handleUseItem(selectedItem)}
+                            disabled={actionLoading}
+                          >
+                            Use Item
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()
               ) : (
-                <div style={emptyInventoryStyle}>Your inventory is empty</div>
-              ))}
+                <div className="inv-empty-state">Select an item to inspect its stats.</div>
+              )}
             </div>
           </div>
         </div>

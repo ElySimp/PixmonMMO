@@ -7,13 +7,16 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 // Import logger
 const logger = require('./utils/logger');
 
-const User = require('./models/User');
-const Achievement = require('./models/Achievement');
-const Inventory = require('./models/Inventory');
-const UserProfile = require('./models/UserProfile');
-const DailyRewards = require('./models/DailyRewards');
+// MongoDB Atlas connection and Mongoose Models
+const { connectDB, getConnectionStatus } = require('./config/mongodb');
+const Player = require('./models/Player');
+const { ItemTemplate } = require('./models/Item');
+const { PetTemplate } = require('./models/Pet');
+const { QuestTemplate } = require('./models/Quest');
+const { ShopCatalog } = require('./models/ShopGacha');
+const Npc = require('./models/Npc');
+
 const inventoryController = require('./controllers/inventoryController');
-const { initializeTables, QuestSystem, UserQuest } = require('./models/QuestSystem');
 const authController = require('./controllers/authController');
 const achievementController = require('./controllers/achievementController');
 const questController = require('./controllers/questController');
@@ -21,17 +24,13 @@ const userProfileController = require('./controllers/userProfileController');
 const dailyRewardsController = require('./controllers/dailyRewardsController');
 const petsController = require('./controllers/petsController');
 const { protect } = require('./middleware/auth');
-const checkAndFixDuplicateStats = require('./scripts/maintenance/check-and-fix-stats');
 const userProfileRoutes = require('./routes/userProfileRoutes');
-
-// Import pet status service
-const { startPetStatusService } = require('./scripts/maintenance/pet-status-service');
 
 const app = express();
 
 // Middleware
 app.use(cors({
-    origin: '*', // Allow all origins for testing
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'],
@@ -51,87 +50,12 @@ if (process.env.NODE_ENV === 'development') {
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database initialization function
-async function initializeDatabaseTables() {    const initSteps = [
-        'UserLogin Table',
-        'UserStats Table', 
-        'Achievement Tables',
-        'UserProfile Tables',
-        'DailyRewards Table',
-        'Inventory Tables',
-        'Pets Tables',
-        'Quest Tables',
-        'Final Check & Cleanup'
-    ];
-
-    logger.dbInitStart(initSteps);
-
+async function initDatabase() {
     try {
-        // Initialize UserLogin table
-        logger.dbStep('UserLogin Table', 'running');
-        await User.createTable();
-        logger.dbStep('UserLogin Table', 'success');
-
-        // Initialize UserStats table
-        logger.dbStep('UserStats Table', 'running');
-        await User.createStatsTable();
-        logger.dbStep('UserStats Table', 'success');
-
-        // Initialize Achievement tables
-        logger.dbStep('Achievement Tables', 'running');
-        await Achievement.createTable();
-        await Achievement.createUserAchievementsTable();
-        logger.dbStep('Achievement Tables', 'success');        // Initialize UserProfile tables
-        logger.dbStep('UserProfile Tables', 'running');
-        await UserProfile.createTable();
-        await UserProfile.createWallpapersTable();
-        logger.dbStep('UserProfile Tables', 'success');
-        
-        // Initialize DailyRewards table
-        logger.dbStep('DailyRewards Table', 'running');
-        await DailyRewards.createTable();
-        logger.dbStep('DailyRewards Table', 'success');
-
-        // Initialize Inventory tables
-        logger.dbStep('Inventory Tables', 'running');
-        await Inventory.createIndexInvtable();
-        await Inventory.createUserInventory();
-        await Inventory.createGachaResult();
-        logger.dbStep('Inventory Tables', 'success');
-
-        // Initialize Pets tables
-        logger.dbStep('Pets Tables', 'running');
-        await petsController.createPetsTables();
-        logger.dbStep('Pets Tables', 'success');
-
-        // Initialize Quest tables
-        logger.dbStep('Quest Tables', 'running');
-        await initializeTables();
-        logger.dbStep('Quest Tables', 'success');        // Final check
-        logger.dbStep('Final Check & Cleanup', 'running');
-        
-        // Check for and fix any duplicate stats records
-        try {
-            await checkAndFixDuplicateStats();
-            logger.debug('Duplicate stats check completed', 'MAINTENANCE');
-        } catch (statsError) {
-            logger.warning('Could not fix duplicate stats', 'MAINTENANCE');
-        }
-        
-        // Schedule periodic monitoring of UserStats table
-        try {
-            const scheduleMonitoring = require('./scripts/monitoring/schedule-monitoring');
-            scheduleMonitoring();
-            logger.debug('UserStats monitoring scheduled', 'MAINTENANCE');
-        } catch (monitorError) {
-            logger.warning('Could not schedule UserStats monitoring', 'MAINTENANCE');
-        }
-        
-        logger.dbStep('Final Check & Cleanup', 'success');
-
-        logger.dbInitComplete();
-        
+        await connectDB();
+        logger.info('MongoDB Atlas connected successfully', 'DATABASE');
     } catch (error) {
-        logger.error('Database initialization failed', 'DATABASE', error);
+        logger.error('Database connection failed', 'DATABASE', error);
         throw error;
     }
 }
@@ -140,8 +64,7 @@ async function initializeDatabaseTables() {    const initSteps = [
 app.post('/api/auth/register', authController.register);
 app.post('/api/auth/login', authController.login);
 app.get('/api/auth/me', protect, authController.getMe);
-app.get('/api/userlogin/:id', protect, authController.getUser); // Added for profile compatibility
-
+app.get('/api/userlogin/:id', protect, authController.getUser);
 
 // User Stats Routes
 app.get('/api/user/stats', protect, authController.getStats);
@@ -156,7 +79,7 @@ app.post('/api/users/:userId/check-achievements', achievementController.checkAch
 app.post('/api/users/:userId/unlock-achievement', achievementController.unlockAchievement);
 app.post('/api/init-achievements', achievementController.initAchievementTables);
 
-// UserProfile Routes - FIXED
+// UserProfile Routes
 app.get('/api/userprofile/:userId', protect, userProfileController.getUserProfile);
 app.put('/api/userprofile/:userId', protect, userProfileController.updateUserProfile);
 app.patch('/api/userprofile/:userId', protect, userProfileController.updateUserProfile);
@@ -165,7 +88,7 @@ app.patch('/api/userprofile/:userId', protect, userProfileController.updateUserP
 app.put('/api/userprofile/:userId/skills', protect, userProfileController.updateSkillPoints);
 app.post('/api/userprofile/:userId/reset-skills', protect, userProfileController.resetSkillPoints);
 
-// File Upload Routes - FIXED
+// File Upload Routes
 app.post('/api/userprofile/:userId/upload-wallpaper', 
     protect,
     userProfileController.uploadSingle('wallpaper'), 
@@ -183,7 +106,7 @@ app.get('/api/wallpapers/all', userProfileController.getAllWallpapers);
 app.get('/api/wallpapers/:wallpaperId', userProfileController.getWallpaper);
 app.get('/api/pets/:petId', userProfileController.getPet);
 
-// Initialization Routes
+// Initialization Routes (No-ops for Mongoose schema migrations)
 app.post('/api/init-userprofile', userProfileController.initUserProfileTables);
 app.post('/api/init-daily-rewards', dailyRewardsController.initDailyRewardsTable);
 
@@ -202,7 +125,7 @@ app.get('/api/users/:userId/MythicalObtain', inventoryController.MythicalKeyObta
 app.get('/api/users/:userId/:index_id/ItemUse', inventoryController.ItemUsage);
 app.get('/api/users/:userId/:index_id/itemInput', inventoryController.ItemInput);
 app.post('/api/inventory/use-item', protect, inventoryController.useInventoryItem);
-
+app.post('/api/inventory/equip', protect, inventoryController.equipItem);
 
 // Quest Routes
 app.get('/api/quests', questController.getAllQuests);
@@ -213,28 +136,11 @@ app.get('/api/user/:userId/quests/bounty', questController.getUserBountyQuests);
 app.get('/api/quests/bounty', questController.getBountyQuests);
 
 // User Quest Routes
-app.get('/api/user/:userId/quests', async (req, res) => {
-    try {
-        const quests = await UserQuest.getUserQuests(req.params.userId);
-        res.json(quests);
-    } catch (error) {
-        console.error("Error fetching user quests:", error);
-        res.status(500).json({ error: "Failed to fetch user quests", details: error.message });
-    }
-});
-
-app.post('/api/user/:userId/quest/:questId/claim', async (req, res) => {
-    try {
-        await QuestSystem.claimQuestReward(req.params.userId, req.params.questId);
-        res.json({ success: true, message: "Quest reward claimed!" });
-    } catch (error) {
-        res.status(400).json({ success: false, message: error.message });
-    }
-});
+app.get('/api/user/:userId/quests', questController.getUserQuests);
+app.post('/api/user/:userId/quest/:questId/claim', questController.claimQuestReward);
 
 // Quest Point Management Routes
 app.post('/api/user/:userId/decrement-quest-point', questController.decrementQuestPoint);
-app.post('/api/user/:userId/claim-daily-main-reward', questController.claimDailyMainReward);
 app.post('/api/user/:userId/restore-quest-point', questController.restoreQuestPoint);
 app.post('/api/user/:userId/quest/:questId/start', questController.startBountyQuest);
 
@@ -246,61 +152,94 @@ app.use('/api/pets', petsRoutes);
 const optimizedPetsRoutes = require('./routes/optimizedPetsRoutes');
 app.use('/api/v2/pets', optimizedPetsRoutes);
 
+// Dungeon & Combat Routes
+const dungeonRoutes = require('./routes/dungeonRoutes');
+app.use('/api/dungeon', dungeonRoutes);
+
+// Shop & Gacha Routes
+const shopRoutes = require('./routes/shopRoutes');
+app.use('/api/shop', shopRoutes);
+
+// NPC Routes
+const npcRoutes = require('./routes/npcRoutes');
+app.use('/api/npcs', npcRoutes);
+
 // Overlay Profile Route
 app.get('/api/user/overlay-profile', protect, async (req, res) => {
     try {
-        const userId = req.user.id;
-        const overlayData = await User.getOverlayProfileData(userId);
+        const userId = req.user?.id || req.user?._id;
+        const player = await Player.findOne({
+            $or: [{ _id: userId }, { id: String(userId) }]
+        });
         
-        if (!overlayData) {
+        if (!player) {
             return res.status(404).json({ error: 'User data not found' });
         }
         
         res.json({
-            username: overlayData.username,
-            level: overlayData.level,
-            xp: overlayData.xp,
-            gold: overlayData.gold,
-            diamonds: overlayData.diamonds,
-            questPoints: overlayData.quest_points,
-            energyPoints: overlayData.energy_points || 2,
-            energyTimer: overlayData.energy_timer || '4h 09:40',
-            questCompleted: overlayData.quest_completed,
-            questClaimed: overlayData.quest_claimed
+            username: player.username,
+            level: player.level,
+            xp: player.xp,
+            gold: player.gold,
+            diamonds: player.diamonds,
+            questPoints: player.questPoints || 0,
+            energyPoints: player.energy?.current ?? 2,
+            energyTimer: player.energy?.timer || '4h 00:00',
+            questCompleted: player.stats?.questsCompleted || 0,
+            questClaimed: 0
         });
     } catch (error) {
-        console.error('Error fetching overlay profile:', error);
+        logger.error(`Error fetching overlay profile: ${error.message}`, 'PROFILE');
         res.status(500).json({ error: 'Failed to fetch overlay profile data' });
     }
 });
 
 // Health check route
-app.get('/api/health', (req, res) => {
-    // Check connection to database
-    const db = require('./config/database');
-    db.query('SELECT 1')
-        .then(() => {
-            res.json({ 
-                status: 'OK', 
-                message: 'Server is running on Vercel', 
-                database: 'Connected',
-                environment: process.env.NODE_ENV || 'development',
-                serverless: process.env.VERCEL_ENV ? true : false,
-                platform: 'Vercel',
-                timestamp: new Date().toISOString()
-            });
-        })
-        .catch(error => {
-            res.status(500).json({ 
-                status: 'WARNING', 
-                message: 'Server is running but database connection failed',
-                error: error.message,
-                environment: process.env.NODE_ENV || 'development',
-                serverless: process.env.VERCEL_ENV ? true : false,
-                platform: 'Vercel',
-                timestamp: new Date().toISOString()
-            });
+app.get('/api/health', async (req, res) => {
+    try {
+        const status = getConnectionStatus();
+        const [players, items, pets, quests, shops, npcs] = await Promise.all([
+            Player.countDocuments().catch(() => 0),
+            ItemTemplate.countDocuments().catch(() => 0),
+            PetTemplate.countDocuments().catch(() => 0),
+            QuestTemplate.countDocuments().catch(() => 0),
+            ShopCatalog.countDocuments().catch(() => 0),
+            Npc.countDocuments().catch(() => 0)
+        ]);
+
+        const isHealthy = status.isConnected;
+
+        res.status(isHealthy ? 200 : 503).json({
+            status: isHealthy ? 'OK' : 'WARNING',
+            message: isHealthy ? 'Server is running with active MongoDB Atlas persistence' : 'Database disconnected',
+            database: isHealthy ? 'Connected' : 'Disconnected',
+            mongodb: {
+                readyState: status.readyState,
+                stateName: status.stateName,
+                host: status.host,
+                databaseName: status.dbName
+            },
+            collections: {
+                players,
+                items,
+                pets,
+                quests,
+                shops,
+                npcs
+            },
+            environment: process.env.NODE_ENV || 'development',
+            serverless: Boolean(process.env.VERCEL_ENV),
+            platform: 'Vercel',
+            timestamp: new Date().toISOString()
         });
+    } catch (error) {
+        res.status(500).json({
+            status: 'ERROR',
+            message: 'Healthcheck failed',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
 });
 
 // Log route registration summary
@@ -315,6 +254,8 @@ logger.info('✅ Quest routes: /api/quests, /api/user/:userId/quest*', 'ROUTES')
 logger.info('✅ Pets routes: /api/users/:userId/userPetGet', 'ROUTES');
 logger.info('✅ Health check: /api/health', 'ROUTES');
 logger.separator();
+
+app.use('/api/userprofile', userProfileRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -344,35 +285,27 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Initialize database on server start
-const PORT = process.env.PORT || 5000;
-
-// For local development
-if (process.env.NODE_ENV !== 'production' || process.env.VERCEL_ENV === undefined) {
+// Server startup - only listen when executed directly, not when required in tests
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
+  
   app.listen(PORT, async () => {
     logger.serverStart(PORT);
     
     try {
-      await initializeDatabaseTables();
+      await initDatabase();
       logger.serverReady(PORT);
-      
-      // Start pet status background service
-      startPetStatusService();
-      logger.info('Pet status background service started', 'STARTUP');
-      
-      // No need for ping service on Vercel - serverless functions don't need to be kept alive
     } catch (error) {
-        logger.error('Failed to initialize database', 'STARTUP', error);
-        logger.warning('Server is running but database initialization failed', 'STARTUP');
-        // Don't exit process, let server continue to run
+      logger.error('Failed to initialize database', 'STARTUP', error);
+      logger.warning('Server is running but database connection failed', 'STARTUP');
     }
-});
-} else {
-  // In Vercel environment, initialize database on first request
+  });
+} else if (process.env.VERCEL_ENV !== undefined && process.env.NODE_ENV !== 'test') {
+  // In Vercel serverless environment, initialize database on first request
   app.use(async (req, res, next) => {
     if (!global.dbInitialized) {
       try {
-        await initializeDatabaseTables();
+        await initDatabase();
         global.dbInitialized = true;
         logger.serverReady('Serverless');
       } catch (error) {
@@ -383,7 +316,5 @@ if (process.env.NODE_ENV !== 'production' || process.env.VERCEL_ENV === undefine
   });
 }
 
-app.use('/api/userprofile', userProfileRoutes);
-
-// Export for Vercel serverless deployment
+// Export for tests and Vercel serverless deployment
 module.exports = app;

@@ -21,7 +21,8 @@ import { GiDiamondHard, GiHeartPlus, GiMuscleUp, GiFoodChain, GiSparkles } from 
 import { MdShield, MdOutlineSpeed, MdFilterListAlt, MdChevronLeft, MdChevronRight, MdPets } from 'react-icons/md';
 import { RiMagicLine, RiHeartPulseFill, RiFireLine, RiShieldFlashLine, RiGamepadLine } from 'react-icons/ri';
 
-const CURRENT_USER_ID = 1; // For testing, we're using user ID 1
+// Dynamic user helper
+const getEffectiveUserId = () => localStorage.getItem('userId') || '1';
 
 // Get pet image based on role
 const getPetImage = (role) => {
@@ -273,7 +274,7 @@ const MiscPets = () => {
   // Pet interaction handlers
   const handleEquipPet = async (petId) => {
     try {
-      const userId = localStorage.getItem('userId') || CURRENT_USER_ID;
+      const userId = getEffectiveUserId();
 
       // Find the complete pet object
       const petToEquip = pets.find((pet) => pet.id === petId);

@@ -17,7 +17,18 @@
     "vercel-build": "cd frontend && npm install && npm run build",
     "lint": "cd frontend && npm run lint",
     "preview": "cd frontend && npm run preview",
-    "start": "node backend/server.js"
+    "start": "node backend/server.js",
+    "seed": "node scripts/seed-mongodb.js",
+    "verify:m1": "node scripts/verify-m1.js",
+    "test": "vitest run",
+    "test:smoke": "vitest run tests/helpers/smoke.test.js",
+    "test:e2e": "vitest run tests/e2e",
+    "test:tier1": "vitest run tests/e2e/tier1-features",
+    "test:tier2": "vitest run tests/e2e/tier2-boundaries",
+    "test:tier3": "vitest run tests/e2e/tier3-pairwise",
+    "test:tier4": "vitest run tests/e2e/tier4-scenarios",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "axios": "^1.9.0",
@@ -29,16 +40,19 @@
     "jsonwebtoken": "^9.0.2",
     "moment-timezone": "^0.5.48",
     "multer": "^2.0.0",
-    "mysql2": "^3.14.1",
+    "mongoose": "^8.10.0",
     "node-cron": "^4.1.0",
     "node-fetch": "^2.7.0",
     "react-toastify": "^11.0.5",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^3.0.0",
     "better-logging": "^5.0.0",
     "chalk": "^4.1.2",
     "concurrently": "^9.1.2",
-    "pm2": "^6.0.8"
+    "pm2": "^6.0.8",
+    "supertest": "^7.0.0",
+    "vitest": "^3.0.0"
   }
 }

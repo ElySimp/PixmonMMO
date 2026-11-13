@@ -1,16 +1,14 @@
-const db = require('../config/database');
+const mongoose = require('mongoose');
 const moment = require('moment-timezone');
-const { QuestSystem } = require('../models/QuestSystem');
+const { QuestTemplate, UserQuestProgress } = require('../models/Quest');
+const { UserInventory } = require('../models/Item');
+const Player = require('../models/Player');
 
 exports.getAllQuests = async (req, res) => {
     try {
-        // Fetching all quests - verbose logging removed
-        const [quests] = await db.query('SELECT * FROM Quest');
-
-        // Quest data retrieved successfully
+        const quests = await QuestTemplate.find({});
         res.json(quests);
     } catch (error) {
-        console.error("Error fetching quests:", error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -19,25 +17,42 @@ exports.getUserQuests = async (req, res) => {
     const { userId } = req.params;
 
     try {
-        const quests = await UserQuest.getUserQuests(userId);
-        
-        if (quests.length === 0) {
-            return res.json({ success: true, message: "No quests assigned yet", data: [] });
-        }
+        const todayKey = UserQuestProgress.generatePeriodKey('daily');
+        const progressList = await UserQuestProgress.find({ userId: String(userId) });
+        const allTemplates = await QuestTemplate.find({});
+        const progressMap = new Map(progressList.map(p => [p.questId, p]));
+
+        const quests = allTemplates.map(tmpl => {
+            const prog = progressMap.get(tmpl.questId);
+            return {
+                id: tmpl.questId,
+                quest_id: tmpl.questId,
+                name: tmpl.name,
+                description: tmpl.description,
+                repeat_type: tmpl.repeatType,
+                requirement_type: tmpl.requirementType,
+                requirement_target: tmpl.requirementTarget,
+                xp_reward: tmpl.xpReward,
+                gold_reward: tmpl.goldReward,
+                diamond_reward: tmpl.diamondReward,
+                progress: prog ? prog.progress : 0,
+                target: tmpl.requirementTarget,
+                completed: prog ? prog.completed : false,
+                claimed: prog ? prog.claimed : false
+            };
+        });
 
         res.json({ success: true, data: quests });
     } catch (error) {
-        console.error("Error fetching user quests:", error);
-        res.status(500).json({ error: "Failed to fetch user quests", details: error.message });
+        res.status(500).json({ error: 'Failed to fetch user quests', details: error.message });
     }
 };
 
 exports.getBountyQuests = async (req, res) => {
     try {
-        const [quests] = await db.query('SELECT * FROM Quest WHERE repeat_type = "bounty"');
+        const quests = await QuestTemplate.find({ repeatType: 'bounty' });
         res.json(quests);
     } catch (error) {
-        console.error("Error fetching bounty quests:", error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -45,13 +60,25 @@ exports.getBountyQuests = async (req, res) => {
 exports.getUserBountyQuests = async (req, res) => {
     const { userId } = req.params;
     try {
-        const [quests] = await db.query(
-            `SELECT q.id, q.name, q.description, q.xp_reward, q.gold_reward, q.repeat_type, uq.completed, uq.claimed, uq.last_completed
-             FROM UserQuest uq
-             JOIN Quest q ON uq.quest_id = q.id
-             WHERE uq.user_id = ? AND q.repeat_type = "bounty"`,
-            [userId]
-        );
+        const progressList = await UserQuestProgress.find({ userId: String(userId), repeatType: 'bounty' });
+        const bountyTemplates = await QuestTemplate.find({ repeatType: 'bounty' });
+        const progressMap = new Map(progressList.map(p => [p.questId, p]));
+
+        const quests = bountyTemplates.map(q => {
+            const uq = progressMap.get(q.questId);
+            return {
+                id: q.questId,
+                name: q.name,
+                description: q.description,
+                xp_reward: q.xpReward,
+                gold_reward: q.goldReward,
+                repeat_type: q.repeatType,
+                completed: uq ? uq.completed : false,
+                claimed: uq ? uq.claimed : false,
+                last_completed: uq ? uq.claimedAt : null
+            };
+        });
+
         res.json({ success: true, data: quests });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -59,8 +86,28 @@ exports.getUserBountyQuests = async (req, res) => {
 };
 
 exports.completeQuest = async (req, res) => {
+    const { userId, questId } = req.params;
     try {
-        await QuestSystem.completeQuest(req.params.userId, req.params.questId);
+        const tmpl = await QuestTemplate.findOne({ questId });
+        if (!tmpl) {
+            return res.status(404).json({ success: false, message: 'Quest template not found' });
+        }
+
+        const periodKey = UserQuestProgress.generatePeriodKey(tmpl.repeatType);
+
+        await UserQuestProgress.findOneAndUpdate(
+            { userId: String(userId), questId, periodKey },
+            {
+                $set: {
+                    repeatType: tmpl.repeatType,
+                    target: tmpl.requirementTarget,
+                    progress: tmpl.requirementTarget,
+                    completed: true
+                }
+            },
+            { upsert: true }
+        );
+
         res.json({ success: true });
     } catch (err) {
         res.status(400).json({ success: false, message: err.message });
@@ -69,71 +116,48 @@ exports.completeQuest = async (req, res) => {
 
 exports.claimDailyMainReward = async (req, res) => {
     const { userId } = req.params;
-    const items = [
-            {
-                item_id: 9,
-                item_name:"Steel Key", 
-                description:"A key to open up a metal chest",
-                item_type:"key",
-                item_stats: {
-                    key_level: 1
-                },
-                rarity:2
-            }
-        ];
     try {
-        const today = moment().tz("Asia/Jakarta").format('YYYY-MM-DD');
+        const playerFilter = mongoose.Types.ObjectId.isValid(userId)
+            ? { $or: [{ _id: userId }, { id: String(userId) }, { username: String(userId) }] }
+            : { $or: [{ id: String(userId) }, { username: String(userId) }] };
 
-        // Cek apakah sudah claim hari ini
-        const [stats] = await db.query(
-            'SELECT last_daily_main_reward FROM UserStats WHERE user_id = ?',
-            [userId]
+        const now = moment().tz("Asia/Jakarta");
+        const startOfToday = now.clone().startOf('day').toDate();
+
+        // Atomic update: only succeeds if lastDailyMainReward is null or prior to today in Jakarta
+        const updatedPlayer = await Player.findOneAndUpdate(
+            {
+                ...playerFilter,
+                $or: [
+                    { lastDailyMainReward: null },
+                    { lastDailyMainReward: { $exists: false } },
+                    { lastDailyMainReward: { $lt: startOfToday } }
+                ]
+            },
+            {
+                $inc: { diamonds: 5 },
+                $set: {
+                    lastDailyMainReward: new Date(),
+                    'dailyRewards.lastDailyMainReward': new Date()
+                }
+            },
+            { new: true }
         );
-        if (
-            stats.length > 0 &&
-            stats[0].last_daily_main_reward &&
-            moment(stats[0].last_daily_main_reward).tz("Asia/Jakarta").format('YYYY-MM-DD') === today
-        ) {
+
+        if (!updatedPlayer) {
+            const playerExists = await Player.findOne(playerFilter);
+            if (!playerExists) {
+                return res.status(404).json({ success: false, message: 'User not found' });
+            }
             return res.status(400).json({ success: false, message: 'Main reward already claimed today' });
         }
 
-        // Berikan reward: tambah 5 diamonds & 1 Normal Key, update waktu claim
-        await db.query(
-            'UPDATE UserStats SET diamonds = diamonds + 5, last_daily_main_reward = NOW() WHERE user_id = ?',
-            [userId]
+        // Add 1 Normal Key (Steel Key) atomically with unique compound index protection
+        await UserInventory.findOneAndUpdate(
+            { userId: String(userId), itemId: 'key_steel' },
+            { $inc: { amount: 1 } },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
         );
-   
-
-        const [rows] = await db.query(
-                'SELECT COUNT(*) AS count FROM UserInventory WHERE user_id = ? AND index_id = 9',
-                [userId]
-      );
-
-        if (rows[0].count === 0) {
-            await db.query(`
-                INSERT INTO UserInventory 
-                    (item_name, index_id, user_id, item_type, amount, item_stats, rarity)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                `,
-                [
-                    items[0].item_name,
-                    items[0].item_id,
-                    userId,
-                    items[0].item_type,
-                    1,
-                    items[0].item_stats ? JSON.stringify(items[0].item_stats) : null,
-                    items[0].rarity
-                ]
-            );
-        } else {
-            await db.query(`
-                UPDATE UserInventory 
-                SET amount = amount + 1
-                WHERE user_id = ? AND index_id = 9
-                `,
-                [userId]
-            );
-        }
 
         res.json({ success: true, message: 'Main reward claimed: 5 diamonds & 1 Normal Key' });
     } catch (error) {
@@ -144,23 +168,72 @@ exports.claimDailyMainReward = async (req, res) => {
 exports.claimQuestReward = async (req, res) => {
     const { userId, questId } = req.params;
     try {
-        const today = moment().tz("Asia/Jakarta").format('YYYY-MM-DD');
-        const [uq] = await db.query(
-            `SELECT completed, claimed, last_completed FROM UserQuest WHERE user_id = ? AND quest_id = ?`,
-            [userId, questId]
-        );
-        if (uq.length === 0) return res.status(404).json({ success: false, message: 'Quest not found' });
-        if (!uq[0].completed || !uq[0].last_completed || moment(uq[0].last_completed).tz("Asia/Jakarta").format('YYYY-MM-DD') !== today) {
-            return res.status(400).json({ success: false, message: 'Quest not completed today' });
+        const tmpl = await QuestTemplate.findOne({ questId });
+        if (!tmpl) {
+            return res.status(404).json({ success: false, message: 'Quest not found' });
         }
-        if (uq[0].claimed) {
-            return res.status(400).json({ success: false, message: 'Quest already claimed today' });
-        }
-        await db.query(
-            `UPDATE UserQuest SET claimed = TRUE WHERE user_id = ? AND quest_id = ?`,
-            [userId, questId]
+
+        const periodKey = UserQuestProgress.generatePeriodKey(tmpl.repeatType);
+
+        // Atomic conditional update: only claim if completed is true and claimed is false
+        const progress = await UserQuestProgress.findOneAndUpdate(
+            {
+                userId: String(userId),
+                questId: String(questId),
+                periodKey,
+                completed: true,
+                claimed: false
+            },
+            {
+                $set: {
+                    claimed: true,
+                    claimedAt: new Date()
+                }
+            },
+            { new: true }
         );
-        // Berikan reward ke user di sini...
+
+        // If no document was modified, determine the exact state for informative response
+        if (!progress) {
+            const existing = await UserQuestProgress.findOne({
+                userId: String(userId),
+                questId: String(questId),
+                periodKey
+            });
+
+            if (!existing || !existing.completed) {
+                return res.status(400).json({ success: false, message: 'Quest not completed' });
+            }
+            return res.status(400).json({ success: false, message: 'Quest already claimed' });
+        }
+
+        // Award rewards atomically to player
+        const playerFilter = mongoose.Types.ObjectId.isValid(userId)
+            ? { $or: [{ _id: userId }, { id: String(userId) }, { username: String(userId) }] }
+            : { $or: [{ id: String(userId) }, { username: String(userId) }] };
+
+        await Player.findOneAndUpdate(
+            playerFilter,
+            {
+                $inc: {
+                    xp: tmpl.xpReward || 0,
+                    gold: tmpl.goldReward || 0,
+                    diamonds: tmpl.diamondReward || 0
+                }
+            }
+        );
+
+        // Award item rewards if defined in template
+        if (tmpl.itemRewards && Array.isArray(tmpl.itemRewards) && tmpl.itemRewards.length > 0) {
+            for (const reward of tmpl.itemRewards) {
+                await UserInventory.findOneAndUpdate(
+                    { userId: String(userId), itemId: reward.itemId },
+                    { $inc: { amount: reward.amount || 1 } },
+                    { upsert: true, new: true, setDefaultsOnInsert: true }
+                );
+            }
+        }
+
         res.json({ success: true, message: 'Quest reward claimed' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -168,44 +241,93 @@ exports.claimQuestReward = async (req, res) => {
 };
 
 exports.restoreQuestPoint = async (req, res) => {
-  const { userId } = req.params;
-  try {
-    // Ambil diamond dan quest_points user
-    const [userStats] = await db.query('SELECT diamonds, quest_points FROM UserStats WHERE user_id = ?', [userId]);
-    if (!userStats[0]) return res.status(404).json({ success: false, message: 'User not found' });
-    if (userStats[0].diamonds < 1) return res.status(400).json({ success: false, message: 'Not enough diamonds' });
-    if (userStats[0].quest_points >= 10) return res.status(400).json({ success: false, message: 'Quest points already max' });
+    const { userId } = req.params;
+    try {
+        const playerFilter = mongoose.Types.ObjectId.isValid(userId)
+            ? { $or: [{ _id: userId }, { id: String(userId) }, { username: String(userId) }] }
+            : { $or: [{ id: String(userId) }, { username: String(userId) }] };
 
-    await db.query('UPDATE UserStats SET diamonds = diamonds - 1, quest_points = quest_points + 1 WHERE user_id = ?', [userId]);
-    res.json({ success: true, message: 'Quest point restored!' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+        // Atomically deduct 1 diamond and add 1 quest point if diamonds >= 1 and questPoints < 10
+        const player = await Player.findOneAndUpdate(
+            {
+                ...playerFilter,
+                diamonds: { $gte: 1 },
+                questPoints: { $lt: 10 }
+            },
+            {
+                $inc: { diamonds: -1, questPoints: 1 }
+            },
+            { new: true }
+        );
+
+        if (!player) {
+            const existing = await Player.findOne(playerFilter);
+            if (!existing) return res.status(404).json({ success: false, message: 'User not found' });
+            if (existing.diamonds < 1) return res.status(400).json({ success: false, message: 'Not enough diamonds' });
+            return res.status(400).json({ success: false, message: 'Quest points already max' });
+        }
+
+        res.json({ success: true, message: 'Quest point restored!' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 };
 
 exports.decrementQuestPoint = async (req, res) => {
-  const { userId } = req.params;
-  try {
-    // Cek quest point user
-    const [userStats] = await db.query('SELECT quest_points FROM UserStats WHERE user_id = ?', [userId]);
-    if (!userStats[0] || userStats[0].quest_points <= 0) {
-      return res.status(400).json({ success: false, message: 'Not enough quest points' });
+    const { userId } = req.params;
+    try {
+        const playerFilter = mongoose.Types.ObjectId.isValid(userId)
+            ? { $or: [{ _id: userId }, { id: String(userId) }, { username: String(userId) }] }
+            : { $or: [{ id: String(userId) }, { username: String(userId) }] };
+
+        const player = await Player.findOneAndUpdate(
+            {
+                ...playerFilter,
+                questPoints: { $gt: 0 }
+            },
+            {
+                $inc: { questPoints: -1 }
+            },
+            { new: true }
+        );
+
+        if (!player) {
+            return res.status(400).json({ success: false, message: 'Not enough quest points' });
+        }
+
+        res.json({ success: true, message: 'Quest point decremented' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
-    await db.query('UPDATE UserStats SET quest_points = quest_points - 1 WHERE user_id = ?', [userId]);
-    res.json({ success: true, message: 'Quest point decremented' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
 };
 
 exports.startBountyQuest = async (req, res) => {
-  const { userId, questId } = req.params;
-  try {
-    await QuestSystem.startBountyQuest(userId, questId);
-    res.json({ success: true, message: 'Bounty quest started' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+    const { userId, questId } = req.params;
+    try {
+        const tmpl = await QuestTemplate.findOne({ questId });
+        if (!tmpl) {
+            return res.status(404).json({ success: false, message: 'Bounty quest not found' });
+        }
+
+        const periodKey = UserQuestProgress.generatePeriodKey('bounty');
+        await UserQuestProgress.findOneAndUpdate(
+            { userId: String(userId), questId, periodKey },
+            {
+                $set: {
+                    repeatType: 'bounty',
+                    target: tmpl.requirementTarget,
+                    progress: 0,
+                    completed: false,
+                    claimed: false
+                }
+            },
+            { upsert: true }
+        );
+
+        res.json({ success: true, message: 'Bounty quest started' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 };
 
 exports.getServerTime = (req, res) => {

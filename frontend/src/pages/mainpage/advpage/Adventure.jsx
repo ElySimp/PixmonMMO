@@ -1,653 +1,573 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 import './Adventure.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
-import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from '../../../context/AuthContext';
 import { useUserStats } from '../../../context/UserStatsContext';
-import { API_URL } from '../../../utils/config';
+import { API_URL, TOKEN_KEY } from '../../../utils/config';
+import { getRarityInfo } from '../../../utils/rarity';
 import adventureStories from '../../../assets/adventure_stories';
-import educationalStories from '../../../assets/educational_stories';
 import avatarExample from '../../../assets/MAIN/avatar_exaple.gif';
+import logo from '../../../assets/MAIN/logo.png';
+import healthIcon from '../../../assets/MAIN/health.png';
+import attackIcon from '../../../assets/MAIN/battle.png';
+import defenseIcon from '../../../assets/MAIN/defence.png';
+import diamondsIcon from '../../../assets/MAIN/diamonds2.png';
 
-function getDailyKeyDate() {
-  const now = new Date();
-  if (now.getHours() < 7) {
-    now.setDate(now.getDate() - 1);
+const DUNGEON_ZONES = [
+  {
+    id: 'whispering_woods',
+    name: 'Whispering Woods',
+    levelReq: 1,
+    difficulty: 'Normal',
+    description: 'A shadowy forest teeming with goblins, wild beasts, and hidden herbal caches.',
+    gradient: 'linear-gradient(135deg, #1b382b 0%, #0d1b14 100%)',
+    borderColor: '#4CAF50'
+  },
+  {
+    id: 'sunken_caverns',
+    name: 'Sunken Caverns',
+    levelReq: 6,
+    difficulty: 'Hard',
+    description: 'Flooded subterranean ruins guarded by cave spiders and ancient golems.',
+    gradient: 'linear-gradient(135deg, #153243 0%, #081620 100%)',
+    borderColor: '#2196F3'
+  },
+  {
+    id: 'dragons_spire',
+    name: 'Dragon’s Spire',
+    levelReq: 12,
+    difficulty: 'Nightmare',
+    description: 'Volcanic peaks inhabited by flame drakes and dragonforged armaments.',
+    gradient: 'linear-gradient(135deg, #421b1b 0%, #1f0b0b 100%)',
+    borderColor: '#FF5722'
+  },
+  {
+    id: 'void_rift',
+    name: 'Void Rift',
+    levelReq: 18,
+    difficulty: 'Eldritch',
+    description: 'A fracture in reality where eldritch horrors and transcendent treasures await.',
+    gradient: 'linear-gradient(135deg, #2d1845 0%, #130a1f 100%)',
+    borderColor: '#B388FF'
   }
-  return now.toISOString().slice(0,10).replace(/-/g,'');
-}
+];
+
 const Adventure = () => {
-  // Use the UserStatsContext for instant access to user stats
-  const { 
-    level, 
-    xp, 
-    gold, 
-    diamonds, 
-    xpToNextLevel,
-    cooldownEnd: contextCooldownEnd,
-    isLoading: statsLoading,
-    updateStats,
-    calculateXpCap,
-    checkAndProcessLevelUp
-  } = useUserStats();
+  const { user } = useAuth();
+  const { level, xp, gold, diamonds, updateStats, calculateXpCap } = useUserStats();
 
-  const [story, setStory] = useState('Your adventure begins...');
-  const [cooldown, setCooldown] = useState(0);
-  const [cooldownEndTime, setCooldownEndTime] = useState(contextCooldownEnd || 0);
-  
-  // Educational story states
-  const [currentEduStory, setCurrentEduStory] = useState(null);
-  const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
-  const [showQuestion, setShowQuestion] = useState(false);
-  const [inEduStoryMode, setInEduStoryMode] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [answerSubmitted, setAnswerSubmitted] = useState(false);
-  
-  const { user } = useAuth(); // Get user from auth context
+  // Navigation / Dungeon State
+  const [dungeonSession, setDungeonSession] = useState(null);
+  const [selectedZone, setSelectedZone] = useState(DUNGEON_ZONES[0]);
+  const [loading, setLoading] = useState(false);
+  const [energy, setEnergy] = useState(10);
+  const [maxEnergy, setMaxEnergy] = useState(10);
 
-  // dummy party
-  const [partyView, setPartyView] = useState('default'); 
-  
-  const dummyPartyList = [
-    { id: 1, name: "Party Alpha", members: 3 },
-    { id: 2, name: "Party Beta", members: 2 },
-    { id: 3, name: "Party Gamma", members: 4 },
-    { id: 4, name: "Party Delta", members: 1 },
-    { id: 5, name: "Party Epsilon", members: 5 }
-  ];
+  // Stepping Action Delay (Cooldown)
+  const [stepCooldown, setStepCooldown] = useState(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
 
-  // We're now using calculateXpCap from UserStatsContext
+  // Combat State
+  const [combatState, setCombatState] = useState(null);
+  const [combatLogs, setCombatLogs] = useState([]);
+  const [isHitPlayer, setIsHitPlayer] = useState(false);
+  const [isHitMonster, setIsHitMonster] = useState(false);
+  const [equippedPet, setEquippedPet] = useState(null);
+  const [currentStoryText, setCurrentStoryText] = useState('');
 
-  // Get a random adventure story from our collection
-  const getRandomStory = (foundRewards) => {
-    // Pick random story from the collection
-    const randomIndex = Math.floor(Math.random() * adventureStories.length);
-    const randomStory = adventureStories[randomIndex];
-    
-    // If rewards were found, append that information
-    if (foundRewards) {
-      return `${randomStory} You found some rewards!`;
-    }
-    
-    return randomStory;
-  };
-
-  // Check and update cooldown based on the server time or local timer
+  // Fetch active session & user energy on mount
   useEffect(() => {
-    let cooldownTimer;
-    
-    if (cooldownEndTime > 0) {
-      const updateCooldown = () => {
-        const now = Date.now();
-        const remainingCooldown = Math.max(0, Math.ceil((cooldownEndTime - now) / 1000));
-        
-        setCooldown(remainingCooldown);
-        
-        if (remainingCooldown === 0) {
-          setCooldownEndTime(0);
-          clearInterval(cooldownTimer);
-        }
-      };
-      
-      updateCooldown(); // Run immediately
-      cooldownTimer = setInterval(updateCooldown, 250); // Update 4 times per second for smoother countdown
-    }
-    
-    return () => {
-      if (cooldownTimer) clearInterval(cooldownTimer);
-    };
-  }, [cooldownEndTime]);
+    fetchActiveSession();
+    fetchEquippedPet();
+  }, [user]);
 
-  // Update cooldown effect from context
+  // Handle action delay timer
   useEffect(() => {
-    if (contextCooldownEnd) {
-      setCooldownEndTime(contextCooldownEnd);
-    }
-  }, [contextCooldownEnd]);
-
-  // Start a new educational story sequence
-  const startNewEduStory = () => {
-    // Pick a random educational story
-    const randomIndex = Math.floor(Math.random() * educationalStories.length);
-    const story = educationalStories[randomIndex];
-    
-    setCurrentEduStory(story);
-    setCurrentSentenceIndex(0);
-    setShowQuestion(false);
-    setInEduStoryMode(true);
-    setSelectedAnswer(null);
-    setAnswerSubmitted(false);
-    
-    // Just set the story text without EVENT STORIES prefix
-    setStory(story.sentences[0]);
-  };
-  
-  // Handle answer selection for educational stories
-  const handleAnswerSelection = (answerIndex) => {
-    setSelectedAnswer(answerIndex);
-  };
-  
-  // Submit the answer and check if correct
-  const submitAnswer = async () => {
-    if (selectedAnswer === null) return;
-    
-    setAnswerSubmitted(true);
-    
-    // Check if answer is correct
-    const isCorrect = selectedAnswer === currentEduStory.correctAnswer;
-    
-    if (isCorrect) {
-      // Award 2 diamonds for correct answer
-      const diamondReward = 2;
-      
-      // Use context to update diamonds
-      updateStats({
-        diamondsDelta: diamondReward
-      });
-      
-      toast.success(`Correct! You earned ${diamondReward} diamonds!`, {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-    } else {
-      toast.error("Sorry, that's not correct. Keep learning!", {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-    }
-    
-    // Reset edu story mode after displaying result
-    setTimeout(() => {
-      setInEduStoryMode(false);
-      setCurrentEduStory(null);
-      setStory("Continue your adventure...");
-    }, 3000);
-  };
-
-  const handleStep = async () => {
-    // Don't allow steps if on cooldown
-    if (cooldown > 0) {
-      return;
-    }
-
-    const userId = localStorage.getItem('userId');
-    const dailyKey = `steps_${userId}_${getDailyKeyDate()}`;
-    const steps = parseInt(localStorage.getItem(dailyKey) || '0') + 1;
-    localStorage.setItem(dailyKey, steps);
-    
-    console.log('Steps after step:', steps);
-
-    // Jika sudah 5 langkah, mark quest completed
-    const questId = 2;
-    if (steps === 5) {
-      try {
-        const res = await axios.post(`${API_URL}/user/${userId}/quest/${questId}/complete`);
-        console.log('Complete quest response:', res.data);
-        toast.success("Quest 'Take 5 Steps' completed!");
-      } catch (err) {
-        console.error('Error completing quest:', err.response?.data || err.message);
-        toast.error('Failed to complete quest!');
-      }
-    }
-
-    // uji coba 
-    if (steps === 10) {
-      try {
-        const res = await axios.post(`${API_URL}/user/${userId}/quest/3/complete`);
-        console.log('Complete quest response:', res.data);
-        toast.success("Dummy Quest completed!");
-      } catch (err) {
-        console.error('Error completing quest:', err.response?.data || err.message);
-        toast.error('Failed to complete quest!');
-      }
-    }
-
-    if (steps === 10) {
-      try {
-        const res = await axios.post(`${API_URL}/user/${userId}/quest/4/complete`);
-        console.log('Complete quest response:', res.data);
-        toast.success("Dummy Quest completed!");
-      } catch (err) {
-        console.error('Error completing quest:', err.response?.data || err.message);
-        toast.error('Failed to complete quest!');
-      }
-    }
-
-
-    if (steps === 10) {
-      try {
-        const res = await axios.post(`${API_URL}/user/${userId}/quest/5/complete`);
-        console.log('Complete quest response:', res.data);
-        toast.success("Dummy Quest completed!");
-      } catch (err) {
-        console.error('Error completing quest:', err.response?.data || err.message);
-        toast.error('Failed to complete quest!');
-      }
-    }
-
-    
-    // Track total steps for achievements
-    const totalSteps = localStorage.getItem(`steps_${user.id}`) ? 
-      parseInt(localStorage.getItem(`steps_${user.id}`)) : 0;
-    
-    // Apply cooldown first to prevent spamming
-    const randomCooldownSeconds = Math.floor(Math.random() * 5) + 3; // 3-7 seconds cooldown
-    const cooldownEndTimestamp = Date.now() + (randomCooldownSeconds * 1000);
-    setCooldownEndTime(cooldownEndTimestamp);
-    setCooldown(randomCooldownSeconds);
-    
-    // If we're in an educational story mode
-    if (inEduStoryMode) {
-      // If showing a question, don't progress until answer is submitted
-      if (showQuestion) {
-        if (!answerSubmitted) {
-          toast.info("Please select an answer", {
-            position: "top-center",
-            autoClose: 1500,
-          });
-        }
-        return;
-      }
-      
-      // Move to next sentence in the story
-      const nextIndex = currentSentenceIndex + 1;
-      
-      // If we've reached the end of the sentences, show the question
-      if (nextIndex >= currentEduStory.sentences.length) {
-        setShowQuestion(true);
-        setStory(currentEduStory.question);
-        return;
-      }
-      
-      // Show the next sentence without EVENT STORIES prefix
-      setCurrentSentenceIndex(nextIndex);
-      setStory(currentEduStory.sentences[nextIndex]);
-      return;
-    }
-    
-    // Determine if this step triggers an educational story (40% chance)
-    const triggerEduStory = Math.random() < 0.05;
-    
-    if (triggerEduStory) {
-      startNewEduStory();
-      
-      // Early return - don't process normal rewards
-      // Cooldown is already applied at the beginning of handleStep
-      return;
-    }
-    
-    // Regular adventure - Calculate current level XP cap
-    const currentXpCap = calculateXpCap(level);
-    
-    // XP gain: 1% to 4.5% of the level cap with random decimals, 35% chance to not get any XP
-    const xpChance = Math.random();
-    let randomXp = 0;
-    
-    if (xpChance > 0.35) { // 65% chance to get XP (100% - 35%)
-      // Random percentage between 1% and 4.5%
-      const randomPercentage = (Math.random() * 3.5 + 1) / 100;
-      randomXp = Math.floor(currentXpCap * randomPercentage);
-    }
-    
-    // Gold gain: 0-50 random, 20% chance to not get any gold
-    const goldChance = Math.random();
-    let randomGold = 0;
-    
-    if (goldChance > 0.2) { // 80% chance to get gold (100% - 20%)
-      randomGold = Math.floor(Math.random() * 51); // 0-50 inclusive
-    }
-    
-    // Cooldown is already applied at the beginning of handleStep
-
-    // Use the context's updateStats method for local and backend updates
-    const updates = {
-      xpDelta: randomXp,
-      goldDelta: randomGold,
-      cooldownEnd: new Date(cooldownEndTimestamp).toISOString()
-    };
-    
-    // Update stats in context (updates local state and sends to backend)
-    updateStats(updates);
-    
-    // Check if player should level up
-    const levelUpResult = await checkAndProcessLevelUp();
-    const { didLevelUp, newLevel: leveledUpTo } = levelUpResult;
-    let levelUpMessage = '';
-    
-    if (didLevelUp) {
-      levelUpMessage = `Congratulations! You've reached level ${leveledUpTo}!`;
-      
-      toast.info(levelUpMessage, {
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-    }
-    
-    // Get a random adventure story
-    const foundRewards = randomXp > 0 || randomGold > 0;
-    const newStory = getRandomStory(foundRewards);
-    
-    // Add level up message if relevant
-    const storyWithLevelUp = levelUpMessage ? `${newStory} ${levelUpMessage}` : newStory;
-    setStory(storyWithLevelUp);
-
-    // Show notifications for XP and gold gains
-    if (randomXp > 0) {
-      toast.success(`Gained ${randomXp} XP!`, {
-        position: "top-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-    }
-    
-    if (randomGold > 0) {
-      toast.success(`Found ${randomGold} Gold!`, {
-        position: "top-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-    }
-
-    // We don't need to update the backend here - the context handles that for us!
-    try {
-      // Validate the user ID before proceeding with achievements
-      if (!user || !user.id) {
-        console.error('Invalid user ID:', user?.id);
-        toast.error('Authentication error: Invalid user ID. Try logging in again.');
-        return;
-      }
-      
-      // Increment total steps for achievements and store in localStorage
-      const newTotalSteps = totalSteps + 1;
-      localStorage.setItem(`steps_${user.id}`, newTotalSteps);
-      
-      // Check for achievements based on new stats and step count
-      try {
-        const achievementResponse = await axios.post(`${API_URL}/users/${user.id}/check-achievements`, {
-          progressData: {
-            totalSteps: newTotalSteps,
+    let timer;
+    if (stepCooldown && cooldownSeconds > 0) {
+      timer = setInterval(() => {
+        setCooldownSeconds((prev) => {
+          if (prev <= 1) {
+            setStepCooldown(false);
+            clearInterval(timer);
+            return 0;
           }
+          return prev - 1;
         });
-        
-        // If achievements were unlocked, show notifications
-        if (achievementResponse.data.newAchievements && achievementResponse.data.newAchievements.length > 0) {
-          // Show achievement notifications
-          achievementResponse.data.newAchievements.forEach(achievement => {
-            toast.success(
-              <div className="achievement-toast">
-                <div className="achievement-toast-header">
-                  <strong>Achievement Unlocked!</strong>
-                </div>
-                <div className="achievement-toast-body">
-                  <p><b>{achievement.title}</b></p>
-                  <p>{achievement.description}</p>
-                  {(achievement.rewards.xp > 0 || achievement.rewards.gold > 0) && (
-                    <div className="achievement-toast-rewards">
-                      {achievement.rewards.xp > 0 && (
-                        <span>+{achievement.rewards.xp} XP</span>
-                      )}
-                      {achievement.rewards.gold > 0 && (
-                        <span>+{achievement.rewards.gold} Gold</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>,
-              {
-                position: "top-center",
-                autoClose: 4000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                className: "achievement-notification-toast"
-              }
-            );
-          });
-          
-          // Update stats if rewards were given
-          if (achievementResponse.data.rewards.xp > 0 || achievementResponse.data.rewards.gold > 0) {
-            setXp(prevXp => prevXp + achievementResponse.data.rewards.xp);
-            setGold(prevGold => prevGold + achievementResponse.data.rewards.gold);
-          }
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [stepCooldown, cooldownSeconds]);
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    };
+  };
+
+  const fetchActiveSession = async () => {
+    try {
+      const res = await fetch(`${API_URL}/dungeon/active`, {
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      if (data.success && data.hasActiveSession) {
+        setDungeonSession(data.session);
+        if (data.session.status === 'in_combat' && data.session.combatState) {
+          setCombatState(data.session.combatState);
+          setCombatLogs(data.session.combatState.combatLogs || []);
         }
-      } catch (error) {
-        console.error('Error checking achievements:', error);
+      }
+    } catch (err) {
+      // Quiet fail on network check
+    }
+  };
+
+  const fetchEquippedPet = async () => {
+    try {
+      const userId = user?.id || localStorage.getItem('userId');
+      if (!userId) return;
+      const res = await fetch(`${API_URL}/pets/user/${userId}`, {
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.pets)) {
+        const equipped = data.pets.find(p => p.equipped === 'yes' || p.is_equipped === true);
+        if (equipped) setEquippedPet(equipped);
+      }
+    } catch (err) {
+      // Quiet fail
+    }
+  };
+
+  // 1. Enter Dungeon (Costs 1 Energy, 1-8 steps)
+  const handleEnterDungeon = async (zone) => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_URL}/dungeon/enter`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        toast.error(data.message || 'Failed to enter dungeon. Check your energy.');
+        setLoading(false);
+        return;
+      }
+
+      setDungeonSession(data.session);
+      if (data.remainingEnergy !== undefined) {
+        setEnergy(data.remainingEnergy);
+      }
+      setSelectedZone(zone);
+      toast.success(`Entered ${zone.name}! Generated ${data.session.totalSteps} steps.`);
+    } catch (error) {
+      toast.error('Network error connecting to dungeon.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 2. Take a Step (Enforces brief action delay)
+  const handleTakeStep = async () => {
+    if (stepCooldown) return;
+
+    try {
+      setStepCooldown(true);
+      setCooldownSeconds(1); // 1-second action delay
+
+      // Pick random ambient story text
+      const randomStory = adventureStories[Math.floor(Math.random() * adventureStories.length)];
+      setCurrentStoryText(randomStory);
+
+      const res = await fetch(`${API_URL}/dungeon/step`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        toast.error(data.message || 'Failed to advance step');
+        return;
+      }
+
+      setDungeonSession(data.session);
+
+      if (data.status === 'in_combat' && data.session.combatState) {
+        setCombatState(data.session.combatState);
+        setCombatLogs(data.session.combatState.combatLogs || []);
+        toast.warn(`Monster encountered! Step ${data.stepIndex} of ${data.totalSteps}`);
+      } else if (data.currentStep?.eventType === 'loot') {
+        const loot = data.currentStep.loot;
+        toast.info(`Found Treasure! +${loot.gold || 0} Gold, ${loot.name || 'item'}`);
+      } else if (data.isCompleted) {
+        toast.success('Dungeon Run Completed! Claim your loot.');
       }
     } catch (error) {
-      console.error('Error updating stats:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
-      console.error('Error message:', error.message);
-      
-      // More detailed error logging
-      if (error.response) {
-        console.error('Response error data:', error.response.data);
-        console.error('Response error status:', error.response.status);
-        console.error('Response error headers:', error.response.headers);
-      } else if (error.request) {
-        console.error('Request was made but no response received');
-        console.error(error.request);
-      }
-      
-      // User-facing error message
-      let errorMessage = 'Failed to save your progress!';
-      
-      if (error.response?.data?.message) {
-        errorMessage = `Failed to save your progress: ${error.response.data.message}`;
-      } else if (error.message && error.message.includes('Network Error')) {
-        errorMessage = 'Network error: Could not reach the server. Check your internet connection.';
-      } else if (error.message) {
-        errorMessage = `Error: ${error.message}`;
-      }
-      
-      toast.error(errorMessage);
-      
-      // Set a flag in localStorage so we know an error occurred
-      localStorage.setItem('adventure_error_occurred', 'true');
-      localStorage.setItem('adventure_error_message', errorMessage);
-      
-      // Continue the game locally despite the error
-      console.log('Continuing with local state despite server error');
+      toast.error('Error taking dungeon step');
     }
   };
 
-  // Calculate progress percentage for XP bar
-  const xpProgressPercentage = xpToNextLevel > 0 ? Math.min(100, (xp / xpToNextLevel) * 100) : 0;
-  
-  // Calculate cooldown fill percentage (100% when no cooldown, 0% at max cooldown)
-  const cooldownPercentage = cooldownEndTime > 0 
-    ? Math.max(0, 100 - ((cooldownEndTime - Date.now()) / (cooldown * 500)) * 100) 
-    : 100;
+  // 3. Combat Action (Attack, Pet Skill, Potion, Flee)
+  const handleCombatAction = async (actionType, itemId = null) => {
+    try {
+      const res = await fetch(`${API_URL}/dungeon/action`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ action: actionType, itemId })
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        toast.error(data.message || 'Combat action failed');
+        return;
+      }
+
+      if (data.fled) {
+        toast.info('You fled the battle safely.');
+        setCombatState(null);
+        setDungeonSession(null);
+        return;
+      }
+
+      setCombatState(data.combatState);
+      setCombatLogs(data.combatState.combatLogs || []);
+
+      // Visual hit flashes
+      setIsHitMonster(true);
+      setTimeout(() => setIsHitMonster(false), 300);
+
+      if (data.combatState?.playerCurrentHp < (combatState?.playerCurrentHp || 100)) {
+        setIsHitPlayer(true);
+        setTimeout(() => setIsHitPlayer(false), 300);
+      }
+
+      if (data.combatFinished) {
+        if (data.victory) {
+          toast.success('Victory! Monster defeated.');
+          setCombatState(null);
+        } else {
+          toast.error('You were defeated in battle!');
+          setCombatState(null);
+        }
+      }
+
+      // Refresh session state
+      fetchActiveSession();
+    } catch (error) {
+      toast.error('Error processing combat action');
+    }
+  };
+
+  // 4. Claim Dungeon Rewards
+  const handleClaimRewards = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_URL}/dungeon/claim`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        toast.error(data.message || 'Failed to claim rewards');
+        return;
+      }
+
+      toast.success(`Claimed +${data.rewards.xp} XP, +${data.rewards.gold} Gold, and ${data.rewards.items.length} items!`);
+
+      // Update global context stats
+      if (data.player) {
+        updateStats({
+          level: data.player.level,
+          xp: data.player.xp,
+          gold: data.player.gold,
+          diamonds: data.player.diamonds
+        });
+      }
+
+      setDungeonSession(null);
+      setCombatState(null);
+    } catch (error) {
+      toast.error('Error claiming rewards');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const currentStep = dungeonSession?.steps?.[(dungeonSession?.currentStepIndex || 1) - 1];
+  const monster = currentStep?.monster;
 
   return (
     <div className="adventure-container">
-      <ToastContainer 
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss={false}
-        draggable
-        pauseOnHover={false}
-        limit={5}
-        toastClassName="adventure-toast"
-        containerId="adventure-toast-container"
-        enableMultiContainer={true}
-      />
-      <Sidebar profilePic="/dummy.jpg" />
+      <Sidebar profilePic={user?.profilePic} username={user?.username} />
       <div className="adventure-content">
-        <Topbar 
-          onMenuClick={() => console.log('Menu clicked')} 
-          onSupportClick={() => console.log('Support clicked')} 
-          onFriendsClick={() => console.log('Friends clicked')} 
-          onSearch={(value) => console.log('Search:', value)} 
-          onChatClick={() => console.log('Chat clicked')} 
-          onNotificationClick={() => console.log('Notifications clicked')} 
-          onEggClick={() => console.log('Egg clicked')} 
-        />
+        <Topbar />
+        <ToastContainer position="top-right" autoClose={2500} theme="dark" />
 
-        {statsLoading ? (
-          <div className="adventure-loading">
-            <div className="loading-spinner"></div>
-            <p>Loading your adventure...</p>
-          </div>
-        ) : (
-        <div className="adventure-grid">
-          <div className="adventure-grid-profile">
-            <div className="adventure-profile-left">
-              <div className="avatar-container">
-                <img src={avatarExample} alt="Profile" className="adventure-profile-pic" />
-              </div>
-              <div className="profile-info">
-                <div className="adventure-profile-name">{user?.username || "Adventurer"}</div>
-                <div className="adventure-profile-level">
-                  <div>Level {level}</div>
-                </div>
+        <div className="adventure-main-layout">
+          {/* Header Status Bar */}
+          <div className="adventure-header-banner">
+            <div className="adventure-header-player">
+              <img src={avatarExample} alt="Avatar" className="adventure-header-avatar" />
+              <div>
+                <h3 className="adventure-player-name">{user?.username || 'Hero'}</h3>
+                <span className="adventure-player-lvl">Level {level} Adventurer</span>
               </div>
             </div>
-            <div className="adventure-profile-right">
-              <div className="adventure-profile-currency">
-                <span>{gold} 🪙</span>
+
+            <div className="adventure-header-stats">
+              <div className="adventure-stat-badge">
+                <span className="badge-icon">⚡</span>
+                <span>Energy: <b>{energy} / {maxEnergy}</b></span>
               </div>
-              <div className="adventure-profile-currency">
-                <span>{diamonds} 💎</span>
+              <div className="adventure-stat-badge">
+                <span className="badge-icon">🪙</span>
+                <span>Gold: <b>{gold?.toLocaleString() || 0}</b></span>
+              </div>
+              <div className="adventure-stat-badge">
+                <img src={diamondsIcon} alt="Diamonds" className="badge-diamond-icon" />
+                <span>Diamonds: <b>{diamonds?.toLocaleString() || 0}</b></span>
               </div>
             </div>
           </div>
-          
-          {/* XP bar moved outside adventure-stats and directly beneath adventure-grid-profile */}
-          <div className="xp-bar-container">
-            <div 
-              className="xp-bar-fill" 
-              style={{ width: `${xpProgressPercentage}%` }}
-            ></div>
-            <span className="adventure-xp-text">XP: {xp} / {xpToNextLevel}</span>
-          </div>
-          <div className="adventure-bottom-grid">
-            {/* Kiri: Party Actions */}
-            <div className="adventure-party-column">
-              <div className="section-title">Party Menu</div>
-              {partyView === 'default' && (
-                <>
-                  <button className="party-action-btn" onClick={() => setPartyView('create')}>Create Party</button>
-                  <button className="party-action-btn" onClick={() => setPartyView('join')}>Join Party</button>
-                </>
-              )}
-              {partyView === 'create' && (
-                <div className="party-create-view">
-                  <h2>Your Party</h2>
-                  <div className="party-profile">
-                    <span className="party-profile-name">{user?.username || "Adventurer"}</span>
-                    <span className="party-profile-level">Level {level}</span>
+
+          {/* MAIN VIEW CONTROLLER */}
+          {!dungeonSession ? (
+            /* VIEW 1: DUNGEON ZONE SELECTOR */
+            <div className="adventure-zone-selector">
+              <div className="zone-selector-header">
+                <h2>Choose a Dungeon</h2>
+                <p>Each dungeon run costs <b>1 Energy</b>. Steps are randomized between <b>1 and 8 steps</b> with monsters, treasure, and relics.</p>
+              </div>
+
+              <div className="zones-grid">
+                {DUNGEON_ZONES.map((zone) => (
+                  <div
+                    key={zone.id}
+                    className="zone-card"
+                    style={{ background: zone.gradient, borderColor: zone.borderColor }}
+                  >
+                    <div className="zone-card-top">
+                      <span className="zone-difficulty-tag" style={{ color: zone.borderColor }}>
+                        {zone.difficulty}
+                      </span>
+                      <span className="zone-energy-cost">⚡ 1 Energy</span>
+                    </div>
+
+                    <h3 className="zone-title">{zone.name}</h3>
+                    <p className="zone-desc">{zone.description}</p>
+                    <div className="zone-rec-level">Recommended Level: {zone.levelReq}+</div>
+
+                    <button
+                      className="zone-enter-button"
+                      onClick={() => handleEnterDungeon(zone)}
+                      disabled={loading || level < zone.levelReq}
+                    >
+                      {level < zone.levelReq ? `Requires Lv. ${zone.levelReq}` : 'Enter Dungeon'}
+                    </button>
                   </div>
-                  <div className='create-party-button'>
-                    <button className="party-add-friend-btn">Add Friends</button>
-                    <button className="party-leave-btn" onClick={() => setPartyView('default')}>Leave Party</button>
-                  </div>
-                  
-                </div>
-              )}
-              {partyView === 'join' && (
-                <div className="party-join-view">
-                  <h2>Available Parties</h2>
-                  <ul className="party-list">
-                    {dummyPartyList.map(party => (
-                      <li key={party.id} className="party-list-item">
-                        <div className="party-list-items">
-                          <span>{party.name}</span>
-                          <span>{party.members} members</span>
-                        </div>
-                        <button className="party-join-btn">Join</button>
-                      </li>
-                    ))}
-                  </ul>
-                  <button className="party-close-btn" onClick={() => setPartyView('default')}>Close</button>
-                </div>
-              )}
+                ))}
+              </div>
             </div>
+          ) : combatState && dungeonSession.status === 'in_combat' ? (
+            /* VIEW 2: TURN-BASED COMBAT ARENA */
+            <div className="adventure-combat-arena">
+              <div className="combat-arena-header">
+                <h3>⚔️ Turn-Based Battle — Round {combatState.turn || 1}</h3>
+                <span className="combat-step-indicator">
+                  Step {dungeonSession.currentStepIndex} of {dungeonSession.totalSteps}
+                </span>
+              </div>
 
-
-            {/* Kanan: Adventure Content */}
-            <div className="adventure-grid-actions">
-              <div className="section-title">Adventure Log</div>
-              <div className="adventure-story">
-                {/* Add EVENT STORIES banner when in educational story mode */}
-                {inEduStoryMode && (
-                  <div className="event-story-banner">
-                    <span>EVENT STORIES</span>
-                  </div>
-                )}
-                <p>{story}</p>
-                
-                {/* Educational Story Question UI */}
-                {showQuestion && currentEduStory && (
-                  <div className="edu-question-container">
-                    {currentEduStory.choices.map((choice, index) => (
-                      <div 
-                        key={index} 
-                        className={`edu-answer-choice ${selectedAnswer === index ? 'selected' : ''} ${answerSubmitted && index === currentEduStory.correctAnswer ? 'correct' : ''} ${answerSubmitted && selectedAnswer === index && selectedAnswer !== currentEduStory.correctAnswer ? 'incorrect' : ''}`}
-                        onClick={() => !answerSubmitted && handleAnswerSelection(index)}
-                      >
-                        <span className="choice-letter">{String.fromCharCode(65 + index)}</span>
-                        <span className="choice-text">{choice}</span>
+              <div className="combat-arena-stage">
+                {/* Player & Pet Side */}
+                <div className={`combat-unit-card player-unit ${isHitPlayer ? 'combat-hit' : ''}`}>
+                  <div className="combat-unit-avatar-wrap">
+                    <img src={avatarExample} alt="Player" className="combat-unit-avatar" />
+                    {equippedPet && (
+                      <div className="combat-pet-badge pet-anim-tier-mid">
+                        <span className="combat-pet-role">🐾 {equippedPet.name || 'Pet'}</span>
                       </div>
-                    ))}
-                    
-                    {/* Submit button appears below the choices and only when an answer is selected */}
-                    {selectedAnswer !== null && !answerSubmitted && (
-                      <button 
-                        className="submit-answer-button"
-                        onClick={submitAnswer}
-                      >
-                        Submit Answer
-                      </button>
                     )}
                   </div>
-                )}
-                
-                {/* Only show Take a Step button when not answering questions or after submission */}
-                {(!showQuestion || answerSubmitted) && (
-                  <button 
-                    className="adventure-step-button" 
-                    onClick={handleStep} 
-                    disabled={cooldown > 0}
+                  <h4 className="combat-unit-name">{user?.username || 'Hero'} (Lv. {level})</h4>
+
+                  {/* Player HP Bar */}
+                  <div className="combat-bar-container">
+                    <div className="combat-bar-label">
+                      <span>HP</span>
+                      <span>{combatState.playerCurrentHp || 100} / 100</span>
+                    </div>
+                    <div className="combat-bar-track">
+                      <div
+                        className="combat-bar-fill hp"
+                        style={{ width: `${Math.max(0, Math.min(100, combatState.playerCurrentHp || 100))}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {/* Pet Status */}
+                  {equippedPet && (
+                    <div className="combat-pet-assist-banner">
+                      <span>Pet Support Active: +{equippedPet.current_atk || 15} ATK</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* VS Divider */}
+                <div className="combat-vs-divider">
+                  <span>VS</span>
+                </div>
+
+                {/* Monster Side */}
+                <div className={`combat-unit-card monster-unit ${isHitMonster ? 'combat-hit' : ''}`}>
+                  <div className="combat-unit-avatar-wrap">
+                    <img
+                      src={monster?.assetPath || logo}
+                      alt={monster?.name || 'Monster'}
+                      className="combat-monster-avatar spritesheet-anim-4frame"
+                    />
+                  </div>
+                  <h4 className="combat-unit-name monster-name">{monster?.name || 'Enemy'} (Lv. {monster?.level || 1})</h4>
+
+                  {/* Monster HP Bar */}
+                  <div className="combat-bar-container">
+                    <div className="combat-bar-label">
+                      <span>HP</span>
+                      <span>{combatState.monsterCurrentHp} / {combatState.monsterMaxHp}</span>
+                    </div>
+                    <div className="combat-bar-track">
+                      <div
+                        className="combat-bar-fill monster-hp"
+                        style={{
+                          width: `${Math.max(0, Math.min(100, (combatState.monsterCurrentHp / (combatState.monsterMaxHp || 1)) * 100))}%`
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div className="combat-monster-stats">
+                    <span>ATK: {monster?.atk || 12}</span>
+                    <span>DEF: {monster?.defPhy || 5}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="combat-actions-panel">
+                <button
+                  className="combat-action-btn btn-attack"
+                  onClick={() => handleCombatAction('attack')}
+                >
+                  ⚔️ Attack
+                </button>
+                <button
+                  className="combat-action-btn btn-potion"
+                  onClick={() => handleCombatAction('use_item', 'potion_hp')}
+                >
+                  🧪 Minor Potion (+50 HP)
+                </button>
+                <button
+                  className="combat-action-btn btn-flee"
+                  onClick={() => handleCombatAction('flee')}
+                >
+                  🏃 Flee Dungeon
+                </button>
+              </div>
+
+              {/* Combat Log */}
+              <div className="combat-log-console">
+                <h4>Battle Log</h4>
+                <div className="combat-log-feed">
+                  {combatLogs.slice().reverse().map((log, index) => (
+                    <div key={index} className={`combat-log-entry ${log.actor}`}>
+                      <span className="log-round">R{log.round || 1}</span>
+                      <span className="log-text">{log.message}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* VIEW 3: ACTIVE DUNGEON STEPPING & LOOT */
+            <div className="adventure-dungeon-run">
+              <div className="dungeon-run-header">
+                <div className="dungeon-run-title-group">
+                  <h2>{selectedZone.name}</h2>
+                  <span className="dungeon-progress-badge">
+                    Step <b>{dungeonSession.currentStepIndex}</b> of <b>{dungeonSession.totalSteps}</b>
+                  </span>
+                </div>
+
+                <div className="dungeon-progress-bar-wrap">
+                  <div
+                    className="dungeon-progress-bar-fill"
+                    style={{
+                      width: `${(dungeonSession.currentStepIndex / dungeonSession.totalSteps) * 100}%`
+                    }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Scene Card */}
+              <div className="dungeon-scene-card">
+                <div className="dungeon-scene-icon">
+                  {dungeonSession.status === 'completed' ? '🏆' : currentStep?.eventType === 'loot' ? '🎁' : '🌲'}
+                </div>
+                <h3 className="dungeon-scene-title">
+                  {dungeonSession.status === 'completed'
+                    ? 'Dungeon Conquered!'
+                    : currentStep?.eventType === 'loot'
+                    ? 'Treasure Found!'
+                    : `Exploring Step ${dungeonSession.currentStepIndex}`}
+                </h3>
+                <p className="dungeon-scene-narrative">
+                  {currentStoryText || 'You venture deeper into the dungeon corridors, your footsteps echoing against the ancient stone...'}
+                </p>
+
+                {/* Accumulated Rewards Pill */}
+                <div className="dungeon-accumulated-pill">
+                  <span>Accumulated: <b>+{dungeonSession.accumulatedRewards?.xp || 0} XP</b></span>
+                  <span><b>+{dungeonSession.accumulatedRewards?.gold || 0} Gold</b></span>
+                  {dungeonSession.accumulatedRewards?.diamonds > 0 && (
+                    <span><b>+{dungeonSession.accumulatedRewards.diamonds} Diamonds</b></span>
+                  )}
+                  {dungeonSession.accumulatedRewards?.items?.length > 0 && (
+                    <span><b>{dungeonSession.accumulatedRewards.items.length} Items</b></span>
+                  )}
+                </div>
+              </div>
+
+              {/* Stepping Action Button */}
+              <div className="dungeon-run-controls">
+                {dungeonSession.status === 'completed' ? (
+                  <button
+                    className="dungeon-claim-btn"
+                    onClick={handleClaimRewards}
+                    disabled={loading}
                   >
-                    <div 
-                      className="cooldown-fill" 
-                      style={{ width: `${cooldownPercentage}%` }}
-                    ></div>
-                    <span className="button-text">Take a Step</span>
+                    🏆 Claim All Rewards & Exit
+                  </button>
+                ) : (
+                  <button
+                    className={`dungeon-step-btn ${stepCooldown ? 'step-delay-pulse' : ''}`}
+                    onClick={handleTakeStep}
+                    disabled={stepCooldown}
+                  >
+                    {stepCooldown ? `Taking Step... (${cooldownSeconds}s)` : '👣 Take Next Step'}
                   </button>
                 )}
               </div>
             </div>
-          </div>
+          )}
         </div>
-      )}
       </div>
     </div>
   );

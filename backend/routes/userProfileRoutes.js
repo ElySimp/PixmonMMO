@@ -4,14 +4,14 @@ const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Route untuk update avatar dan wallpaper
+// Route to update avatar and wallpaper
 router.put('/:userId/avatar', protect, userProfileController.updateAvatar);
 router.put('/:userId/wallpaper', protect, userProfileController.updateWallpaper);
-// Tambahkan endpoint favorite pet dan selected achievements
+// Endpoints for favorite pet and selected achievements
 router.put('/:userId/favorite-pet', protect, userProfileController.updateFavoritePet);
 router.get('/:userId/selected-achievements', protect, userProfileController.getSelectedAchievements);
 router.put('/:userId/selected-achievements', protect, userProfileController.updateSelectedAchievements);
-// Tambahkan endpoint untuk mengambil semua pet milik user
+// Endpoint to retrieve all pets belonging to user
 router.get('/:userId/pets', protect, userProfileController.getUserPets);
 
 module.exports = router; 

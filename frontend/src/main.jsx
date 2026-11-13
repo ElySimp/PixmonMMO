@@ -23,8 +23,10 @@ import MiscGacha from './pages/miscpage/MiscGacha.jsx'
 import Friends from './components/Topbar/Friends.jsx'
 import Support from './components/Topbar/support.jsx'
 import MiscShop from './pages/miscpage/MiscShop.jsx'
+import MiscNpc from './pages/miscpage/MiscNpc.jsx'
 
 import './index.css'
+import './styles/pixelAnimations.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -45,7 +47,10 @@ createRoot(document.getElementById('root')).render(
           <Route path="/misc-pets" element={<MiscPets />} />
           <Route path="/pet-house" element={<PetsHouse />} />
           <Route path="/shop" element={<MiscShop />} />
+          <Route path="/npcs" element={<MiscNpc />} />
           <Route path="/adventure" element={<Adventure />} />
+          <Route path="/battle" element={<Adventure />} />
+          <Route path="/dungeon" element={<Adventure />} />
           <Route path="/daily" element={<HomeDaily />} />
           <Route path="/friends" element={<Friends />} />
           <Route path="/gacha" element={<MiscGacha/>}/>

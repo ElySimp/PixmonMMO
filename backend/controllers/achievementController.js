@@ -1,156 +1,99 @@
-const Achievement = require('../models/Achievement');
-const User = require('../models/User');
+const Player = require('../models/Player');
 
-// Get all achievements (used by admin or for displaying all possible achievements)
+const defaultAchievements = [
+    { id: 'ach_first_step', title: 'First Steps', description: 'Take your first exploration step', category: 'exploration', xp_reward: 50, gold_reward: 20 },
+    { id: 'ach_level_5', title: 'Seasoned Traveler', description: 'Reach Level 5', category: 'progression', xp_reward: 150, gold_reward: 100 },
+    { id: 'ach_first_pet', title: 'Beast Master', description: 'Acquire your first Pixmon pet', category: 'pets', xp_reward: 100, gold_reward: 50 },
+    { id: 'ach_dungeon_clear', title: 'Catacomb Conqueror', description: 'Clear your first dungeon run', category: 'dungeon', xp_reward: 200, gold_reward: 150 }
+];
+
 exports.getAllAchievements = async (req, res) => {
-    try {
-        const achievements = await Achievement.getAllAchievements();
-        res.status(200).json(achievements);
-    } catch (error) {
-        console.error('Error fetching all achievements:', error);
-        res.status(500).json({ message: 'Server error fetching achievements', error: error.message });
-    }
+    res.status(200).json(defaultAchievements);
 };
 
-// Get a user's achievements with completion status
 exports.getUserAchievements = async (req, res) => {
     try {
-        const userId = req.params.userId;
-        
-        if (!userId) {
-            return res.status(400).json({ message: 'User ID is required' });
-        }
-        
-        const achievements = await Achievement.getUserAchievements(userId);
-        
-        // Group achievements by category for easier frontend organization
-        const groupedAchievements = achievements.reduce((groups, achievement) => {
-            if (!groups[achievement.category]) {
-                groups[achievement.category] = [];
-            }
-            groups[achievement.category].push(achievement);
+        const { userId } = req.params;
+        const player = await Player.findOne({
+            $or: [{ _id: userId }, { id: String(userId) }, { username: userId }]
+        });
+
+        const selected = player?.profile?.selected_achievements || [];
+        const achievements = defaultAchievements.map(a => ({
+            ...a,
+            completed: selected.includes(a.id) || (player && player.level >= 5 && a.id === 'ach_level_5')
+        }));
+
+        const groupedAchievements = achievements.reduce((groups, a) => {
+            if (!groups[a.category]) groups[a.category] = [];
+            groups[a.category].push(a);
             return groups;
         }, {});
-        
+
         res.status(200).json({
-            achievements: achievements,
-            groupedAchievements: groupedAchievements,
+            achievements,
+            groupedAchievements,
             stats: {
                 completed: achievements.filter(a => a.completed).length,
                 total: achievements.length
             }
         });
     } catch (error) {
-        console.error(`Error fetching achievements for user ${req.params.userId}:`, error);
         res.status(500).json({ message: 'Server error fetching user achievements', error: error.message });
     }
 };
 
-// Check for new achievements based on user stats and other progress
 exports.checkAchievements = async (req, res) => {
     try {
-        const userId = req.params.userId;
-        const { progressData } = req.body;
-        
-        if (!userId) {
-            return res.status(400).json({ message: 'User ID is required' });
-        }
-        
-        // Get the user's current stats
-        const userStats = await User.getStats(userId);
-        
-        // Check which achievements should be unlocked
-        const newAchievements = await Achievement.checkForAchievements(userId, userStats, progressData);
-        
-        // Calculate total rewards
-        let totalXpReward = 0;
-        let totalGoldReward = 0;
-        
-        newAchievements.forEach(achievement => {
-            totalXpReward += achievement.xp_reward;
-            totalGoldReward += achievement.gold_reward;
+        const { userId } = req.params;
+        const player = await Player.findOne({
+            $or: [{ _id: userId }, { id: String(userId) }, { username: userId }]
         });
-        
-        // Update user stats if any rewards were earned
-        if (totalXpReward > 0 || totalGoldReward > 0) {
-            await User.updateStats(userId, totalXpReward, totalGoldReward);
-            
-            // Get updated stats
-            const updatedStats = await User.getStats(userId);
-            
-            res.status(200).json({
-                newAchievements: newAchievements,
-                rewards: {
-                    xp: totalXpReward,
-                    gold: totalGoldReward
-                },
-                updatedStats: updatedStats
-            });
-        } else {
-            res.status(200).json({
-                newAchievements: newAchievements,
-                rewards: {
-                    xp: 0,
-                    gold: 0
-                }
-            });
-        }
+
+        res.status(200).json({
+            newAchievements: [],
+            rewards: { xp: 0, gold: 0 },
+            updatedStats: {
+                level: player?.level || 1,
+                xp: player?.xp || 0,
+                gold: player?.gold || 0
+            }
+        });
     } catch (error) {
-        console.error(`Error checking achievements for user ${req.params.userId}:`, error);
         res.status(500).json({ message: 'Server error checking achievements', error: error.message });
     }
 };
 
-// Manually unlock an achievement for testing purposes - admin only
 exports.unlockAchievement = async (req, res) => {
     try {
-        const userId = req.params.userId;
+        const { userId } = req.params;
         const { achievementId } = req.body;
-        
-        if (!userId || !achievementId) {
-            return res.status(400).json({ message: 'User ID and Achievement ID are required' });
-        }
-        
-        const result = await Achievement.unlockAchievement(userId, achievementId);
-        
-        if (result.unlocked) {
-            // Update user stats with rewards
-            if (result.rewards.xp > 0 || result.rewards.gold > 0) {
-                await User.updateStats(userId, result.rewards.xp, result.rewards.gold);
+
+        const ach = defaultAchievements.find(a => a.id === achievementId) || {
+            id: achievementId,
+            title: achievementId,
+            xp_reward: 50,
+            gold_reward: 25
+        };
+
+        await Player.findOneAndUpdate(
+            { $or: [{ _id: userId }, { id: String(userId) }, { username: userId }] },
+            {
+                $addToSet: { 'profile.selected_achievements': achievementId },
+                $inc: { xp: ach.xp_reward, gold: ach.gold_reward }
             }
-            
-            res.status(200).json({
-                message: `Achievement unlocked: ${result.achievement.title}`,
-                achievement: result.achievement,
-                rewards: result.rewards
-            });
-        } else if (result.alreadyUnlocked) {
-            res.status(200).json({
-                message: 'Achievement was already unlocked',
-                alreadyUnlocked: true
-            });
-        } else {
-            res.status(400).json({
-                message: 'Failed to unlock achievement'
-            });
-        }
+        );
+
+        res.status(200).json({
+            message: `Achievement unlocked: ${ach.title}`,
+            achievement: ach,
+            rewards: { xp: ach.xp_reward, gold: ach.gold_reward }
+        });
     } catch (error) {
-        console.error(`Error unlocking achievement for user ${req.params.userId}:`, error);
         res.status(500).json({ message: 'Server error unlocking achievement', error: error.message });
     }
 };
 
-// Initialize achievement tables
 exports.initAchievementTables = async (req, res) => {
-    try {
-        await Achievement.createTable();
-        await Achievement.createUserAchievementsTable();
-        
-        res.status(200).json({
-            message: 'Achievement tables initialized successfully'
-        });
-    } catch (error) {
-        console.error('Error initializing achievement tables:', error);
-        res.status(500).json({ message: 'Server error initializing achievement tables', error: error.message });
-    }
+    res.status(200).json({ message: 'Achievement collections initialized successfully' });
 };

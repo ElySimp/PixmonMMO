@@ -312,8 +312,33 @@ const MainHome = () => {
 
           <div className="mainhome-notifications-container">
             <div className="mainhome-notifications-card">
-              <h3>Notifications</h3>
-              {/* Add notifications content here */}
+              <h3>Quick Adventure</h3>
+              <p style={{ color: '#8b949e', fontSize: '0.85rem', marginBottom: '1rem' }}>
+                Explore randomized 1–8 step dungeons, battle monsters, and summon Tier 1–10 gear.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                <button
+                  className="mainhome-view-collection"
+                  style={{ background: 'linear-gradient(135deg, #da3633 0%, #b62324 100%)', margin: 0 }}
+                  onClick={() => navigate('/battle')}
+                >
+                  ⚔️ Enter Dungeon (1 Energy)
+                </button>
+                <button
+                  className="mainhome-view-collection"
+                  style={{ background: '#1f6feb', margin: 0 }}
+                  onClick={() => navigate('/npcs')}
+                >
+                  🏰 Town Square & NPCs
+                </button>
+                <button
+                  className="mainhome-view-collection"
+                  style={{ background: '#7928ca', margin: 0 }}
+                  onClick={() => navigate('/gacha')}
+                >
+                  ✨ Gacha Summon Portal
+                </button>
+              </div>
             </div>
           </div>
         </div>

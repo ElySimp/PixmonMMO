@@ -29,9 +29,9 @@ router.get('/user/:userId', protect, optimizedPetsController.getUserPets);
 router.post('/adopt', protect, optimizedPetsController.adoptPet);
 router.patch('/status/:userPetId', protect, optimizedPetsController.updatePetStatus);
 router.patch('/equip', protect, optimizedPetsController.toggleEquipPet);
-router.patch('/:userId/equip', petsController.equipPet); // Removed auth for testing
+router.patch('/:userId/equip', protect, petsController.equipPet);
 router.get('/stats/:petId/:level', protect, optimizedPetsController.calculatePetStats);
 router.post('/experience/:userPetId', protect, optimizedPetsController.addExperience);
-router.get('/:userId/equipped', petsController.getEquippedPet); // Removed auth for testing
+router.get('/:userId/equipped', protect, petsController.getEquippedPet);
 
 module.exports = router;

@@ -1,0 +1,121 @@
+/* PixmonMMO Spritesheet & Pixel Animation Engine */
+
+/* 4-Frame Looping Spritesheet Animation for Tier 9 Eldritch Items */
+@keyframes spritesheet-loop-4 {
+  from {
+    transform: rotate(0deg) scale(1);
+    filter: drop-shadow(0 0 6px #B388FF);
+  }
+  25% {
+    transform: rotate(-3deg) scale(1.05);
+    filter: drop-shadow(0 0 12px #B388FF) hue-rotate(15deg);
+  }
+  50% {
+    transform: rotate(0deg) scale(1.08);
+    filter: drop-shadow(0 0 18px #E040FB) hue-rotate(30deg);
+  }
+  75% {
+    transform: rotate(3deg) scale(1.05);
+    filter: drop-shadow(0 0 12px #B388FF) hue-rotate(15deg);
+  }
+  to {
+    transform: rotate(0deg) scale(1);
+    filter: drop-shadow(0 0 6px #B388FF);
+  }
+}
+
+.spritesheet-anim-4frame {
+  animation: spritesheet-loop-4 1.2s steps(4) infinite;
+  display: inline-block;
+  transform-origin: center;
+}
+
+/* 6-Frame Looping Spritesheet Animation for Tier 10 Transcendent Items */
+@keyframes spritesheet-loop-6 {
+  0% {
+    transform: translateY(0px) scale(1);
+    filter: drop-shadow(0 0 8px #FFD700);
+  }
+  16.6% {
+    transform: translateY(-2px) scale(1.04) rotate(-2deg);
+    filter: drop-shadow(0 0 14px #FFA000);
+  }
+  33.3% {
+    transform: translateY(-4px) scale(1.08);
+    filter: drop-shadow(0 0 20px #FFEA00) brightness(1.15);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.12) rotate(2deg);
+    filter: drop-shadow(0 0 25px #FFD700) brightness(1.25);
+  }
+  66.6% {
+    transform: translateY(-3px) scale(1.08);
+    filter: drop-shadow(0 0 20px #FFEA00);
+  }
+  83.3% {
+    transform: translateY(-1px) scale(1.04) rotate(-1deg);
+    filter: drop-shadow(0 0 14px #FFA000);
+  }
+  100% {
+    transform: translateY(0px) scale(1);
+    filter: drop-shadow(0 0 8px #FFD700);
+  }
+}
+
+.spritesheet-anim-6frame {
+  animation: spritesheet-loop-6 1.5s steps(6) infinite;
+  display: inline-block;
+  transform-origin: center;
+}
+
+/* Pet Idle Pixel Animations (Tiered by rarity) */
+@keyframes pet-idle-subtle {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes pet-idle-energetic {
+  0%, 100% { transform: translateY(0px) scale(1); filter: drop-shadow(0 0 4px rgba(74, 144, 226, 0.4)); }
+  50% { transform: translateY(-6px) scale(1.04); filter: drop-shadow(0 0 10px rgba(74, 144, 226, 0.8)); }
+}
+
+@keyframes pet-idle-mythic {
+  0%, 100% { transform: translateY(0px) scale(1); filter: drop-shadow(0 0 8px #FFD700); }
+  33% { transform: translateY(-6px) scale(1.06) rotate(1deg); filter: drop-shadow(0 0 16px #FF8008); }
+  66% { transform: translateY(-4px) scale(1.04) rotate(-1deg); filter: drop-shadow(0 0 20px #FFC837); }
+}
+
+.pet-anim-tier-low {
+  animation: pet-idle-subtle 2s steps(2) infinite;
+}
+
+.pet-anim-tier-mid {
+  animation: pet-idle-energetic 1.4s steps(4) infinite;
+}
+
+.pet-anim-tier-high {
+  animation: pet-idle-mythic 1.2s steps(6) infinite;
+}
+
+/* Combat Battle Shake & Hit Flashes */
+@keyframes combat-hit-flash {
+  0% { filter: brightness(1); }
+  30% { filter: brightness(3) saturate(0) contrast(2); transform: translateX(6px); }
+  60% { filter: brightness(1.5); transform: translateX(-4px); }
+  100% { filter: brightness(1); transform: translateX(0); }
+}
+
+.combat-hit {
+  animation: combat-hit-flash 0.35s ease-out;
+}
+
+/* Stepping action delay pulse */
+@keyframes step-pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.85; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.step-delay-pulse {
+  animation: step-pulse 0.8s ease-in-out infinite;
+}

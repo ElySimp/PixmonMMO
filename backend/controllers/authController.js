@@ -1,13 +1,14 @@
-const User = require('../models/User');
+const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
-const UserProfile = require('../models/UserProfile');
-const { UserQuest } = require('../models/QuestSystem'); 
+const Player = require('../models/Player');
 const logger = require('../utils/logger');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'as9d8f7a98sdf7a9s8df7a9s8d7fa8sd7f89a7sdf';
 
 const generateToken = (user) => {
     return jwt.sign(
-        { id: user.id, username: user.username },
-        process.env.JWT_SECRET,
+        { id: user.id || user._id.toString(), username: user.username },
+        JWT_SECRET,
         { expiresIn: '24h' }
     );
 };
@@ -17,14 +18,16 @@ const validateToken = async (token) => {
     try {
         if (!token) return { valid: false, message: 'No token provided' };
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.id);
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const player = await Player.findOne({
+            $or: [{ _id: decoded.id }, { id: String(decoded.id) }]
+        });
 
-        if (!user) {
+        if (!player) {
             return { valid: false, message: 'User not found' };
         }
 
-        return { valid: true, user };
+        return { valid: true, user: player };
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
             return { valid: false, message: 'Token expired' };
@@ -33,58 +36,52 @@ const validateToken = async (token) => {
     }
 };
 
-
 exports.register = async (req, res) => {
     try {
         logger.debug(`Registration attempt for: ${req.body.username}`, 'AUTH');
         const { username, email, password } = req.body;
 
-        // Validate input
         if (!username || !email || !password) {
             logger.warning('Registration failed: Missing required fields', 'AUTH');
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Please provide username, email and password' 
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide username, email and password'
             });
         }
 
-        // Register user
-        const userId = await User.register(username, email, password);
-        logger.success(`User registered successfully: ${username} (ID: ${userId})`, 'AUTH');        // Create initial user stats
-        try {
-            await User.ensureSingleStatsRecord(userId);
-            // Initial user stats created
-        } catch (statsError) {
-            console.error('Error creating initial stats:', statsError);
-            // Don't fail registration if stats creation fails
+        // Check if username or email already exists
+        const existing = await Player.findOne({
+            $or: [{ username: username.toLowerCase().trim() }, { email: email.toLowerCase().trim() }]
+        });
+
+        if (existing) {
+            return res.status(400).json({
+                success: false,
+                message: existing.username === username.toLowerCase().trim() 
+                    ? 'Username already taken' 
+                    : 'Email already registered'
+            });
         }
 
-        // Create initial user profile
-        try {
-            await UserProfile.createDefaultProfile(userId);
-            // Initial user profile created
-        } catch (profileError) {
-            console.error('Error creating initial profile:', profileError);
-            // Don't fail registration if profile creation fails
-        }        
-        // await User.createUserStats(userId);
-        
-        const user = await User.findById(userId);
-        // User data retrieved for token generation
-        
-        // Generate token
-        const token = generateToken(user);
+        const player = await Player.create({
+            username: username.trim(),
+            email: email.trim(),
+            password: password
+        });
+
+        logger.success(`User registered successfully: ${player.username} (ID: ${player.id})`, 'AUTH');
+
+        const token = generateToken(player);
 
         res.status(201).json({
             success: true,
             message: 'User registered successfully',
             data: {
-                user,
+                user: player,
                 token
             }
         });
     } catch (error) {
-        console.error('Registration controller error:', error);
         res.status(400).json({
             success: false,
             message: error.message
@@ -94,16 +91,8 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
     try {
-        console.log('Login attempt received:', {
-            method: req.method,
-            url: req.originalUrl,
-            body: req.body,
-            headers: req.headers
-        });
-        
         const { username, password } = req.body;
 
-        // Validate input
         if (!username || !password) {
             logger.warning('Login failed: Missing credentials', 'AUTH');
             return res.status(400).json({
@@ -112,27 +101,34 @@ exports.login = async (req, res) => {
             });
         }
 
-        // Login user
-        const user = await User.login(username, password);
-        logger.success(`User logged in: ${username} (ID: ${user.id})`, 'AUTH');
-        
-        // Ensure user has only one stats record
-        await User.ensureSingleStatsRecord(user.id);
+        const player = await Player.findOne({
+            username: username.toLowerCase().trim()
+        }).select('+password');
 
-        // Ensure profile exists
-        await UserProfile.ensureProfileExists(user.id);
+        if (!player) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid credentials'
+            });
+        }
 
-        await UserQuest.assignDailyQuests(user.id);
-        await UserQuest.completeDailyLoginQuest(user.id);
-        
-        // Generate token
-        const token = generateToken(user);
+        const isMatch = await player.comparePassword(password);
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid credentials'
+            });
+        }
+
+        logger.success(`User logged in: ${player.username} (ID: ${player.id})`, 'AUTH');
+
+        const token = generateToken(player);
 
         res.json({
             success: true,
             message: 'Login successful',
             data: {
-                user,
+                user: player,
                 token
             }
         });
@@ -146,10 +142,17 @@ exports.login = async (req, res) => {
 
 exports.getMe = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id);
+        const player = await Player.findOne({
+            $or: [{ _id: req.user.id }, { id: String(req.user.id) }]
+        });
+
+        if (!player) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
         res.json({
             success: true,
-            data: user
+            data: player
         });
     } catch (error) {
         res.status(500).json({
@@ -161,10 +164,26 @@ exports.getMe = async (req, res) => {
 
 exports.getStats = async (req, res) => {
     try {
-        const stats = await User.getStats(req.user.id);
+        const player = await Player.findOne({
+            $or: [{ _id: req.user.id }, { id: String(req.user.id) }]
+        });
+
+        if (!player) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
         res.json({
             success: true,
-            data: stats
+            data: {
+                user_id: player.id || player._id.toString(),
+                level: player.level,
+                xp: player.xp,
+                gold: player.gold,
+                diamonds: player.diamonds,
+                quest_points: player.questPoints,
+                energy: player.energy,
+                combat_stats: player.combatStats
+            }
         });
     } catch (error) {
         res.status(500).json({
@@ -176,12 +195,28 @@ exports.getStats = async (req, res) => {
 
 exports.updateStats = async (req, res) => {
     try {
-        const { xpDelta, goldDelta } = req.body;
-        await User.updateStats(req.user.id, xpDelta, goldDelta);
-        const stats = await User.getStats(req.user.id);
+        const { xpDelta = 0, goldDelta = 0 } = req.body;
+
+        const player = await Player.findOneAndUpdate(
+            { $or: [{ _id: req.user.id }, { id: String(req.user.id) }] },
+            { $inc: { xp: xpDelta, gold: goldDelta } },
+            { new: true }
+        );
+
+        if (!player) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
         res.json({
             success: true,
-            data: stats
+            data: {
+                user_id: player.id || player._id.toString(),
+                level: player.level,
+                xp: player.xp,
+                gold: player.gold,
+                diamonds: player.diamonds,
+                quest_points: player.questPoints
+            }
         });
     } catch (error) {
         res.status(500).json({
@@ -191,32 +226,44 @@ exports.updateStats = async (req, res) => {
     }
 };
 
-// New controller functions for frontend endpoints
-
-// Calculate XP required for a given level
 const calculateXpCap = (playerLevel) => {
     return Math.floor(50 * Math.pow(playerLevel, 1.4));
 };
 
-// Get stats for a specific user by ID
 exports.getUserStats = async (req, res) => {
     try {
         const { userId } = req.params;
-        
-        // Simple validation
-        if (!userId || isNaN(userId)) {
+
+        if (!userId) {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid user ID'
             });
         }
-        
-        const stats = await User.getStats(userId);
-        
-        // Return stats in the format expected by the frontend
-        res.json(stats);
+
+        const player = await Player.findOne({
+            $or: [{ _id: userId }, { id: String(userId) }, { username: userId }]
+        });
+
+        if (!player) {
+            return res.status(404).json({
+                success: false,
+                message: 'User stats not found'
+            });
+        }
+
+        res.json({
+            user_id: player.id || player._id.toString(),
+            level: player.level,
+            xp: player.xp,
+            gold: player.gold,
+            diamonds: player.diamonds,
+            quest_points: player.questPoints,
+            energy: player.energy?.current || 10,
+            energy_max: player.energy?.max || 10,
+            cooldownEnd: player.cooldownEnd || player.exploration?.cooldownEnd
+        });
     } catch (error) {
-        console.error('Error getting user stats:', error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -224,116 +271,104 @@ exports.getUserStats = async (req, res) => {
     }
 };
 
-// Update stats for a specific user by ID, with level progression
 exports.updateUserStats = async (req, res) => {
     try {
         const { userId } = req.params;
         const { xpDelta = 0, goldDelta = 0, diamondsDelta = 0, level: newLevel, resetXp, cooldownEnd } = req.body;
-        
-        logger.verbose(`Stats update request for user ${userId}: XP+${xpDelta}, Gold+${goldDelta}, Level=${newLevel}`, 'STATS');
-        
-        // Simple validation
-        if (!userId || isNaN(userId)) {
+
+        if (!userId) {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid user ID'
             });
-        }        // If we're only updating diamonds, handle it separately for efficiency
-        if (diamondsDelta !== 0 && xpDelta === 0 && goldDelta === 0 && !newLevel && !resetXp && !cooldownEnd) {
-            try {
-                const updatedDiamonds = await User.updateDiamonds(userId, diamondsDelta);
-                logger.gameAction('Diamond Update', userId, `+${diamondsDelta} diamonds (total: ${updatedDiamonds})`);
-                
-                // Get updated stats
-                const updatedStats = await User.getStats(userId);
-                return res.json(updatedStats);
-            } catch (error) {
-                logger.error('Error updating diamonds', 'STATS', error);
-                throw error;
-            }
         }
-        
-        // For other updates, require XP and gold deltas
-        if (xpDelta === undefined || goldDelta === undefined) {
-            return res.status(400).json({
+
+        const playerFilter = mongoose.Types.ObjectId.isValid(userId)
+            ? { $or: [{ _id: userId }, { id: String(userId) }, { username: String(userId) }] }
+            : { $or: [{ id: String(userId) }, { username: String(userId) }] };
+
+        const incOps = {};
+        const setOps = {};
+
+        if (goldDelta) incOps.gold = Number(goldDelta);
+        if (diamondsDelta) incOps.diamonds = Number(diamondsDelta);
+        if (xpDelta && !resetXp) incOps.xp = Number(xpDelta);
+
+        if (newLevel !== undefined) {
+            setOps.level = Number(newLevel);
+        }
+        if (resetXp) {
+            setOps.xp = 0;
+        }
+        if (cooldownEnd !== undefined) {
+            setOps.cooldownEnd = cooldownEnd ? new Date(cooldownEnd) : null;
+        }
+
+        const updateOps = {};
+        if (Object.keys(incOps).length > 0) updateOps.$inc = incOps;
+        if (Object.keys(setOps).length > 0) updateOps.$set = setOps;
+
+        let player;
+        if (Object.keys(updateOps).length > 0) {
+            player = await Player.findOneAndUpdate(
+                playerFilter,
+                updateOps,
+                { new: true }
+            );
+        } else {
+            player = await Player.findOne(playerFilter);
+        }
+
+        if (!player) {
+            return res.status(404).json({
                 success: false,
-                message: 'Please provide xpDelta and goldDelta'
+                message: 'User not found'
             });
         }
-          // Get current stats
-        const currentStats = await User.getStats(userId);
-        logger.verbose(`Current stats: Level ${currentStats.level}, XP ${currentStats.xp}`, 'STATS');
-        
-        // Check if we need to update the level or if the frontend already calculated it
-        let updatedLevel = currentStats.level;
-        let updatedXp = currentStats.xp + xpDelta;
-        
-        // Handle level up scenarios
-        if (newLevel && newLevel > currentStats.level) {
-            // Frontend already calculated the new level, trust it
-            updatedLevel = newLevel;
-            logger.gameAction('Level Up', userId, `Level ${currentStats.level} → ${updatedLevel}`);
-            
-            // Reset XP to 0 if requested
-            if (resetXp) {
-                updatedXp = 0;
-                logger.verbose('XP reset to 0 due to level up', 'STATS');
-            }
-        } else {
-            // Calculate if player should level up based on new XP total
-            const currentLevelCap = calculateXpCap(currentStats.level);
-            logger.verbose(`XP cap for level ${currentStats.level}: ${currentLevelCap}, XP after gain: ${updatedXp}`, 'STATS');
-            
-            if (updatedXp >= currentLevelCap) {
-                updatedLevel = currentStats.level + 1;
-                logger.gameAction('Auto Level Up', userId, `Level ${currentStats.level} → ${updatedLevel}`);
-                
-                // Reset XP to 0 on level up
-                updatedXp = 0;
-            }
-        }        // Update all stats in one go with absolute XP value
-        logger.verbose(`Updating stats: XP=${updatedXp}, Gold=${currentStats.gold + goldDelta}, Level=${updatedLevel}`, 'STATS');
-        try {
-            await User.updateAllStatsAbsolute(userId, updatedXp, currentStats.gold + goldDelta, updatedLevel, cooldownEnd);
-        } catch (updateError) {
-            // Check if error is related to cooldownEnd column not existing
-            if (updateError.message && updateError.message.includes('cooldownEnd')) {
-                logger.verbose('Retrying stats update without cooldown parameter', 'STATS');
-                // Try again without the cooldownEnd parameter
-                await User.updateAllStatsAbsolute(userId, updatedXp, currentStats.gold + goldDelta, updatedLevel);
-            } else {
-                // Re-throw the error if it's not related to cooldownEnd
-                throw updateError;
+
+        // Automatic level-up calculation if XP crosses threshold and level was not explicitly passed
+        if (newLevel === undefined && player.xp > 0) {
+            const xpCap = calculateXpCap(player.level);
+            if (player.xp >= xpCap) {
+                player = await Player.findOneAndUpdate(
+                    {
+                        ...playerFilter,
+                        level: player.level, // Optimistic guard against duplicate concurrent level increments
+                        xp: { $gte: xpCap }
+                    },
+                    {
+                        $inc: { level: 1 },
+                        $set: { xp: 0 }
+                    },
+                    { new: true }
+                ) || player;
             }
         }
-        
-        // Get updated stats
-        const updatedStats = await User.getStats(userId);
-        logger.verbose(`Stats updated successfully: Level ${updatedStats.level}, XP ${updatedStats.xp}`, 'STATS');
-        
-        // Log game action for significant changes
-        if (xpDelta > 0 || goldDelta > 0) {
-            const changes = [];
-            if (xpDelta > 0) changes.push(`+${xpDelta} XP`);
-            if (goldDelta > 0) changes.push(`+${goldDelta} Gold`);
-            logger.gameAction('Stats Update', userId, changes.join(', '));
-        }
-        
-        // Return updated stats in the format expected by the frontend
-        res.json(updatedStats);    } catch (error) {
-        logger.error('Error updating user stats', 'STATS', error);
+
+        res.json({
+            user_id: player.id || player._id.toString(),
+            level: player.level,
+            xp: player.xp,
+            gold: player.gold,
+            diamonds: player.diamonds,
+            quest_points: player.questPoints,
+            cooldownEnd: player.cooldownEnd
+        });
+    } catch (error) {
         res.status(500).json({
             success: false,
             message: error.message
         });
     }
-
 };
-// Get specific user by ID
+
 exports.getUser = async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
-        if (!user) {
+        const player = await Player.findOne({
+            $or: [{ _id: req.params.id }, { id: String(req.params.id) }]
+        });
+
+        if (!player) {
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
@@ -342,7 +377,7 @@ exports.getUser = async (req, res) => {
 
         res.json({
             success: true,
-            data: user
+            data: player
         });
     } catch (error) {
         res.status(500).json({
@@ -350,4 +385,16 @@ exports.getUser = async (req, res) => {
             message: error.message
         });
     }
+};
+
+module.exports = {
+    register: exports.register,
+    login: exports.login,
+    getMe: exports.getMe,
+    getStats: exports.getStats,
+    updateStats: exports.updateStats,
+    getUserStats: exports.getUserStats,
+    updateUserStats: exports.updateUserStats,
+    getUser: exports.getUser,
+    validateToken
 };

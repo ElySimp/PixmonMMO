@@ -74,3 +74,10 @@ lerna-debug.log*
 .sass-cache
 .eslintcache
 .vercel
+
+# AI Agent & Teamwork Internal Files
+.agents/
+PROJECT.md
+TEST_INFRA.md
+
+.agents

@@ -305,8 +305,10 @@ class QuestSystem {
 
     }
 
-// ✅ Jalankan reset otomatis saat server berjalan
-QuestSystem.startDailyQuestResetSchedule();
+// Start daily quest reset schedule only in non-test runtime environments
+if (process.env.NODE_ENV !== 'test') {
+    QuestSystem.startDailyQuestResetSchedule();
+}
 
 async function initializeTables() {
     await Quest.createTable();
